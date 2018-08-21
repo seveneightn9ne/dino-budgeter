@@ -6,22 +6,58 @@ import * as bodyParser from 'body-parser';
 import path from "path";
 import serveStatic from 'serve-static'
 import passport from 'passport';
+import {Strategy as LocalStrategy} from 'passport-local';
+import flash from 'connect-flash';
+import session from 'express-session';
 
 const app = express();
 app.use(bodyParser.json());
+app.use(passport.initialize());
+app.use(passport.session());
+app.use(session({
+  resave: true,
+  saveUninitialized: true,
+  secret: "TODO", //TODO
+}));
+app.use(flash());
 const pgp:IMain = pgPromise();
 const db = pgp(`postgres://budgeter:${process.env.PGPASSWORD}@127.0.0.1/budgeter`);
 
 // Express configuration
 app.set("port", process.env.PORT || 3000);
 
+// Passport configuration
+passport.use(new LocalStrategy(
+  function(username, password, done) {
+    db.one("select foo from users where username=?", username)
+    .then((row) => {
+      if (password == row.password_hash) {// TODO for real
+        return done(null, {email: row.email});
+      } else {
+        return done(null, false, {message: 'Incorrect passowrd.'});
+      }
+    })
+    .catch(error => {
+      return done(null, false, { message: 'Incorrect username.' });
+    });
+  }
+));
+
+
 /**
  * Primary app routes.
  */
-app.get("/", express.static(path.join(__dirname, '../../static'), {'index': ['index.html',]}));
+const index = (req: Request, res: Response) => res.sendFile(path.join(__dirname + '../../../static/index.html'));
+app.get("/", index);
+app.get("/login", index);
 app.use(serveStatic(path.join(__dirname, '../client')));
 app.use(serveStatic(path.join(__dirname, '../../node_modules/react/umd')));
 app.use(serveStatic(path.join(__dirname, '../../node_modules/react-dom/umd')));
+app.post('/login',
+  passport.authenticate('local', { successRedirect: '/',
+                                   failureRedirect: '/login',
+                                   failureFlash: true })
+);
 
 app.get("/playground", (req, res) => {
   db.one("select foo from playground limit 1")

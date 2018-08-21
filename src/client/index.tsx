@@ -1,17 +1,36 @@
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
+import { BrowserRouter, Switch, Route, Link } from 'react-router-dom'
 
-class HelloMessage extends React.Component<any, any> {
+const Home = () => <div><Link to="/login">Log In</Link></div>;
+const Login = () => <form action="/login" method="post">
+    <div>
+        <label>Username:</label>
+        <input type="text" name="username"/>
+    </div>
+    <div>
+        <label>Password:</label>
+        <input type="password" name="password"/>
+    </div>
+    <div>
+        <input type="submit" value="Log In"/>
+    </div>
+</form>;
+
+class App extends React.Component {
     render() {
         return (
-        <div>
-            Hello {this.props.name}
-        </div>
+        <Switch>
+            <Route exact path="/" component={Home} />
+            <Route path="/login" component={Login} />
+        </Switch>
         );
     }
 }
   
 ReactDOM.render(
-    <HelloMessage name="Miles" />,
+    <BrowserRouter>
+        <App />
+    </BrowserRouter>,
     document.getElementById('root') as HTMLElement
 );
