@@ -5,6 +5,7 @@ import pgPromise from 'pg-promise';
 import * as bodyParser from 'body-parser';
 import path from "path";
 import serveStatic from 'serve-static'
+import passport from 'passport';
 
 const app = express();
 app.use(bodyParser.json());
