@@ -3,6 +3,8 @@ import { Request, Response } from "express";
 import {IMain, IDatabase} from 'pg-promise';
 import pgPromise from 'pg-promise';
 import * as bodyParser from 'body-parser';
+import path from "path";
+import serveStatic from 'serve-static'
 
 const app = express();
 app.use(bodyParser.json());
@@ -15,7 +17,10 @@ app.set("port", process.env.PORT || 3000);
 /**
  * Primary app routes.
  */
-app.get("/", express.static('client/index.js'));
+app.get("/", express.static(path.join(__dirname, '../../static'), {'index': ['index.html',]}));
+app.use(serveStatic(path.join(__dirname, '../client')));
+app.use(serveStatic(path.join(__dirname, '../../node_modules/react/umd')));
+app.use(serveStatic(path.join(__dirname, '../../node_modules/react-dom/umd')));
 
 app.get("/playground", (req, res) => {
   db.one("select foo from playground limit 1")
