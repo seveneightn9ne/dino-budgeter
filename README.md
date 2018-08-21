@@ -11,6 +11,7 @@ sudo apt install postgresql postgresql-contrib
 ```
 
 2. Create a user named `budgeter` and give it no special priveleges.
+
 Ignore non-fatal errors about changing directories.
 ```
 sudo -u postgres createuser --interactive
@@ -28,8 +29,13 @@ sudo -u postgres createdb budgeter
 ```
 
 5. Add this to your `.envrc` file for the project.
+
 Create a `.envrc` file if you don't have one. Make sure it's gitignored!
+
 Install [`direnv`](https://direnv.net/) if you haven't.
+
+You may need to run `direnv allow`.
+
 ```
 export PGPASSWORD=blahblahpassword
 ```
@@ -38,3 +44,5 @@ export PGPASSWORD=blahblahpassword
 ```
 sql/init.sh
 ```
+
+That's it, the app should now be able to connect to the db.
