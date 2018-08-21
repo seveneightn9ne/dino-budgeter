@@ -1,0 +1,27 @@
+{
+  "name": "budgeter",
+  "version": "1.0.0",
+  "description": "budgeting webapp",
+  "main": "dist/server.js",
+  "dependencies": {
+    "typescript": "^3.0.1"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "tsc",
+    "watch": "tsc -w",
+    "lint": "tslint -c tslint.json -p tsconfig.json",
+    "serve": "node dist/server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/seveneightn9ne/budgeter.git"
+  },
+  "author": "Jess Kenney",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/seveneightn9ne/budgeter/issues"
+  },
+  "homepage": "https://github.com/seveneightn9ne/budgeter#readme"
+}
