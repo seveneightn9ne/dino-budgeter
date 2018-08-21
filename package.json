@@ -26,10 +26,13 @@
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "tsc",
-    "watch": "tsc -w",
+    "build-server": "tsc",
+    "build-client": "node_modules/.bin/webpack --mode=development",
+    "build": "npm run build-server && npm run build-client",
+    "watch-server": "tsc -w",
     "lint": "tslint -c tslint.json -p tsconfig.json",
-    "serve": "node dist/server/server.js"
+    "serve": "node dist/server/server.js",
+    "server": "npm run serve"
   },
   "repository": {
     "type": "git",
