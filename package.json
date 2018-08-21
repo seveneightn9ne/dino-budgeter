@@ -2,7 +2,7 @@
   "name": "budgeter",
   "version": "1.0.0",
   "description": "budgeting webapp",
-  "main": "dist/server.js",
+  "main": "dist/server/server.js",
   "dependencies": {
     "typescript": "^3.0.1"
   },
@@ -12,7 +12,7 @@
     "build": "tsc",
     "watch": "tsc -w",
     "lint": "tslint -c tslint.json -p tsconfig.json",
-    "serve": "node dist/server.js"
+    "serve": "node dist/server/server.js"
   },
   "repository": {
     "type": "git",

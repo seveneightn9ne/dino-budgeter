@@ -10,8 +10,6 @@ app.set("port", process.env.PORT || 3000);
 /**
  * Primary app routes.
  */
-app.get("/", (req: Request, res: Response) => {
-  res.send("Hello World");
-});
+app.get("/", express.static('client/index.js'));
 
 export default app;
