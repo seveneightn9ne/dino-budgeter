@@ -45,6 +45,7 @@ app.get('/api/current-email', ensureLogin.ensureLoggedIn(), auth.handle_current_
 
 /* Static Routes */
 app.use(serveStatic(path.join(__dirname, '../client')));
+app.use(serveStatic(path.join(__dirname, '../../static')));
 app.use(serveStatic(path.join(__dirname, '../../node_modules/react/umd')));
 app.use(serveStatic(path.join(__dirname, '../../node_modules/react-dom/umd')));
 
