@@ -17,14 +17,14 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(validator());
 app.use(cookieParser.default());
-app.use(passport.initialize());
-app.use(passport.session());
 app.use(morgan('combined'));
 app.use(session({
   resave: true,
   saveUninitialized: true,
   secret: "TODO", //TODO
 }));
+app.use(passport.initialize());
+app.use(passport.session());
 
 // Express configuration
 app.set("port", process.env.PORT || 3000);
@@ -41,15 +41,19 @@ app.post("/playground", playground.handle_playground_post);
 /**
  * API Routes. They require login.
  */
-app.post('/api/current-email', ensureLogin.ensureLoggedIn(), auth.handle_current_email_get);
+app.get('/api/current-email', ensureLogin.ensureLoggedIn(), auth.handle_current_email_get);
 
 /* Static Routes */
 app.use(serveStatic(path.join(__dirname, '../client')));
 app.use(serveStatic(path.join(__dirname, '../../node_modules/react/umd')));
 app.use(serveStatic(path.join(__dirname, '../../node_modules/react-dom/umd')));
 
+const index = (req: Request, res: Response) =>
+  res.sendFile(path.join(__dirname + '../../../static/index.html'));
+app.get('/', ensureLogin.ensureLoggedOut('/app'), index);
+app.get('/app', ensureLogin.ensureLoggedIn(''), index);
+
 // Anything not matched above, use the main react app
-app.get('*', (req: Request, res: Response) =>
-  res.sendFile(path.join(__dirname + '../../../static/index.html')));
+app.get('*', index);
 
 export default app;

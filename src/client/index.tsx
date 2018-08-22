@@ -3,11 +3,14 @@ import * as ReactDOM from 'react-dom';
 import { BrowserRouter, Switch, Route, Link } from 'react-router-dom'
 
 const Home = () => <div>
-    <Link to="/login">Log In</Link>
+    <Link to="/login">Log In</Link>{ }
     <Link to="/signup">Sign Up</Link>
 </div>;
 
+const msg = (text: string) => () => <div>{text}</div>;
+
 const Login = () => <form action="/login" method="post">
+    <Route path="/login/error" render={msg("There was an error. Fix it!")} />
     <div>
         <label>Email:</label>
         <input type="text" name="username"/>
@@ -21,7 +24,6 @@ const Login = () => <form action="/login" method="post">
     </div>
 </form>;
 
-const msg = (text: string) => () => <div>{text}</div>;
 const Signup = () => <form action="/signup" method="post">
     <Route path="/signup/no-password" render={msg("You must enter a password.")} />
     <Route path="/signup/invalid-email" render={msg("You must enter a valid email.")} />

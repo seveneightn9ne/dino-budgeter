@@ -11,7 +11,7 @@ passport.serializeUser(function(user: User, cb) {
 });
 
 passport.deserializeUser(function(id: string, cb) {
-    db.one("select foo from users where user_id=$1", id)
+    db.one("select * from users where uid=$1", id)
         .then((row) => cb(null, row as User))
         .catch((error) => cb(error));
 });
@@ -35,7 +35,7 @@ passport.use(new LocalStrategy(
 ));
 
 export const handle_login_post = passport.authenticate('local', {
-    successRedirect: '/secrets',
+    successRedirect: '/app',
     failureRedirect: '/login/error'});
 
 export const handle_signup_post = function(req: Request, res: Response) {
@@ -60,12 +60,12 @@ export const handle_signup_post = function(req: Request, res: Response) {
             const password_hash = bcrypt.hashSync(password, 10);
             const user_id = randomstring.generate(32);
             db.none("insert into users values ($1, $2, $3)", [user_id, email, password_hash]);
-            passport.authenticate('local', {successRedirect: '/secrets'});
+            passport.authenticate('local', {successRedirect: '/app'});
             res.redirect("/");
         });
     });
 }
 
 export const handle_current_email_get = function(req: Request, res: Response) {
-    res.write(JSON.stringify({email: (req.user as User).email}));
+    res.send({email: (req.user as User).email});
 }
