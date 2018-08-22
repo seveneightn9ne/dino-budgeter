@@ -1,6 +1,7 @@
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import { BrowserRouter, Switch, Route, Link } from 'react-router-dom'
+import App from './app';
 
 const Home = () => <div>
     <Link to="/login">Log In</Link>{ }
@@ -41,13 +42,15 @@ const Signup = () => <form action="/signup" method="post">
     </div>
 </form>;
 
-class App extends React.Component {
+class Index extends React.Component {
     render() {
         return (
         <Switch>
             <Route exact path="/" component={Home} />
             <Route path="/login" component={Login} />
             <Route path="/signup" component={Signup} />
+            <Route path="/app/:group_id" component={App} />
+            <Route path="/app" component={App} />
         </Switch>
         );
     }
@@ -55,7 +58,7 @@ class App extends React.Component {
   
 ReactDOM.render(
     <BrowserRouter>
-        <App />
+        <Index />
     </BrowserRouter>,
     document.getElementById('root') as HTMLElement
 );

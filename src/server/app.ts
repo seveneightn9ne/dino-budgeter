@@ -11,6 +11,7 @@ import * as cookieParser from 'cookie-parser';
 import * as playground from './playground';
 import validator from 'express-validator';
 import * as ensureLogin from 'connect-ensure-login';
+import * as api from './api';
 
 const app = express();
 app.use(bodyParser.json());
@@ -41,7 +42,8 @@ app.post("/playground", playground.handle_playground_post);
 /**
  * API Routes. They require login.
  */
-app.get('/api/current-email', ensureLogin.ensureLoggedIn(), auth.handle_current_email_get);
+app.get('/api/current-email', ensureLogin.ensureLoggedIn(), api.handle_current_email_get);
+app.get('/api/groups', ensureLogin.ensureLoggedIn(), api.handle_groups_get);
 
 /* Static Routes */
 app.use(serveStatic(path.join(__dirname, '../client')));

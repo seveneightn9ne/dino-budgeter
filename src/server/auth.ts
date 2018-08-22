@@ -59,13 +59,12 @@ export const handle_signup_post = function(req: Request, res: Response) {
             // Good - the user doesn't exist already
             const password_hash = bcrypt.hashSync(password, 10);
             const user_id = randomstring.generate(32);
+            const group_id = randomstring.generate(32);
             db.none("insert into users values ($1, $2, $3)", [user_id, email, password_hash]);
+            db.none("insert into groups values ($1)", [group_id]);
+            db.none("insert into membership values ($1, $2)", [user_id, group_id]);
             passport.authenticate('local', {successRedirect: '/app'});
-            res.redirect("/");
+            res.redirect("/app/" + group_id);
         });
     });
-}
-
-export const handle_current_email_get = function(req: Request, res: Response) {
-    res.send({email: (req.user as User).email});
 }
