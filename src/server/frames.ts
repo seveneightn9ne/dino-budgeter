@@ -20,6 +20,6 @@ export function getOrCreateFrame(gid: GroupId, month: number, year: number): Pro
     });
 }
 
-export function getCurrentFrame(date: Date): Promise<Frame> | void {
-    // TODO
+export function setIncome(fid: FrameId, income: Money): Promise<void> {
+    return db.none("update frames set income = $1 where id = $2", [income, fid]);
 }
