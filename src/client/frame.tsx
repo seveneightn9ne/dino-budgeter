@@ -1,7 +1,7 @@
 import * as React from 'react';
 import {RouteComponentProps} from 'react-router';
 import {Frame as FrameType, Money } from '../shared/types';
-import { PreparedStatement } from 'pg-promise';
+import TxEntry from './txentry'
 
 type FrameProps = RouteComponentProps<{month: string, year: string}>;
 interface FrameState {
@@ -46,6 +46,7 @@ export default class Frame extends React.Component<FrameProps, FrameState> {
             <h1>{this.monthName + ' ' + this.state.frame.year}</h1>
             <p><b>Budgeted: {this.state.incomeFormatted}</b></p>
             <p>Your categories will show up here.</p>
+            <TxEntry />
         </div>;
     }
 }
