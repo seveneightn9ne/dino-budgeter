@@ -1,5 +1,5 @@
 import {Request, Response} from 'express';
-import {User, FrameId} from '../shared/types';
+import {User, FrameId, GroupId} from '../shared/types';
 import db from './db';
 import * as frames from './frames';
 import * as user from './user';
@@ -44,16 +44,21 @@ export const handle_frame_get = function(req: Request, res: Response) {
 }
 
 export const handle_transaction_post = function(req: Request, res: Response) {
-    req.checkQuery("month").notEmpty().isNumeric();
-    req.checkQuery("year").notEmpty().isNumeric();
+    req.checkBody("month").notEmpty().isNumeric();
+    req.checkBody("year").notEmpty().isNumeric();
     req.checkBody('amount').notEmpty().isString();
     req.checkBody('description').notEmpty().isString();
+    const month = Number(req.body.month);
+    const year = Number(req.body.year);
     const amount = util.validateAmount(req.body.amount);
     const tx_id = util.randomId();
+    console.log(`add tx ${month} ${year} ${amount} ${tx_id}`)
     db.tx(function* (t) {
-        const gid = yield t.one("select gid from membership where uid = $1", [req.user.uid]);
-        const frame_id: FrameId = yield* frames.getOrCreateFrame2(t, gid, Number(req.query.month), Number(req.query.year));
-        yield t.none("insert into transactions (id, fid, amount, description) values ($1, $2, $3, $3)",
+        const {gid} = yield t.one("select gid from membership where uid = $1", [req.user.uid]);
+        console.log(`got gid ${gid}`)
+        const frame_id: FrameId = yield* frames.getOrCreateFrame2(t, gid, month, year);
+        console.log(`got frame_id ${frame_id}`)
+        yield t.none("insert into transactions (id, fid, amount, description) values ($1, $2, $3, $4)",
             [tx_id, frame_id, amount, req.body.description]);
     }).then(() => {
         res.send({tx_id: tx_id});
