@@ -44,6 +44,7 @@ app.post("/playground", playground.handle_playground_post);
  */
 app.get('/api/current-email', ensureLogin.ensureLoggedIn(), api.handle_current_email_get);
 app.get('/api/groups', ensureLogin.ensureLoggedIn(), api.handle_groups_get);
+app.get('/api/frame', ensureLogin.ensureLoggedIn(), api.handle_frame_get);
 
 /* Static Routes */
 app.use(serveStatic(path.join(__dirname, '../client')));

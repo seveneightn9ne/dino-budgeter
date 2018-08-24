@@ -11,10 +11,11 @@ export function getOrCreateFrame(gid: GroupId, month: number, year: number): Pro
             } else {
                 const id: FrameId = randomId();
                 const income: Money = "0";
-                t.none("insert into frames values ($1, $2, $3, $4, $5)", [
+                return t.none("insert into frames values ($1, $2, $3, $4, $5)", [
                     id, gid, month, year, income,
-                ]);
-                return {id, gid, month, year, income};
+                ]).then(() => {
+                    return {id, gid, month, year, income};
+                });
             }
         });
     });

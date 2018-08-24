@@ -23,16 +23,16 @@ export const handle_frame_get = function(req: Request, res: Response) {
             res.sendStatus(400);
             return;
         }
-        return user.isUserInGroup(req.user, req.body.gid);
+        return user.isUserInGroup(req.user, req.query.gid);
     }).then(isUserInGroup => {
         if (!isUserInGroup) {
             res.sendStatus(401);
             return;
         }
         return frames.getOrCreateFrame(
-            req.body.gid,
-            Number(req.body.month),
-            Number(req.body.year),
+            req.query.gid,
+            Number(req.query.month),
+            Number(req.query.year),
         );
     }).then(frame => {
         res.send(frame);
