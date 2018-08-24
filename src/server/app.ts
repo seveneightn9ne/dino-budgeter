@@ -12,6 +12,8 @@ import * as playground from './playground';
 import validator from 'express-validator';
 import * as ensureLogin from 'connect-ensure-login';
 import * as api from './api';
+import connectPgSimple from 'connect-pg-simple';
+import db from './db';
 
 const app = express();
 app.use(bodyParser.json());
@@ -19,8 +21,15 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(validator());
 app.use(cookieParser.default());
 app.use(morgan('combined'));
+const pgSession = connectPgSimple(session);
 app.use(session({
-  resave: true,
+  store: new pgSession({
+    pgPromise: db,
+  }),
+  cookie: {
+    secure: false // TODO
+  },
+  resave: true, // TODO
   saveUninitialized: true,
   secret: "TODO", //TODO
 }));
@@ -45,6 +54,8 @@ app.post("/playground", playground.handle_playground_post);
 app.get('/api/current-email', ensureLogin.ensureLoggedIn(), api.handle_current_email_get);
 app.get('/api/groups', ensureLogin.ensureLoggedIn(), api.handle_groups_get);
 app.get('/api/frame/:month/:year', ensureLogin.ensureLoggedIn(), api.handle_frame_get);
+app.get('/api/frame', ensureLogin.ensureLoggedIn(), api.handle_frame_get);
+app.post('/api/transaction', ensureLogin.ensureLoggedIn(), api.handle_transaction_post)
 
 /* Static Routes */
 app.use(serveStatic(path.join(__dirname, '../client')));

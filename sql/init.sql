@@ -4,6 +4,14 @@ create table if not exists playground (
   foo varchar (50) primary key
 );
 
+CREATE TABLE "session" (
+  "sid" varchar NOT NULL COLLATE "default",
+	"sess" json NOT NULL,
+	"expire" timestamp(6) NOT NULL
+)
+WITH (OIDS=FALSE);
+ALTER TABLE "session" ADD CONSTRAINT "session_pkey" PRIMARY KEY ("sid") NOT DEFERRABLE INITIALLY IMMEDIATE;
+
 create table if not exists users (
   uid char(32) primary key,
   email varchar(255) unique not null,
@@ -34,7 +42,7 @@ create table if not exists frames (
 create table if not exists categories (
   id char(32) not null,
   fid char(32) not null references frames,
-  alive bool not null,
+  alive bool not null default true,
   name text not null,
   ctime timestamp not null default current_timestamp,
   primary key (fid, id)
@@ -44,7 +52,9 @@ create table if not exists transactions (
   id char(32) primary key,
   fid char(32) not null references frames, -- transaction always has a frame, but may not have a category yet
   category char(32),
-  alive bool not null,
+  amount text not null,
+  description text not null,
+  alive bool not null default true,
   ctime timestamp not null default current_timestamp,
   foreign key (category, fid) references categories
 );
