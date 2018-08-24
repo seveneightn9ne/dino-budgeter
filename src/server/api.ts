@@ -15,8 +15,8 @@ export const handle_groups_get = function(req: Request, res: Response) {
 }
 
 export const handle_frame_get = function(req: Request, res: Response) {
-    req.checkQuery("month").isNumeric();
-    req.checkQuery("year").isNumeric();
+    req.checkParams("month").isNumeric();
+    req.checkParams("year").isNumeric();
     req.getValidationResult().then((result) => {
         if (!result.isEmpty()) {
             res.sendStatus(400);
@@ -26,8 +26,8 @@ export const handle_frame_get = function(req: Request, res: Response) {
         return user.getDefaultGroup(req.user).then((gid) => {
             return frames.getOrCreateFrame(
                 gid,
-                Number(req.query.month),
-                Number(req.query.year),
+                Number(req.params.month),
+                Number(req.params.year),
             );
         });
     }).then(frame => {

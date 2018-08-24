@@ -27,7 +27,7 @@ export default class Frame extends React.Component<FrameProps, FrameState> {
     }
 
     initializeFrame(): Promise<FrameType> {
-        const path = '/api/frame?month=' + this.month + '&year=' + this.year;
+        const path = '/api/frame/' + this.month + '/' + this.year;
         return fetch(path).then((response) => {
             return response.json();
         }).then(response => {
