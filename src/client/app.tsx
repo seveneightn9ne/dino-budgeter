@@ -1,10 +1,10 @@
 import * as React from 'react';
-import { BrowserRouter, Switch, Route, Link, RouteComponentProps } from 'react-router-dom'
-import { GroupId, Frame } from '../shared/types';
+import { GroupId, Frame as FrameType } from '../shared/types';
+import Frame from './frame';
 
 interface AppState {
     group?: GroupId;
-    frame?: Frame;
+    frame?: FrameType;
 }
 
 //type AppProps = RouteComponentProps<{group_id?: string}>;
@@ -21,7 +21,7 @@ export default class App extends React.Component<{}, AppState> {
         })
     }
 
-    initializeFrame(gid: GroupId): Promise<Frame> {
+    initializeFrame(gid: GroupId): Promise<FrameType> {
         const today = new Date();
         const month = today.getMonth();
         const year = today.getFullYear();
@@ -29,7 +29,7 @@ export default class App extends React.Component<{}, AppState> {
         return fetch(path).then((response) => {
             return response.json();
         }).then(response => {
-            const frame = response as Frame;
+            const frame = response as FrameType;
             this.setState({frame});
             return frame;
         });
@@ -49,14 +49,10 @@ export default class App extends React.Component<{}, AppState> {
         })
     }
     render() {
-        if (!this.state.group) {
-            console.log("there is no group");
+        if (!this.state.frame) {
+            console.log("there is no frame");
             return null;
         }
-        return (
-        <div>
-            Welcome to the app. Your group is {this.state.group}.
-        </div>
-        );
+        return <Frame frame={this.state.frame} />;
     }
 }
