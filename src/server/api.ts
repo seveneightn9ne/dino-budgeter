@@ -48,6 +48,7 @@ export const handle_transaction_post = function(req: Request, res: Response) {
     req.checkBody("year").notEmpty().isNumeric();
     req.checkBody('amount').notEmpty().isString();
     req.checkBody('description').notEmpty().isString();
+    // TODO actually do the validation
     const month = Number(req.body.month);
     const year = Number(req.body.year);
     const amount = util.validateAmount(req.body.amount);
