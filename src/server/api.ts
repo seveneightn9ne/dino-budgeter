@@ -15,7 +15,6 @@ export const handle_groups_get = function(req: Request, res: Response) {
 }
 
 export const handle_frame_get = function(req: Request, res: Response) {
-    req.checkQuery("gid").notEmpty();
     req.checkQuery("month").isNumeric();
     req.checkQuery("year").isNumeric();
     req.getValidationResult().then((result) => {
@@ -23,17 +22,14 @@ export const handle_frame_get = function(req: Request, res: Response) {
             res.sendStatus(400);
             return;
         }
-        return user.isUserInGroup(req.user, req.query.gid);
-    }).then(isUserInGroup => {
-        if (!isUserInGroup) {
-            res.sendStatus(401);
-            return;
-        }
-        return frames.getOrCreateFrame(
-            req.query.gid,
-            Number(req.query.month),
-            Number(req.query.year),
-        );
+        // TODO - combine getDefaultGroup with getOrCreateFrame
+        return user.getDefaultGroup(req.user).then((gid) => {
+            return frames.getOrCreateFrame(
+                gid,
+                Number(req.query.month),
+                Number(req.query.year),
+            );
+        });
     }).then(frame => {
         res.send(frame);
     }).catch(err => {

@@ -8,6 +8,10 @@ export function getGroups(user: User): Promise<GroupId[]> {
     });
 }
 
+export function getDefaultGroup(user: User): Promise<GroupId> {
+    return getGroups(user).then(groups => groups[0]);
+}
+
 export function isUserInGroup(user: User, group: GroupId): Promise<boolean> {
     return db.one("select count(*) > 0 as exists from membership where uid = $1 and gid = $2", [user.uid, group]).then(row => {
         return row.exists;
