@@ -23,33 +23,27 @@ create table if not exists membership (
 );
 
 create table if not exists frames (
+  id char(32) not null primary key,
   gid char(32) not null references groups,
-  frame int not null,
-  primary key (gid, frame)
-);
-
-create table if not exists income (
-  gid char(32) not null references groups,
-  frame int not null,
+  month int not null,
+  year int not null,
   income text not null,
-  primary key (gid, frame)
+  unique (gid, year, month)
 );
 
 create table if not exists categories (
-  gid char(32) not null references groups,
   id char(32) not null,
-  frame int not null,
+  fid char(32) not null references frames,
   alive bool not null,
   name text not null,
   ctime timestamp not null default current_timestamp,
-  primary key (gid, id, frame),
-  unique (id, frame)
+  primary key (fid, id),
 );
 
 create table if not exists transactions (
   id char(32) primary key,
-  gid char(32) not null references groups,
-  frame int not null,
+  fid char(32) not null references frames, -- transaction always has a frame, but may not have a category yet
+  category char(32) references categories,
   alive bool not null,
   ctime timestamp not null default current_timestamp
 );

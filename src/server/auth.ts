@@ -1,10 +1,10 @@
 import passport from 'passport';
 import {Strategy as LocalStrategy} from 'passport-local';
 import {Request, Response} from 'express';
-import randomstring from 'randomstring';
 import {User} from '../shared/types';
 import bcrypt from 'bcrypt';
 import db from './db';
+import {randomId} from './util';
 
 passport.serializeUser(function(user: User, cb) {
     cb(null, user.uid);
@@ -41,6 +41,7 @@ export const handle_login_post = passport.authenticate('local', {
 export const handle_signup_post = function(req: Request, res: Response) {
     req.checkBody("username").isEmail();
     req.checkBody("password").notEmpty();
+    const email = req.body.username;
     req.getValidationResult().then((result) => {
         const errors = result.mapped();
         if (errors['username']) {
@@ -51,20 +52,22 @@ export const handle_signup_post = function(req: Request, res: Response) {
             res.redirect('/signup/no-password');
             return;
         }
-        const email = req.body.username;
-        const password = req.body.password;
-        db.one("select 1 from users where email=$1", email).then(() => {
+        return db.one("select count(*) > 0 as exists from users where email=$1", email);
+    }).then((row) => {
+        if (row.exists){
             res.redirect('/signup/user-exists');
-        }).catch(() => {
-            // Good - the user doesn't exist already
+        } else {
+            const password = req.body.password;
             const password_hash = bcrypt.hashSync(password, 10);
-            const user_id = randomstring.generate(32);
-            const group_id = randomstring.generate(32);
-            db.none("insert into users values ($1, $2, $3)", [user_id, email, password_hash]);
-            db.none("insert into groups values ($1)", [group_id]);
-            db.none("insert into membership values ($1, $2)", [user_id, group_id]);
-            passport.authenticate('local', {successRedirect: '/app'});
-            res.redirect("/app/" + group_id);
-        });
+            const user_id = randomId();
+            const group_id = randomId();
+            db.tx(function * (t) {
+                yield t.none("insert into users values ($1, $2, $3)", [user_id, email, password_hash]);
+                yield t.none("insert into groups values ($1)", [group_id]);
+                yield t.none("insert into membership (uid, gid) values ($1, $2)", [user_id, group_id]);
+            }).then(() => {
+                passport.authenticate('local', {successRedirect: '/app'})(req, res);
+            });
+        }
     });
 }
