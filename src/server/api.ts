@@ -1,9 +1,5 @@
 import {Request, Response} from 'express';
-<<<<<<< HEAD
-import {User, FrameId, GroupId} from '../shared/types';
-=======
 import {User} from '../shared/types';
->>>>>>> categories show up
 import db from './db';
 import * as frames from './frames';
 import * as user from './user';

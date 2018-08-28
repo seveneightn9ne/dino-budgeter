@@ -1,11 +1,8 @@
 import * as React from 'react';
 import {RouteComponentProps} from 'react-router';
 import {Frame as FrameType, Money } from '../shared/types';
-<<<<<<< HEAD
 import TxEntry from './txentry'
-=======
 import * as frames from '../shared/frames';
->>>>>>> categories show up
 
 type FrameProps = RouteComponentProps<{month: string, year: string}>;
 interface FrameState {
