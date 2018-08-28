@@ -1,7 +1,8 @@
 
 export type UserId = string;
 export type GroupId = string;
-export type FrameId = string;
+export type CategoryId = string;
+export type FrameIndex = number;
 
 // Corresponds to `users` db table
 export interface User {
@@ -12,11 +13,19 @@ export interface User {
 
 export type Money = string;
 
-// Corresponds to `frames` db table
-export interface Frame {
-    id: FrameId;
+export interface Category {
+    id: CategoryId;
     gid: GroupId;
-    month: number;
-    year: number;
+    frame: FrameIndex;
+    alive: boolean;
+    name: string;
+    ordering: number;
+}
+
+// Corresponds to `frames` db table joined on `categories`
+export interface Frame {
+    gid: GroupId;
+    index: FrameIndex;
     income: Money;
+    categories: Category[];
 }

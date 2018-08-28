@@ -31,32 +31,34 @@ create table if not exists membership (
 );
 
 create table if not exists frames (
-  id char(32) not null primary key,
   gid char(32) not null references groups,
-  month int not null,
-  year int not null,
+  index int not null,
   income text not null,
-  unique (gid, year, month)
+  primary key (gid, index)
 );
 
 create table if not exists categories (
-  id char(32) not null,
-  fid char(32) not null references frames,
+  id char(32) not null, -- there are many entries with the same id
+  gid char(32) not null references groups,
+  frame int not null,
   alive bool not null default true,
   name text not null,
+  ordering int not null,
   ctime timestamp not null default current_timestamp,
-  primary key (fid, id)
+  primary key (frame, id),
+  foreign key (gid, frame) references frames
 );
 
 create table if not exists transactions (
   id char(32) primary key,
-  fid char(32) not null references frames, -- transaction always has a frame, but may not have a category yet
+  gid char(32) not null references groups,
+  frame int not null, -- transaction always has a frame, but may not have a category yet
   category char(32),
   amount text not null,
   description text not null,
   alive bool not null default true,
   ctime timestamp not null default current_timestamp,
-  foreign key (category, fid) references categories
+  foreign key (frame, category) references categories
 );
 
 commit;

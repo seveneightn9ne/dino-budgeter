@@ -1,5 +1,9 @@
 import {Request, Response} from 'express';
+<<<<<<< HEAD
 import {User, FrameId, GroupId} from '../shared/types';
+=======
+import {User} from '../shared/types';
+>>>>>>> categories show up
 import db from './db';
 import * as frames from './frames';
 import * as user from './user';
@@ -27,13 +31,12 @@ export const handle_frame_get = function(req: Request, res: Response) {
             res.sendStatus(400);
             return;
         }
-        // TODO - combine getDefaultGroup with getOrCreateFrame
-        return user.getDefaultGroup(req.user).then((gid) => {
-            return frames.getOrCreateFrame(
-                gid,
-                Number(req.params.month),
-                Number(req.params.year),
-            );
+        return db.tx(t => {
+            return user.getDefaultGroup(req.user, t).then(gid => {
+                return frames.getOrCreateFrame(gid, frames.index(
+                    Number(req.params.month),
+                    Number(req.params.year)));
+            });
         });
     }).then(frame => {
         res.send(frame);
@@ -53,14 +56,12 @@ export const handle_transaction_post = function(req: Request, res: Response) {
     const year = Number(req.body.year);
     const amount = util.validateAmount(req.body.amount);
     const tx_id = util.randomId();
-    console.log(`add tx ${month} ${year} ${amount} ${tx_id}`)
-    db.tx(function* (t) {
-        const {gid} = yield t.one("select gid from membership where uid = $1", [req.user.uid]);
-        console.log(`got gid ${gid}`)
-        const frame_id: FrameId = yield* frames.getOrCreateFrame2(t, gid, month, year);
-        console.log(`got frame_id ${frame_id}`)
-        yield t.none("insert into transactions (id, fid, amount, description) values ($1, $2, $3, $4)",
-            [tx_id, frame_id, amount, req.body.description]);
+    db.tx(t => {
+        return user.getDefaultGroup(req.user, t).then(gid => {
+            const frame_index = frames.index(req.query.month, req.query.year);
+            return t.none("insert into transactions (id, gid, frame, amount, description) values ($1, $2, $3, $4, $5)",
+                [tx_id, gid, frame_index, amount, req.body.description]);
+        });
     }).then(() => {
         res.send({tx_id: tx_id});
     }).catch(err => {
