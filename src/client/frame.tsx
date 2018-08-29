@@ -1,13 +1,16 @@
 import * as React from 'react';
 import {RouteComponentProps} from 'react-router';
-import {Frame as FrameType, Money } from '../shared/types';
+import {Frame as FrameType, Money, Category, CategoryId } from '../shared/types';
 import TxEntry from './txentry'
+import NewCategory from './newcategory';
+import CategoryRow from './categoryrow';
 import * as frames from '../shared/frames';
 
 type FrameProps = RouteComponentProps<{month: string, year: string}>;
 interface FrameState {
     frame?: FrameType;
     incomeFormatted?: string;
+    balanceFormatted?: string;
 }
 
 /** /app/:month/:year */
@@ -34,9 +37,25 @@ export default class Frame extends React.Component<FrameProps, FrameState> {
         }).then(response => {
             const frame = response as FrameType;
             const incomeFormatted = formatMoney(frame.income);
-            this.setState({frame, incomeFormatted});
+            const balanceFormatted = formatMoney(frame.balance)
+            this.setState({frame, incomeFormatted, balanceFormatted});
             return frame;
         });
+    }
+
+    onAddCategory(category: Category) {
+        const newFrame = {...this.state.frame};
+        const newCategories = [...this.state.frame.categories];
+        newCategories.push(category);
+        newFrame.categories = newCategories;
+        this.setState({frame: newFrame});
+    }
+
+    onDeleteCategory(id: CategoryId) {
+        const newFrame = {...this.state.frame};
+        const newCategories = this.state.frame.categories.filter(c => c.id != id);
+        newFrame.categories = newCategories;
+        this.setState({frame: newFrame});
     }
 
     render() {
@@ -44,13 +63,16 @@ export default class Frame extends React.Component<FrameProps, FrameState> {
             return null;
         }
         const cs = this.state.frame.categories.map(c => 
-            <div key={c.id}>{c.name}</div>
+            <CategoryRow key={c.id} category={c} onDeleteCategory={this.onDeleteCategory.bind(this)} />
         );
         console.log(this.state.frame);
         return <div>
             <h1>{this.monthName + ' ' + this.year}</h1>
-            <p><b>Budgeted: {this.state.incomeFormatted}</b></p>
-            <p>Your categories will show up here.</p>
+            <p><b>Balance: {this.state.balanceFormatted} Income: {this.state.incomeFormatted}</b></p>
+            <NewCategory frame={this.state.frame.index} onAddCategory={this.onAddCategory.bind(this)} />
+            <table><tbody>
+                {cs}
+            </tbody></table>
             <TxEntry />
         </div>;
     }

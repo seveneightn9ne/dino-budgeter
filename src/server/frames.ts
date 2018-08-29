@@ -15,61 +15,61 @@ function getOrCreateFrameInner(gid: GroupId, index: FrameIndex, t: pgPromise.ITa
         if (row) {
             console.log("frame exists");
             const frame = {...row};
-            return t.manyOrNone("select * from categories where gid = $1 and frame = $2", [gid, index]).then(rows => {
-                frame.categories = rows || [];
+            return getCategories(gid, index, t).then(cs => {
+                frame.categories = cs;
                 return frame as Frame;
             });
         } else {
             console.log("creating new frame");
-            const income: Money = "0";
-            return t.none("insert into frames values ($1, $2, $3)", [
-                 gid, index, income,
-            ]).then(() => {
-                const frame = {gid, index, income, categories: [] as Category[]};
-                return getPreviousFrame(gid, index, t).then(prevFrame => {
-                    if (!prevFrame) {
-                        console.log("no previous frame");
-                        return createDefaultCategories(gid, frame.index, t);
-                    } else {
-                        console.log("copying categories from previous frame");
-                        return copyCategories(gid, frame.index, prevFrame.index, t);
-                    }
-                }).then((cs: Category[]) => {
-                    frame.categories = cs;
-                    return frame;
+            const frame = {gid, index, balance: "0", income: "0", categories: [] as Category[]};
+            return getPreviousFrame(gid, index, t).then(prevFrame => {
+                if (prevFrame) {
+                    frame.balance = prevFrame.balance + prevFrame.income;
+                    frame.income = prevFrame.income;
+                    return getCategories(gid, prevFrame.index, t).then(cs => {
+                        frame.categories = cs.map(old_category => {
+                            return {...old_category, frame: frame.index, balance: old_category.budget};
+                        })
+                    });
+                } else {
+                    console.log("no previous frame");
+                    let i = -1;
+                    frame.categories = DEFAULT_CATEGORIES.map(c => {
+                        i += 1;
+                        return {
+                            name: c,
+                            gid: gid,
+                            frame: index,
+                            alive: true,
+                            id: util.randomId(),
+                            ordering: i,
+                            budget: "0",
+                            balance: "0",
+                        }
+                    });
+                }
+            }).then(() => {
+                // Save the new frame and categories
+                return t.none("insert into frames (gid, index, balance, income) values ($1, $2, $3, $4)", [
+                    frame.gid, frame.index, frame.balance, frame.income,
+                ]).then(() => {
+                    return Promise.all(frame.categories.map(c => {
+                        return t.none("insert into categories (id, gid, frame, name, ordering, budget, balance) values ($1, $2, $3, $4, $5, $6, $7)", [
+                            c.id, c.gid, c.frame, c.name, c.ordering, c.budget, c.balance,
+                        ]);
+                    })).then(() => {
+                        return frame;
+                    });
                 });
+
+                
             });
         }
     });
 }
 
-function createDefaultCategories(gid: GroupId, frame: FrameIndex, t: pgPromise.ITask<{}>): Promise<Category[]> {
-    const cs: Category[] = [];
-    let i = 0;
-    return Promise.all(DEFAULT_CATEGORIES.map(c => {
-        const id = util.randomId();
-        const this_i = i;
-        i++;
-        return t.none("insert into categories (id, gid, frame, name, ordering) values ($1, $2, $3, $4, $5)", [
-            id, gid, frame, c, this_i,
-        ]).then(() => {
-            cs.push({
-                id, gid, frame,
-                alive: true,
-                name: c,
-                ordering: this_i,
-            });
-        });
-    })).then(() => {
-        return cs;
-    });
-}
-
-function copyCategories(gid: GroupId, frame: FrameIndex, copyFrom: FrameIndex, t: pgPromise.ITask<{}>): Promise<Category[]> {
-    return t.manyOrNone("insert into categories (id, gid, frame, name, ordering) " +
-    "select id, $1, $2, name, ordering from categories where gid = $1 and frame = $3 returning *", [
-        gid, frame, copyFrom,
-    ]).then(rows => {
+function getCategories(gid: GroupId, frame: FrameIndex, t: pgPromise.ITask<{}>): Promise<Category[]> {
+    return t.manyOrNone("select * from categories where gid = $1 and frame = $2 and alive order by ordering asc", [gid, frame]).then(rows => {
         return rows || [];
     });
 }

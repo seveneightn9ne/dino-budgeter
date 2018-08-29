@@ -1,5 +1,10 @@
 body {
-    background-color: #dddddd;
+    background-color: #eeeeee;
     color: #333333;
-    font-size: 48px;
+    font-size: 16px;
+}
+
+#root {
+    max-width: 1000px;
+    margin: 40px 80px;
 }

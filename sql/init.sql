@@ -33,6 +33,7 @@ create table if not exists membership (
 create table if not exists frames (
   gid char(32) not null references groups,
   index int not null,
+  balance text not null,
   income text not null,
   primary key (gid, index)
 );
@@ -45,6 +46,8 @@ create table if not exists categories (
   name text not null,
   ordering int not null,
   ctime timestamp not null default current_timestamp,
+  budget text not null,
+  balance text not null,
   primary key (frame, id),
   foreign key (gid, frame) references frames
 );

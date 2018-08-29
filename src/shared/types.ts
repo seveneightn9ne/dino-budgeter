@@ -20,12 +20,15 @@ export interface Category {
     alive: boolean;
     name: string;
     ordering: number;
+    budget: Money;
+    balance: Money;
 }
 
 // Corresponds to `frames` db table joined on `categories`
 export interface Frame {
     gid: GroupId;
     index: FrameIndex;
+    balance: Money;
     income: Money;
     categories: Category[];
 }
