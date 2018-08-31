@@ -48,7 +48,7 @@ export default class NewCategory extends React.Component<NewCategoryProps, NewCa
 
     render() {
         if (!this.state.expanded) {
-            return <a onClick={() => this.expand()}>+ Category</a>;
+            return <a onClick={() => this.expand()} href="#">+ Category</a>;
         }
         return <div>
             <input type="text" placeholder="New Category" value={this.state.value} onChange={(e) => this.updateValue(e)} />

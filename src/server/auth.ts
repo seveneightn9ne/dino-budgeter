@@ -4,7 +4,7 @@ import {Request, Response} from 'express';
 import {User} from '../shared/types';
 import bcrypt from 'bcrypt';
 import db from './db';
-import {randomId} from './util';
+import {randomId} from '../shared/util';
 
 passport.serializeUser(function(user: User, cb) {
     cb(null, user.uid);

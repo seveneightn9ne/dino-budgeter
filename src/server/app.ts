@@ -58,6 +58,7 @@ app.get('/api/frame', ensureLogin.ensureLoggedIn(), api.handle_frame_get);
 app.post('/api/transaction', ensureLogin.ensureLoggedIn(), api.handle_transaction_post);
 app.post('/api/category', ensureLogin.ensureLoggedIn(), api.handle_category_post);
 app.delete('/api/category', ensureLogin.ensureLoggedIn(), api.handle_category_delete);
+app.post('/api/category/budget', ensureLogin.ensureLoggedIn(), api.handle_category_budget_post);
 
 /* Static Routes */
 app.use(serveStatic(path.join(__dirname, '../client')));

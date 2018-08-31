@@ -48,7 +48,7 @@ create table if not exists categories (
   ctime timestamp not null default current_timestamp,
   budget text not null,
   balance text not null,
-  primary key (frame, id),
+  primary key (id, frame),
   foreign key (gid, frame) references frames
 );
 

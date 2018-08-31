@@ -1,10 +1,11 @@
 import * as React from 'react';
 import {RouteComponentProps} from 'react-router';
-import {Frame as FrameType, Money, Category, CategoryId } from '../shared/types';
+import {Frame as FrameType, Category, CategoryId } from '../shared/types';
 import TxEntry from './txentry'
 import NewCategory from './newcategory';
 import CategoryRow from './categoryrow';
 import * as frames from '../shared/frames';
+import * as util from './util';
 
 type FrameProps = RouteComponentProps<{month: string, year: string}>;
 interface FrameState {
@@ -22,7 +23,7 @@ export default class Frame extends React.Component<FrameProps, FrameState> {
       super(props);
       this.month = Number(props.match.params.month) - 1;
       this.year = Number(props.match.params.year);
-      this.monthName = MONTHS[this.month];
+      this.monthName = util.MONTHS[this.month];
       this.state = {};
     }
 
@@ -36,8 +37,8 @@ export default class Frame extends React.Component<FrameProps, FrameState> {
             return response.json();
         }).then(response => {
             const frame = response as FrameType;
-            const incomeFormatted = formatMoney(frame.income);
-            const balanceFormatted = formatMoney(frame.balance)
+            const incomeFormatted = util.formatMoney(frame.income);
+            const balanceFormatted = util.formatMoney(frame.balance)
             this.setState({frame, incomeFormatted, balanceFormatted});
             return frame;
         });
@@ -58,12 +59,27 @@ export default class Frame extends React.Component<FrameProps, FrameState> {
         this.setState({frame: newFrame});
     }
 
+    onChangeCategory(newCategory: Category) {
+        const newFrame = {...this.state.frame};
+        const newCategories: Category[] = this.state.frame.categories.map(c => {
+            if (c.id == newCategory.id) {
+                return newCategory;
+            } else {
+                return c;
+            }
+        });
+        newFrame.categories = newCategories;
+        this.setState({frame: newFrame});
+    }
+
     render() {
         if (!this.state.frame) {
             return null;
         }
         const cs = this.state.frame.categories.map(c => 
-            <CategoryRow key={c.id} category={c} onDeleteCategory={this.onDeleteCategory.bind(this)} />
+            <CategoryRow key={c.id} category={c} 
+                onDeleteCategory={this.onDeleteCategory.bind(this)}
+                onChangeCategory={this.onChangeCategory.bind(this)} />
         );
         console.log(this.state.frame);
         return <div>
@@ -76,18 +92,4 @@ export default class Frame extends React.Component<FrameProps, FrameState> {
             <TxEntry />
         </div>;
     }
-}
-
-const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-
-function formatMoney(money: Money): string {
-    let dollars: string = money;
-    let cents = "00";
-    if (money.indexOf(".") > -1) {
-        [dollars, cents] = money.split(".");
-    }
-    if (cents.length < 2) {
-        cents = cents + "0";
-    }
-    return "$" + dollars + "." + cents;
 }

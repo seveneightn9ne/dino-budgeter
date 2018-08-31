@@ -5,7 +5,7 @@ import * as frames from './frames';
 import * as user from './user';
 import * as categories from './categories';
 import { utils } from 'pg-promise';
-import * as util from './util';
+import * as util from '../shared/util';
 
 export const handle_current_email_get = function(req: Request, res: Response) {
     res.send({email: (req.user as User).email});
@@ -49,8 +49,6 @@ export const handle_transaction_post = function(req: Request, res: Response) {
     req.checkBody('amount').notEmpty().isString();
     req.checkBody('description').notEmpty().isString();
     // TODO actually do the validation
-    const month = Number(req.body.month);
-    const year = Number(req.body.year);
     const amount = util.validateAmount(req.body.amount);
     const tx_id = util.randomId();
     db.tx(t => {
@@ -123,6 +121,40 @@ export const handle_category_delete = function(req: Request, res: Response) {
                     });
             });
         });
+    }).catch(err => {
+        console.log(err);
+        res.sendStatus(500);
+    });
+}
+
+export const handle_category_budget_post = function(req: Request, res: Response) {
+    req.checkBody("id").notEmpty();
+    req.checkBody("frame").notEmpty().isNumeric();
+    req.checkBody("amount").notEmpty().isNumeric();
+    req.getValidationResult().then((result) => {
+        if (!result.isEmpty()) {
+            console.log(result.mapped());
+            res.sendStatus(400);
+            return;
+        }
+        const id = req.body.id;
+        const frame = req.body.frame;
+        // TODO canonicalize amount
+        const amount = req.body.amount;
+        db.tx(t => {
+            return user.getDefaultGroup(req.user, t).then(gid => {
+                return categories.getBalance(id, frame, t).then(prevBalance => {
+                    return categories.getBudget(id, frame, t).then(prevBudget => {
+                        const prevCat = {balance: prevBalance, budget: prevBudget};
+                        const newBalance = categories.updateBalanceWithBudget(prevCat, amount);
+                        // gid included to make sure user has permission to edit this category
+                        return t.none("update categories set budget = $1, balance = $2 where id = $3 and frame = $4 and gid = $5", [
+                            amount, newBalance, id, frame, gid,
+                        ]);
+                    });
+                });
+            });
+        }).then(() => res.sendStatus(200));
     }).catch(err => {
         console.log(err);
         res.sendStatus(500);

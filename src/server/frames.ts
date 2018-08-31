@@ -2,7 +2,7 @@ import {Frame, GroupId, Money, FrameIndex, Category} from '../shared/types';
 import db from './db';
 import pgPromise from 'pg-promise';
 import {DEFAULT_CATEGORIES} from './categories';
-import * as util from './util';
+import * as util from '../shared/util';
 export {index, year, month} from '../shared/frames';
 
 export function getOrCreateFrame(gid: GroupId, index: FrameIndex, t?: pgPromise.ITask<{}>): Promise<Frame> {

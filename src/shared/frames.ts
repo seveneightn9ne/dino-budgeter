@@ -1,4 +1,4 @@
-import {Frame, FrameIndex} from '../shared/types';
+import {Frame, FrameIndex} from './types';
 
 export function index(month: number, year: number): FrameIndex {
     return (year - 1970) * 12 + month;
