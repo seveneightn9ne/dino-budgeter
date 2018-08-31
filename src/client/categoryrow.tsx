@@ -49,7 +49,6 @@ export default class CategoryRow extends React.Component<CategoryRowProps, Categ
     }
 
     saveNewBudget(): void {
-        console.log("st");
         fetch('/api/category/budget', {
             method: 'POST',
             headers: {

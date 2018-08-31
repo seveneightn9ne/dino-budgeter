@@ -15,7 +15,9 @@ export function validateAmount(amount: string, allowNegative?: boolean): string 
     if (!allowNegative && v.isNegative()) {
         throw new Error(`unexpected negative amount ${amount}`)
     }
-    return v.toFixed(2);
+    const result = v.toFixed(2);
+    console.log("Your number is", result);
+    return result;
 }
 
 export function add(a: Money, b: Money): Money {

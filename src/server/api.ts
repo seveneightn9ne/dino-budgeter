@@ -44,21 +44,23 @@ export const handle_frame_get = function(req: Request, res: Response) {
 }
 
 export const handle_transaction_post = function(req: Request, res: Response) {
-    req.checkBody("month").notEmpty().isNumeric();
-    req.checkBody("year").notEmpty().isNumeric();
+    req.checkBody("frame").notEmpty().isNumeric();
     req.checkBody('amount').notEmpty().isString();
     req.checkBody('description').notEmpty().isString();
     // TODO actually do the validation
     const amount = util.validateAmount(req.body.amount);
     const tx_id = util.randomId();
+    const frame_index = req.body.frame;
     db.tx(t => {
         return user.getDefaultGroup(req.user, t).then(gid => {
-            const frame_index = frames.index(req.body.month, req.body.year);
-            return Promise.all([
-                t.none("insert into transactions (id, gid, frame, amount, description) values ($1, $2, $3, $4, $5)",
-                    [tx_id, gid, frame_index, amount, req.body.description]),
-                t.none("update frames set balance = balance - $1 where gid = $2 and index = $3",
-                    [amount, gid, frame_index])]);
+            return t.one("select balance from frames where gid = $1 and index = $2", [gid, frame_index]).then(row => {
+                const newBalance = util.subtract(row.balance, amount);
+                return Promise.all([
+                    t.none("insert into transactions (id, gid, frame, amount, description) values ($1, $2, $3, $4, $5)",
+                        [tx_id, gid, frame_index, amount, req.body.description]),
+                    t.none("update frames set balance = $1 where gid = $2 and index = $3",
+                        [newBalance, gid, frame_index])]);
+            });
         });
     }).then(() => {
         res.send({tx_id: tx_id});

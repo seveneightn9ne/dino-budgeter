@@ -1,4 +1,5 @@
 import {Money} from '../shared/types';
+export * from '../shared/util';
 
 export const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 

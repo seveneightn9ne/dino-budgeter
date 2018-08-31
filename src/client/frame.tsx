@@ -1,6 +1,6 @@
 import * as React from 'react';
 import {RouteComponentProps} from 'react-router';
-import {Frame as FrameType, Category, CategoryId } from '../shared/types';
+import {Frame as FrameType, Category, CategoryId, Money} from '../shared/types';
 import TxEntry from './txentry'
 import NewCategory from './newcategory';
 import CategoryRow from './categoryrow';
@@ -19,17 +19,22 @@ export default class Frame extends React.Component<FrameProps, FrameState> {
     private month: number;
     private year: number;
     private monthName: string;
+    private index: number;
+
     constructor(props: FrameProps) {
       super(props);
       this.month = Number(props.match.params.month) - 1;
       this.year = Number(props.match.params.year);
       this.monthName = util.MONTHS[this.month];
+      this.index = frames.index(this.month, this.year);
       this.state = {};
     }
 
     componentDidMount() {
         this.initializeFrame();
     }
+
+    // TODO update the frame in the background.
 
     initializeFrame(): Promise<FrameType> {
         const path = '/api/frame/' + this.month + '/' + this.year;
@@ -72,6 +77,15 @@ export default class Frame extends React.Component<FrameProps, FrameState> {
         this.setState({frame: newFrame});
     }
 
+    onAddTransaction(amount: Money) {
+        const newFrame = {...this.state.frame};
+        newFrame.balance = util.subtract(this.state.frame.balance, amount);
+        this.setState({
+            frame: newFrame,
+            balanceFormatted: util.formatMoney(newFrame.balance),
+        });
+    }
+
     render() {
         if (!this.state.frame) {
             return null;
@@ -89,7 +103,7 @@ export default class Frame extends React.Component<FrameProps, FrameState> {
             <table><tbody>
                 {cs}
             </tbody></table>
-            <TxEntry />
+            <TxEntry frame={this.index} onAddTransaction={this.onAddTransaction.bind(this)} />
         </div>;
     }
 }
