@@ -10,8 +10,7 @@ import * as util from './util';
 type FrameProps = RouteComponentProps<{month: string, year: string}>;
 interface FrameState {
     frame?: FrameType;
-    incomeFormatted?: string;
-    balanceFormatted?: string;
+    budgeted?: Money;
 }
 
 /** /app/:month/:year */
@@ -34,6 +33,10 @@ export default class Frame extends React.Component<FrameProps, FrameState> {
         this.initializeFrame();
     }
 
+    calculateBudgeted(categories: Category[]): Money {
+        return categories.reduce((a, b) => util.add(a, b.budget), "0");
+    }
+
     // TODO update the frame in the background.
 
     initializeFrame(): Promise<FrameType> {
@@ -42,9 +45,8 @@ export default class Frame extends React.Component<FrameProps, FrameState> {
             return response.json();
         }).then(response => {
             const frame = response as FrameType;
-            const incomeFormatted = util.formatMoney(frame.income);
-            const balanceFormatted = util.formatMoney(frame.balance)
-            this.setState({frame, incomeFormatted, balanceFormatted});
+            const budgeted = this.calculateBudgeted(frame.categories);
+            this.setState({frame, budgeted});
             return frame;
         });
     }
@@ -77,12 +79,18 @@ export default class Frame extends React.Component<FrameProps, FrameState> {
         this.setState({frame: newFrame});
     }
 
-    onAddTransaction(amount: Money) {
+    onAddTransaction(amount: Money, cid: CategoryId) {
         const newFrame = {...this.state.frame};
         newFrame.balance = util.subtract(this.state.frame.balance, amount);
+        newFrame.categories = newFrame.categories.map(c => {
+            const newBalance = util.subtract(c.balance, amount);
+            if (c.id == cid) {
+                return {...c, balance: newBalance};
+            }
+            return c;
+        });
         this.setState({
             frame: newFrame,
-            balanceFormatted: util.formatMoney(newFrame.balance),
         });
     }
 
@@ -98,12 +106,15 @@ export default class Frame extends React.Component<FrameProps, FrameState> {
         console.log(this.state.frame);
         return <div>
             <h1>{this.monthName + ' ' + this.year}</h1>
-            <p><b>Balance: {this.state.balanceFormatted} Income: {this.state.incomeFormatted}</b></p>
+            <p><b>Balance: {util.formatMoney(this.state.frame.balance)}
+                Income: {util.formatMoney(this.state.frame.income)}
+                Budgeted: {util.formatMoney(this.state.budgeted)}</b></p>
             <NewCategory frame={this.state.frame.index} onAddCategory={this.onAddCategory.bind(this)} />
             <table><tbody>
                 {cs}
             </tbody></table>
-            <TxEntry frame={this.index} onAddTransaction={this.onAddTransaction.bind(this)} />
+            <TxEntry frame={this.index} onAddTransaction={this.onAddTransaction.bind(this)}
+                categories={this.state.frame.categories} />
         </div>;
     }
 }

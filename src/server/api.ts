@@ -51,15 +51,23 @@ export const handle_transaction_post = function(req: Request, res: Response) {
     const amount = util.validateAmount(req.body.amount);
     const tx_id = util.randomId();
     const frame_index = req.body.frame;
+    const category = req.body.category;
     db.tx(t => {
         return user.getDefaultGroup(req.user, t).then(gid => {
             return t.one("select balance from frames where gid = $1 and index = $2", [gid, frame_index]).then(row => {
                 const newBalance = util.subtract(row.balance, amount);
-                return Promise.all([
+                const work = [
                     t.none("insert into transactions (id, gid, frame, amount, description) values ($1, $2, $3, $4, $5)",
                         [tx_id, gid, frame_index, amount, req.body.description]),
                     t.none("update frames set balance = $1 where gid = $2 and index = $3",
-                        [newBalance, gid, frame_index])]);
+                        [newBalance, gid, frame_index])];
+                return t.oneOrNone("select balance from categories where id = $1 and frame = $2", [category, frame_index]).then(row => {
+                    if (row) {
+                        const newBalance = util.subtract(row.balance, amount);
+                        work.push(t.none("update categories set balance = $1 where id = $2 and frame = $3", [newBalance, category, frame_index]));
+                    }
+                    return t.batch(work);
+                });
             });
         });
     }).then(() => {
