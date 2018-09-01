@@ -3,7 +3,7 @@ import db from './db';
 import pgPromise from 'pg-promise';
 import {DEFAULT_CATEGORIES} from './categories';
 import * as util from '../shared/util';
-export {index, year, month} from '../shared/frames';
+export * from '../shared/frames';
 
 export function getOrCreateFrame(gid: GroupId, index: FrameIndex, t?: pgPromise.ITask<{}>): Promise<Frame> {
     return t ? getOrCreateFrameInner(gid, index, t) : db.tx(t => getOrCreateFrameInner(gid, index, t));
@@ -65,6 +65,18 @@ function getOrCreateFrameInner(gid: GroupId, index: FrameIndex, t: pgPromise.ITa
                 
             });
         }
+    });
+}
+
+export function getIncome(gid: GroupId, index: FrameIndex, t: pgPromise.ITask<{}>): Promise<Money> {
+    return t.oneOrNone("select income from frames where gid = $1 and index = $2", [gid, index]).then(row => {
+        return row ? row.income : "0";
+    });
+}
+
+export function getBalance(gid: GroupId, index: FrameIndex, t: pgPromise.ITask<{}>): Promise<Money> {
+    return t.oneOrNone("select balance from frames where gid = $1 and index = $2", [gid, index]).then(row => {
+        return row ? row.balance : "0";
     });
 }
 

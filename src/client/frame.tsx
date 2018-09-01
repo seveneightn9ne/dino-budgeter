@@ -104,7 +104,7 @@ export default class Frame extends React.Component<FrameProps, FrameState> {
         });
     }
 
-    onChangeIncome(event: React.ChangeEvent<HTMLInputElement>) {
+    onChangeIncome(event: React.ChangeEvent<HTMLInputElement>): void {
         this.setState({setIncome: event.target.value});
     }
 
@@ -122,16 +122,19 @@ export default class Frame extends React.Component<FrameProps, FrameState> {
             }),
         }).then(() => {
             const newFrame = {...this.state.frame};
+            newFrame.balance = frames.updateBalanceWithIncome(newFrame.balance, newFrame.income, setIncome);
             newFrame.income = setIncome;
             this.setState({frame: newFrame});
         });
-        return true;
+        event.preventDefault();
     }
 
     render() {
         if (!this.state.frame) {
             return null;
         }
+
+        console.log(this.state.frame);
 
         if (util.cmp(this.state.frame.income, "0") == 0) {
             return <div className="splash">
@@ -150,7 +153,6 @@ export default class Frame extends React.Component<FrameProps, FrameState> {
                 onChangeCategory={this.onChangeCategory.bind(this)} />
         );
         const ais = this.getAIs().map(ai => <AIComponent ai={ai} key={ai.message()} />);
-        console.log(this.state.frame);
         // income - spent = balance;
         // spent = income - balance;
         return <div>

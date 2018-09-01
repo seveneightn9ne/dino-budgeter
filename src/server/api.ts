@@ -187,8 +187,11 @@ export const handle_income_post = async function(req: Request, res: Response): P
     const frame = Number(req.body.frame);
     await db.tx(async t => {
         const gid = await user.getDefaultGroup(req.user, t);
-        await t.none("update frames set income = $1 where gid = $2 and index = $3",
-            [income, gid, frame]);
+        const prevIncome = await frames.getIncome(gid, frame, t);
+        const prevBalance = await frames.getBalance(gid, frame, t);
+        const newBalance = frames.updateBalanceWithIncome(prevBalance, prevIncome, income);
+        await t.none("update frames set income = $1, balance = $2 where gid = $3 and index = $4",
+            [income, newBalance, gid, frame]);
         res.sendStatus(200);
     });
 }
