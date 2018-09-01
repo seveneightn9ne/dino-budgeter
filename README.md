@@ -1,6 +1,25 @@
 # budgeter
 Budgeting webapp.
 
+## Development
+
+See [Database setup] first.
+
+Build the stuff
+```
+npm run build
+```
+
+Watching compiler for the server
+```
+npm run watch-server
+```
+
+Restarting server
+```
+npm run watch-serve
+```
+
 ## Database setup
 (ubuntu)
 

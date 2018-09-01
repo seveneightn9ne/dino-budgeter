@@ -55,6 +55,31 @@ export const handle_frame_get = async function(req: Request, res: Response): Pro
     });
 }
 
+export const handle_transactions_get = async function(req: Request, res: Response): Promise<void> {
+    req.checkQuery("frame").notEmpty().isNumeric();
+    let result = await req.getValidationResult()
+    if (!result.isEmpty()) {
+        const status = 400;
+        res.status(status).send({
+            "error": {
+                "status": status,
+                "message": "invalid parameters",
+                "details": result.mapped(),
+            }
+        });
+        return
+    }
+    const transactions = await db.tx(async t => {
+        const gid = await user.getDefaultGroup(req.user, t);
+        const rows = t.many("select id,category,amount,description,ctime \
+        from transactions \
+        where gid=$1 \
+        and alive", [gid]);
+        return rows
+    })
+    res.json({transactions});
+}
+
 export const handle_transaction_post = function(req: Request, res: Response) {
     req.checkBody("frame").notEmpty().isNumeric();
     req.checkBody('amount').notEmpty().isString();

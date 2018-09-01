@@ -55,6 +55,7 @@ app.get('/api/current-email', ensureLogin.ensureLoggedIn(), api.handle_current_e
 app.get('/api/groups', ensureLogin.ensureLoggedIn(), api.handle_groups_get);
 app.get('/api/frame/:month/:year', ensureLogin.ensureLoggedIn(), api.wrap(api.handle_frame_get));
 app.get('/api/frame', ensureLogin.ensureLoggedIn(), api.wrap(api.handle_frame_get));
+app.get('/api/transactions', ensureLogin.ensureLoggedIn(), api.wrap(api.handle_transactions_get))
 app.post('/api/transaction', ensureLogin.ensureLoggedIn(), api.handle_transaction_post);
 app.post('/api/category', ensureLogin.ensureLoggedIn(), api.handle_category_post);
 app.delete('/api/category', ensureLogin.ensureLoggedIn(), api.handle_category_delete);
