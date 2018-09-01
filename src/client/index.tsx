@@ -1,6 +1,7 @@
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import { BrowserRouter, Switch, Route, Link } from 'react-router-dom'
+import NoRoute from './noroute';
 import App from './app';
 
 const Home = () => <div>
@@ -50,6 +51,7 @@ class Index extends React.Component {
             <Route path="/login" component={Login} />
             <Route path="/signup" component={Signup} />
             <Route path="/app" component={App} />
+            <Route path="*" component={NoRoute} />
         </Switch>
         );
     }
