@@ -1,6 +1,8 @@
 import * as React from 'react';
 import { GroupId, Frame as FrameType } from '../shared/types';
 import Frame from './frame';
+import Transactions from './transactions';
+import NoRoute from './noroute';
 import { Switch, Route, Redirect } from 'react-router';
 
 interface AppState {
@@ -25,6 +27,8 @@ export default class App extends React.Component<{}, AppState> {
         return <Switch>
             <Redirect exact from="/app" to={"/app/" + this.currentMonth + "/" + this.currentYear} />
             <Route path="/app/:month/:year" component={Frame} />
+            <Route path="/app/transactions/:frame" component={Transactions} />
+            <Route path="/apq" component={NoRoute} />
         </Switch>;
     }
 }

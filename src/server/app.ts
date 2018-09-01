@@ -72,6 +72,7 @@ const index = (req: Request, res: Response) =>
 app.get('/', ensureLogin.ensureLoggedOut('/app'), index);
 app.get('/app', ensureLogin.ensureLoggedIn(''), index);
 app.get('/app/:month/:year', ensureLogin.ensureLoggedIn(''), index);
+app.get('/app/transactions/:frame', ensureLogin.ensureLoggedIn(''), index);
 
 // Anything not matched above, use the main react app
 app.get('*', index);
