@@ -7,6 +7,22 @@ import * as categories from './categories';
 import { utils } from 'pg-promise';
 import * as util from '../shared/util';
 
+// Wrap an async handler to be called synchronously
+export const wrap = function(handler: (req: Request, res: Response)=>Promise<void>): (req: Request, res: Response)=>void {
+    return function(req: Request, res: Response, ) {
+        handler(req, res).catch((err) => {
+            console.log("Error (caught)", err);
+            const status = 500;
+            res.status(status).send({
+                "error": {
+                    "status": status,
+                    "message": "internal server error",
+                }
+            });
+        })
+    };
+}
+
 export const handle_current_email_get = function(req: Request, res: Response) {
     res.send({email: (req.user as User).email});
 }
@@ -20,26 +36,22 @@ export const handle_groups_get = function(req: Request, res: Response) {
     });
 }
 
-export const handle_frame_get = function(req: Request, res: Response) {
+export const handle_frame_get = async function(req: Request, res: Response): Promise<void> {
     req.checkParams("month").isNumeric();
     req.checkParams("year").isNumeric();
-    req.getValidationResult().then((result) => {
-        if (!result.isEmpty()) {
-            res.sendStatus(400);
-            return;
-        }
-        return db.tx(t => {
-            return user.getDefaultGroup(req.user, t).then(gid => {
-                return frames.getOrCreateFrame(gid, frames.index(
-                    Number(req.params.month),
-                    Number(req.params.year)));
-            });
-        }).then(frame => {
-            res.send(frame);
+    let result = await req.getValidationResult()
+    if (!result.isEmpty()) {
+        res.sendStatus(400);
+        return;
+    }
+    return db.tx(t => {
+        return user.getDefaultGroup(req.user, t).then(gid => {
+            return frames.getOrCreateFrame(gid, frames.index(
+                Number(req.params.month),
+                Number(req.params.year)));
         });
-    }).catch(err => {
-        console.log(err);
-        res.sendStatus(500);
+    }).then(frame => {
+        res.send(frame);
     });
 }
 
