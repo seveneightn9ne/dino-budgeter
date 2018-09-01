@@ -8,3 +8,9 @@ body {
     max-width: 1000px;
     margin: 40px 80px;
 }
+
+.ai {
+    background-color: #aaccff;
+    padding: 10px;
+    margin: 10px 0;
+}

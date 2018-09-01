@@ -31,3 +31,13 @@ export function subtract(a: Money, b: Money): Money {
     const bNum = new BigNumber(b);
     return aNum.minus(bNum).toFixed(2);
 }
+
+export function cmp(a: Money, b: Money): number {
+    const aNum = new BigNumber(a);
+    const bNum = new BigNumber(b);
+    return aNum.comparedTo(bNum);
+}
+
+export function negate(a: Money): Money {
+    return new BigNumber(a).times(-1).toFixed(2);
+}

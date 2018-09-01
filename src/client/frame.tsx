@@ -6,6 +6,8 @@ import NewCategory from './newcategory';
 import CategoryRow from './categoryrow';
 import * as frames from '../shared/frames';
 import * as util from './util';
+import { AI, getAIs } from '../shared/ai';
+import AIComponent from './ai';
 
 type FrameProps = RouteComponentProps<{month: string, year: string}>;
 interface FrameState {
@@ -27,6 +29,13 @@ export default class Frame extends React.Component<FrameProps, FrameState> {
       this.monthName = util.MONTHS[this.month];
       this.index = frames.index(this.month, this.year);
       this.state = {};
+    }
+
+    getAIs(): AI[] {
+        if (!this.state.frame) {
+            return [];
+        }
+        return getAIs(this.state.frame);
     }
 
     componentDidMount() {
@@ -103,12 +112,14 @@ export default class Frame extends React.Component<FrameProps, FrameState> {
                 onDeleteCategory={this.onDeleteCategory.bind(this)}
                 onChangeCategory={this.onChangeCategory.bind(this)} />
         );
+        const ais = this.getAIs().map(ai => <AIComponent ai={ai} />);
         console.log(this.state.frame);
         return <div>
             <h1>{this.monthName + ' ' + this.year}</h1>
             <p><b>Balance: {util.formatMoney(this.state.frame.balance)}
                 Income: {util.formatMoney(this.state.frame.income)}
                 Budgeted: {util.formatMoney(this.state.budgeted)}</b></p>
+            {ais}
             <NewCategory frame={this.state.frame.index} onAddCategory={this.onAddCategory.bind(this)} />
             <table><tbody>
                 {cs}
