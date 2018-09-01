@@ -1,5 +1,6 @@
 import * as React from 'react';
 import {RouteComponentProps} from 'react-router';
+import { Link } from 'react-router-dom'
 import {Frame as FrameType, Category, CategoryId, Money} from '../shared/types';
 import TxEntry from './txentry'
 import NewCategory from './newcategory';
@@ -158,7 +159,9 @@ export default class Frame extends React.Component<FrameProps, FrameState> {
         return <div>
             <h1>{this.monthName + ' ' + this.year}</h1>
             <p><b>Budgeted: {util.formatMoney(this.state.budgeted)} / {util.formatMoney(this.state.frame.income)}
-                {' '} Spent: {util.formatMoney(util.subtract(this.state.frame.income, this.state.frame.balance))}
+                {' '} <Link to={`/app/transactions/${this.month}/${this.year}`}>
+                    Spent: {util.formatMoney(util.subtract(this.state.frame.income, this.state.frame.balance))}
+                </Link>
                 {' '} Balance: {util.formatMoney(this.state.frame.balance)}</b></p>
             {ais}
             <NewCategory frame={this.state.frame.index} onAddCategory={this.onAddCategory.bind(this)} />
