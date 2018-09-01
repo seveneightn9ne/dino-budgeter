@@ -6,6 +6,7 @@ import * as user from './user';
 import * as categories from './categories';
 import { utils } from 'pg-promise';
 import * as util from '../shared/util';
+import { IncomingMessage } from 'http';
 
 // Wrap an async handler to be called synchronously
 export const wrap = function(handler: (req: Request, res: Response)=>Promise<void>): (req: Request, res: Response)=>void {
@@ -174,6 +175,23 @@ export const handle_category_delete = function(req: Request, res: Response) {
     });
 }
 
+export const handle_income_post = async function(req: Request, res: Response): Promise<void> {
+    req.checkBody("frame").isNumeric();
+    req.checkBody("income").isNumeric();
+    const result = await req.getValidationResult()
+    if (!result.isEmpty()) {
+        res.sendStatus(400);
+        return;
+    }
+    const income = req.body.income;
+    const frame = Number(req.body.frame);
+    await db.tx(async t => {
+        const gid = await user.getDefaultGroup(req.user, t);
+        await t.none("update frames set income = $1 where gid = $2 and index = $3",
+            [income, gid, frame]);
+        res.sendStatus(200);
+    });
+}
 export const handle_category_budget_post = function(req: Request, res: Response) {
     req.checkBody("id").notEmpty();
     req.checkBody("frame").notEmpty().isNumeric();

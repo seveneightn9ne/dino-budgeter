@@ -60,6 +60,7 @@ app.post('/api/transaction', ensureLogin.ensureLoggedIn(), api.handle_transactio
 app.post('/api/category', ensureLogin.ensureLoggedIn(), api.handle_category_post);
 app.delete('/api/category', ensureLogin.ensureLoggedIn(), api.handle_category_delete);
 app.post('/api/category/budget', ensureLogin.ensureLoggedIn(), api.handle_category_budget_post);
+app.post('/api/income', ensureLogin.ensureLoggedIn(), api.wrap(api.handle_income_post));
 
 /* Static Routes */
 app.use(serveStatic(path.join(__dirname, '../client')));

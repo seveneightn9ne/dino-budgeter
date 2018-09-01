@@ -13,6 +13,7 @@ type FrameProps = RouteComponentProps<{month: string, year: string}>;
 interface FrameState {
     frame?: FrameType;
     budgeted?: Money;
+    setIncome: string;
 }
 
 /** /app/:month/:year */
@@ -28,7 +29,7 @@ export default class Frame extends React.Component<FrameProps, FrameState> {
       this.year = Number(props.match.params.year);
       this.monthName = util.MONTHS[this.month];
       this.index = frames.index(this.month, this.year);
-      this.state = {};
+      this.state = {setIncome: ''};
     }
 
     getAIs(): AI[] {
@@ -103,16 +104,52 @@ export default class Frame extends React.Component<FrameProps, FrameState> {
         });
     }
 
+    onChangeIncome(event: React.ChangeEvent<HTMLInputElement>) {
+        this.setState({setIncome: event.target.value});
+    }
+
+    onSetIncome(event: React.FormEvent) {
+        const setIncome = this.state.setIncome;
+        fetch('/api/income', {
+            method: 'POST',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                frame: this.state.frame.index,
+                income: setIncome,
+            }),
+        }).then(() => {
+            const newFrame = {...this.state.frame};
+            newFrame.income = setIncome;
+            this.setState({frame: newFrame});
+        });
+        return true;
+    }
+
     render() {
         if (!this.state.frame) {
             return null;
         }
+
+        if (util.cmp(this.state.frame.income, "0") == 0) {
+            return <div className="splash">
+                <p>What is your total expected income for {this.monthName}?</p>
+                <form onSubmit={this.onSetIncome.bind(this)}>
+                    <input type="number" placeholder="0.00" value={this.state.setIncome} 
+                        onChange={this.onChangeIncome.bind(this)} />
+                    <input type="submit" value="Continue" />
+                </form>
+            </div>;
+        }
+
         const cs = this.state.frame.categories.map(c => 
             <CategoryRow key={c.id} category={c} 
                 onDeleteCategory={this.onDeleteCategory.bind(this)}
                 onChangeCategory={this.onChangeCategory.bind(this)} />
         );
-        const ais = this.getAIs().map(ai => <AIComponent ai={ai} />);
+        const ais = this.getAIs().map(ai => <AIComponent ai={ai} key={ai.message()} />);
         console.log(this.state.frame);
         return <div>
             <h1>{this.monthName + ' ' + this.year}</h1>
