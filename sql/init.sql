@@ -61,7 +61,7 @@ create table if not exists transactions (
   description text not null,
   alive bool not null default true,
   ctime timestamp not null default current_timestamp,
-  foreign key (frame, category) references categories
+  foreign key (category, frame) references categories
 );
 
 commit;
