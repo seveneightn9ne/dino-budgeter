@@ -14,3 +14,7 @@ body {
     padding: 10px;
     margin: 10px 0;
 }
+
+input.error {
+    border-color: rgb(122, 0, 0);
+}

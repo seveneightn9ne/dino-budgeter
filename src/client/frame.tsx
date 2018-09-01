@@ -15,6 +15,7 @@ interface FrameState {
     frame?: FrameType;
     budgeted?: Money;
     setIncome: string;
+    setIncomeErr?: boolean;
 }
 
 /** /app/:month/:year */
@@ -45,7 +46,7 @@ export default class Frame extends React.Component<FrameProps, FrameState> {
     }
 
     calculateBudgeted(categories: Category[]): Money {
-        return categories.reduce((a, b) => util.add(a, b.budget), "0");
+        return categories.reduce((a, b) => a.plus(b.budget), Money.Zero);
     }
 
     // TODO update the frame in the background.
@@ -55,7 +56,7 @@ export default class Frame extends React.Component<FrameProps, FrameState> {
         return fetch(path).then((response) => {
             return response.json();
         }).then(response => {
-            const frame = response as FrameType;
+            const frame = frames.fromSerialized(response);
             const budgeted = this.calculateBudgeted(frame.categories);
             this.setState({frame, budgeted});
             return frame;
@@ -87,14 +88,15 @@ export default class Frame extends React.Component<FrameProps, FrameState> {
             }
         });
         newFrame.categories = newCategories;
-        this.setState({frame: newFrame});
+        const budgeted = this.calculateBudgeted(newCategories);
+        this.setState({frame: newFrame, budgeted});
     }
 
     onAddTransaction(amount: Money, cid: CategoryId) {
         const newFrame = {...this.state.frame};
-        newFrame.balance = util.subtract(this.state.frame.balance, amount);
+        newFrame.balance = this.state.frame.balance.minus(amount);
         newFrame.categories = newFrame.categories.map(c => {
-            const newBalance = util.subtract(c.balance, amount);
+            const newBalance = c.balance.minus(amount);
             if (c.id == cid) {
                 return {...c, balance: newBalance};
             }
@@ -106,11 +108,16 @@ export default class Frame extends React.Component<FrameProps, FrameState> {
     }
 
     onChangeIncome(event: React.ChangeEvent<HTMLInputElement>): void {
-        this.setState({setIncome: event.target.value});
+        this.setState({setIncome: event.target.value, setIncomeErr: false});
     }
 
     onSetIncome(event: React.FormEvent) {
-        const setIncome = this.state.setIncome;
+        const setIncome = new Money(this.state.setIncome);
+        if (!setIncome.isValid(false /** allowNegative **/)) {
+            this.setState({setIncomeErr: true});
+            event.preventDefault();
+            return;
+        }
         fetch('/api/income', {
             method: 'POST',
             headers: {
@@ -137,11 +144,13 @@ export default class Frame extends React.Component<FrameProps, FrameState> {
 
         console.log(this.state.frame);
 
-        if (util.cmp(this.state.frame.income, "0") == 0) {
+        if (this.state.frame.income.cmp(Money.Zero) == 0) {
+            const className = this.state.setIncomeErr ? "error" : "";
             return <div className="splash">
                 <p>What is your total expected income for {this.monthName}?</p>
                 <form onSubmit={this.onSetIncome.bind(this)}>
-                    <input type="number" placeholder="0.00" value={this.state.setIncome} 
+                    <input className={className} type="number" placeholder="0.00"
+                        value={this.state.setIncome} 
                         onChange={this.onChangeIncome.bind(this)} />
                     <input type="submit" value="Continue" />
                 </form>
@@ -158,11 +167,11 @@ export default class Frame extends React.Component<FrameProps, FrameState> {
         // spent = income - balance;
         return <div>
             <h1>{this.monthName + ' ' + this.year}</h1>
-            <p><b>Budgeted: {util.formatMoney(this.state.budgeted)} / {util.formatMoney(this.state.frame.income)}
-                {' '} <Link to={`/app/transactions/${this.month}/${this.year}`}>
-                    Spent: {util.formatMoney(util.subtract(this.state.frame.income, this.state.frame.balance))}
+            <p><b>Income: {this.state.frame.income.formatted()}
+                {' - '} <Link to={`/app/transactions/${this.month}/${this.year}`}>
+                    Spent: {this.state.frame.income.minus(this.state.frame.balance).formatted()}
                 </Link>
-                {' '} Balance: {util.formatMoney(this.state.frame.balance)}</b></p>
+                {' = '} Balance: {this.state.frame.balance.formatted()}</b></p>
             {ais}
             <NewCategory frame={this.state.frame.index} onAddCategory={this.onAddCategory.bind(this)} />
             <table><tbody>

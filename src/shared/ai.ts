@@ -1,7 +1,4 @@
 import { FrameIndex, Money, Frame } from "./types";
-import { subtract, add, cmp, negate } from "./util";
-import { formatMoney } from "../client/util";
-import { utils } from "pg-promise";
 
 export interface AI {
     frame: FrameIndex;
@@ -17,7 +14,7 @@ export class OverspentCategory implements AI {
     ) { }
 
     message(): string {
-        return `You've overspent your budget in ${this.categoryName} by ${formatMoney(negate(this.balance))}. ` +
+        return `You've overspent your budget in ${this.categoryName} by ${this.balance.formatted()}. ` +
             `Choose another category to cover it.`;
     }
 }
@@ -30,7 +27,7 @@ export class Overbudgeted implements AI {
         public budgetedAmount: Money,
         public income: Money,
     ) { 
-        this.overspent = subtract(income, budgetedAmount);
+        this.overspent = income.minus(budgetedAmount);
     }
 
     message(): string {
@@ -46,26 +43,26 @@ export class Underbudgeted implements AI {
         public budgetedAmount: Money,
         public income: Money,
     ) {
-        this.balance = subtract(income, budgetedAmount);
+        this.balance = income.minus(budgetedAmount);
     }
 
     message(): string {
-        return `You have ${formatMoney(this.balance)} left to budget for the month.`;
+        return `You have ${this.balance.formatted()} left to budget for the month.`;
     }
 }
 
 export function getAIs(frame: Frame): AI[] {
     const ais: AI[] = [];
     const overspends: AI[] = [];
-    let totalBudgeted: Money = "0";
+    let totalBudgeted = Money.Zero;
     frame.categories.forEach(c => {
-        totalBudgeted = add(totalBudgeted, c.budget);
+        totalBudgeted = totalBudgeted.plus(c.budget);
         // if (balance < 0) {
-        if (cmp(c.balance, "0") == -1) {
+        if (c.balance.cmp(Money.Zero) == -1) {
             overspends.push(new OverspentCategory(frame.index, c.name, c.budget, c.balance));
         }
     });
-    const cmpIncome = cmp(totalBudgeted, frame.income);
+    const cmpIncome = totalBudgeted.cmp(frame.income);
     if (cmpIncome == 1) {
         ais.push(new Overbudgeted(frame.index, totalBudgeted, frame.income));
     } else if (cmpIncome == -1) {

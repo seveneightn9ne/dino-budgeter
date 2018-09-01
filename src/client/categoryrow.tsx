@@ -14,6 +14,7 @@ interface CategoryRowProps {
 interface CategoryRowState {
     editingBudget: boolean;
     newBudget?: string;
+    newBudgetErr?: boolean;
 }
 
 export default class CategoryRow extends React.Component<CategoryRowProps, CategoryRowState> {
@@ -45,10 +46,16 @@ export default class CategoryRow extends React.Component<CategoryRowProps, Categ
     }
 
     updateBudgetValue(event: React.ChangeEvent<HTMLInputElement>): void {
-        this.setState({newBudget: event.target.value});
+        this.setState({newBudget: event.target.value, newBudgetErr: false});
     }
 
-    saveNewBudget(): void {
+    saveNewBudget(event: React.FormEvent): void {
+        const newBudget = new Money(this.state.newBudget);
+        if (!newBudget.isValid(false /** allowNegative **/)) {
+            this.setState({newBudgetErr: true});
+            event.preventDefault();
+            return;
+        }
         fetch('/api/category/budget', {
             method: 'POST',
             headers: {
@@ -58,31 +65,32 @@ export default class CategoryRow extends React.Component<CategoryRowProps, Categ
             body: JSON.stringify({
                 id: this.props.category.id,
                 frame: this.props.category.frame,
-                amount: this.state.newBudget,
+                amount: newBudget,
             }),
         }).then(() => {
             const newCategory = {...this.props.category};
-            newCategory.budget = this.state.newBudget;
+            newCategory.budget = newBudget;
             newCategory.balance = categories.updateBalanceWithBudget(
-                this.props.category, this.state.newBudget);
+                this.props.category, newBudget);
             this.props.onChangeCategory(newCategory);
             this.setState({editingBudget: false});
         });
+        event.preventDefault();
     }
 
     render() {
         const budget = (this.state.editingBudget) 
-            ? <span><input type="text" size={4} autoFocus={true}
-                placeholder={this.props.category.budget} value={this.state.newBudget} 
-                onChange={(e) => this.updateBudgetValue(e)}
-                onBlur={() => this.endEditBudget()}  />
-                <button onMouseDown={() => this.saveNewBudget()}>Save</button></span>
-            : <b><a href="#" onClick={() => this.editBudget()}>{util.formatMoney(this.props.category.budget)}</a></b>;
+            ? <span><form onBlur={this.endEditBudget.bind(this)} onSubmit={this.saveNewBudget.bind(this)}>
+                <input type="text" size={4} autoFocus={true}
+                    placeholder={this.props.category.budget.string()} value={this.state.newBudget} 
+                    onChange={(e) => this.updateBudgetValue(e)} />
+                <input type="submit" value="Save" /></form></span>
+            : <b><a href="#" onClick={() => this.editBudget()}>{this.props.category.budget.formatted()}</a></b>;
         return <tr key={this.props.category.id}>
             <td><a href="#" onClick={() => this.delete()}>X</a></td>
             <td>{this.props.category.name}</td>
             <td>{budget}</td>
-            <td>{util.formatMoney(this.props.category.balance)}</td>
+            <td>{this.props.category.balance.formatted()}</td>
         </tr>;
     }
 }

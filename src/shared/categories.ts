@@ -1,9 +1,22 @@
 import {Money, Category} from '../shared/types';
-import * as util from './util';
 
 export function updateBalanceWithBudget(category: {
         balance: Money,
         budget: Money,
     }, newBudget: Money): Money {
-    return util.add(util.subtract(category.balance, category.budget), newBudget);
+    return category.balance.minus(category.budget).plus(newBudget);
+}
+
+export function fromSerialized(row: any): Category {
+    if (!row) {
+        return null;
+    }
+    const category: Category = {...row};
+    if (row.budget) {
+        category.budget = new Money(row.budget);
+    }
+    if (row.balance) {
+        category.balance = new Money(row.balance);
+    }
+    return category;
 }

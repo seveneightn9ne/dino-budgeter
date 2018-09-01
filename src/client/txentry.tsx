@@ -12,6 +12,7 @@ interface TxEntryState {
     amount: string;
     description: string;
     category: string;
+    error: boolean;
 }
 
 export default class TxEntry extends React.Component<TxEntryProps, TxEntryState> {
@@ -19,10 +20,11 @@ export default class TxEntry extends React.Component<TxEntryProps, TxEntryState>
         amount: '',
         description: '',
         category: '',
+        error: false,
     };
 
     updateAmount(event: React.ChangeEvent<HTMLInputElement>): void {
-        this.setState({amount: event.target.value});
+        this.setState({amount: event.target.value, error: false});
     }
 
     updateDescription(event: React.ChangeEvent<HTMLInputElement>): void {
@@ -34,8 +36,12 @@ export default class TxEntry extends React.Component<TxEntryProps, TxEntryState>
     }
 
     handleSubmit(event: React.FormEvent): void {
-        console.log("hi");
-        const amount = this.state.amount;
+        const amount = new Money(this.state.amount);
+        if (!amount.isValid(false /** allowNegative **/)) {
+            this.setState({error: true});
+            event.preventDefault();
+            return;
+        }
         const category = this.state.category;
         fetch('/api/transaction', {
             method: 'POST',
@@ -61,10 +67,11 @@ export default class TxEntry extends React.Component<TxEntryProps, TxEntryState>
         const options = this.props.categories.map(c => {
             return <option key={c.id} value={c.id}>{c.name}</option>;
         });
+        const className = this.state.error ? "error" : "";
         return <div>
             <form onSubmit={this.handleSubmit.bind(this)}>
                 <label>Amount:
-                <input value={this.state.amount} onChange={(e) => this.updateAmount(e)} size={4} /></label>
+                <input className={className} value={this.state.amount} onChange={(e) => this.updateAmount(e)} size={4} /></label>
                 <label>Description:
                 <input value={this.state.description} onChange={(e) => this.updateDescription(e)} /></label>
                 <select onChange={(e) => this.updateCategory(e)} value={this.state.category}>

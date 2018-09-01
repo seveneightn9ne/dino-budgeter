@@ -1,7 +1,5 @@
-import {Frame, GroupId, Money, FrameIndex, CategoryId} from '../shared/types';
-import db from './db';
+import {GroupId, Money, FrameIndex, CategoryId} from '../shared/types';
 import pgPromise from 'pg-promise';
-import {randomId} from '../shared/util';
 export * from '../shared/categories';
 
 export const DEFAULT_CATEGORIES = [
@@ -29,12 +27,12 @@ export function getNextOrdinal(gid: GroupId, frame: FrameIndex, t: pgPromise.ITa
 
 export function getBalance(id: CategoryId, frame: FrameIndex, t: pgPromise.ITask<{}>): Promise<Money> {
     return t.one("select balance from categories where id = $1 and frame = $2", [id, frame]).then(row => {
-        return row.balance;
+        return new Money(row.balance);
     });
 }
 
 export function getBudget(id: CategoryId, frame: FrameIndex, t: pgPromise.ITask<{}>): Promise<Money> {
     return t.one("select budget from categories where id = $1 and frame = $2", [id, frame]).then(row => {
-        return row.budget;
+        return new Money(row.budget);
     });
 }

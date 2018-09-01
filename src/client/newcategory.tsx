@@ -2,7 +2,7 @@ import * as React from 'react';
 import {RouteComponentProps} from 'react-router';
 import {Frame as FrameType, Money, FrameIndex, Category } from '../shared/types';
 import TxEntry from './txentry'
-import * as frames from '../shared/frames';
+import {fromSerialized} from '../shared/categories';
 
 interface NewCategoryProps {
     frame: FrameIndex;
@@ -23,7 +23,6 @@ export default class NewCategory extends React.Component<NewCategoryProps, NewCa
     }
 
     updateValue(event: React.ChangeEvent<HTMLInputElement>): void {
-        console.log("new value is " + event.target.value);
         this.setState({value: event.target.value});
     }
 
@@ -41,7 +40,7 @@ export default class NewCategory extends React.Component<NewCategoryProps, NewCa
         }).then(response => {
             return response.json();
         }).then(response => {
-            this.props.onAddCategory(response.category);
+            this.props.onAddCategory(fromSerialized(response.category));
             this.setState({expanded: false, value: ""});
         });
     }
