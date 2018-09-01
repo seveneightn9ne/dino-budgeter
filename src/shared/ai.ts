@@ -54,25 +54,15 @@ export class Underbudgeted implements AI {
     }
 }
 
-export class NoIncome implements AI {
-    constructor(
-        public frame: FrameIndex,
-    ) {}
-
-    message(): string {
-        return `You need to set your income for the month.`
-    }
-}
-
 export function getAIs(frame: Frame): AI[] {
-    console.log("Lookin' for AIs");
     const ais: AI[] = [];
+    const overspends: AI[] = [];
     let totalBudgeted: Money = "0";
     frame.categories.forEach(c => {
         totalBudgeted = add(totalBudgeted, c.budget);
         // if (balance < 0) {
         if (cmp(c.balance, "0") == -1) {
-            ais.push(new OverspentCategory(frame.index, c.name, c.budget, c.balance));
+            overspends.push(new OverspentCategory(frame.index, c.name, c.budget, c.balance));
         }
     });
     const cmpIncome = cmp(totalBudgeted, frame.income);
@@ -81,9 +71,9 @@ export function getAIs(frame: Frame): AI[] {
     } else if (cmpIncome == -1) {
         ais.push(new Underbudgeted(frame.index, totalBudgeted, frame.income));
     }
-    if (cmp(frame.income, "0") == 0) {
-        ais.push(new NoIncome(frame.index));
+    if (ais.length == 0) {
+        // Only send ovespends if there aren't bigger problems.
+        ais.push(...overspends);
     }
-    console.log("You have " + ais.length + " AIs");
     return ais;
 }

@@ -151,11 +151,13 @@ export default class Frame extends React.Component<FrameProps, FrameState> {
         );
         const ais = this.getAIs().map(ai => <AIComponent ai={ai} key={ai.message()} />);
         console.log(this.state.frame);
+        // income - spent = balance;
+        // spent = income - balance;
         return <div>
             <h1>{this.monthName + ' ' + this.year}</h1>
-            <p><b>Balance: {util.formatMoney(this.state.frame.balance)}
-                Income: {util.formatMoney(this.state.frame.income)}
-                Budgeted: {util.formatMoney(this.state.budgeted)}</b></p>
+            <p><b>Budgeted: {util.formatMoney(this.state.budgeted)} / {util.formatMoney(this.state.frame.income)}
+                {' '} Spent: {util.formatMoney(util.subtract(this.state.frame.income, this.state.frame.balance))}
+                {' '} Balance: {util.formatMoney(this.state.frame.balance)}</b></p>
             {ais}
             <NewCategory frame={this.state.frame.index} onAddCategory={this.onAddCategory.bind(this)} />
             <table><tbody>
