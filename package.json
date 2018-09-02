@@ -55,6 +55,7 @@
     "build": "npm run build-server && npm run build-client",
     "watch-server": "tsc -w",
     "watch-serve": "find dist/server | entr -r sh -c \"npm run serve\"",
+    "watch-client": "node_modules/.bin/webpack --mode=development --watch",
     "lint": "tslint -c tslint.json -p tsconfig.json",
     "serve": "node dist/server/server.js",
     "server": "npm run serve"
