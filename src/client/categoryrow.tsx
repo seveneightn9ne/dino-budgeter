@@ -5,6 +5,7 @@ import TxEntry from './txentry'
 import * as frames from '../shared/frames';
 import * as util from './util';
 import * as categories from '../shared/categories';
+import ClickToEdit from './components/clicktoedit';
 
 interface CategoryRowProps {
     category: Category;
@@ -12,13 +13,10 @@ interface CategoryRowProps {
     onChangeCategory: (newCategory: Category) => void;
 }
 interface CategoryRowState {
-    editingBudget: boolean;
-    newBudget?: string;
-    newBudgetErr?: boolean;
 }
 
 export default class CategoryRow extends React.Component<CategoryRowProps, CategoryRowState> {
-    state = {editingBudget: false, newBudget: ''};
+    state = {};
 
     delete(): boolean {
         fetch('/api/category', {
@@ -36,27 +34,21 @@ export default class CategoryRow extends React.Component<CategoryRowProps, Categ
         return true;
     }
 
-    editBudget(): boolean {
-        this.setState({editingBudget: true, newBudget: ''});
-        return true;
+    onUpdateBudget(newBudgetStr: string) {
+        const newBudget = new Money(newBudgetStr);
+        const newCategory = {...this.props.category};
+        newCategory.budget = newBudget;
+        newCategory.balance = categories.updateBalanceWithBudget(
+            this.props.category, newBudget);
+        this.props.onChangeCategory(newCategory);
     }
 
-    endEditBudget(): void {
-        this.setState({editingBudget: false});
-    }
-
-    updateBudgetValue(event: React.ChangeEvent<HTMLInputElement>): void {
-        this.setState({newBudget: event.target.value, newBudgetErr: false});
-    }
-
-    saveNewBudget(event: React.FormEvent): void {
-        const newBudget = new Money(this.state.newBudget);
+    async validateNewBudget(newBudgetStr: string): Promise<boolean> {
+        const newBudget = new Money(newBudgetStr);
         if (!newBudget.isValid(false /** allowNegative **/)) {
-            this.setState({newBudgetErr: true});
-            event.preventDefault();
-            return;
+            return false;
         }
-        fetch('/api/category/budget', {
+        const res = await fetch('/api/category/budget', {
             method: 'POST',
             headers: {
                 'Accept': 'application/json',
@@ -67,25 +59,16 @@ export default class CategoryRow extends React.Component<CategoryRowProps, Categ
                 frame: this.props.category.frame,
                 amount: newBudget,
             }),
-        }).then(() => {
-            const newCategory = {...this.props.category};
-            newCategory.budget = newBudget;
-            newCategory.balance = categories.updateBalanceWithBudget(
-                this.props.category, newBudget);
-            this.props.onChangeCategory(newCategory);
-            this.setState({editingBudget: false});
         });
-        event.preventDefault();
+        return res.status == 200;
     }
 
     render() {
-        const budget = (this.state.editingBudget) 
-            ? <span><form onBlur={this.endEditBudget.bind(this)} onSubmit={this.saveNewBudget.bind(this)}>
-                <input type="text" size={4} autoFocus={true}
-                    placeholder={this.props.category.budget.string()} value={this.state.newBudget} 
-                    onChange={(e) => this.updateBudgetValue(e)} />
-                <input type="submit" value="Save" /></form></span>
-            : <b><a href="#" onClick={() => this.editBudget()}>{this.props.category.budget.formatted()}</a></b>;
+        const budget = <ClickToEdit 
+            value={this.props.category.budget.string()} 
+            onChange={this.onUpdateBudget.bind(this)}
+            validateChange={this.validateNewBudget.bind(this)}
+            formatDisplay={(budget) => new Money(budget).formatted()} />
         return <tr key={this.props.category.id}>
             <td><a href="#" onClick={() => this.delete()}>X</a></td>
             <td>{this.props.category.name}</td>

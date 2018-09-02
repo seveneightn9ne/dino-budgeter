@@ -47,7 +47,7 @@ export class Underbudgeted implements AI {
     }
 
     message(): string {
-        return `You have ${this.balance.formatted()} left to budget for the month.`;
+        return `${this.balance.formatted()} needs to be budgeted into categories.`;
     }
 }
 
