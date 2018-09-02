@@ -186,7 +186,7 @@ export default class Frame extends React.Component<FrameProps, FrameState> {
         return <div>
             <h1>{this.monthName + ' ' + this.year}</h1>
             <div><b>Income: {income}
-                {' - '} <Link to={`/app/transactions/${this.month}/${this.year}`}>
+                {' - '} <Link to={`/app/transactions/${this.month+1}/${this.year}`}>
                     Spent: {this.state.frame.income.minus(this.state.frame.balance).formatted()}
                 </Link>
                 {' = '} Balance: {this.state.frame.balance.formatted()}</b></div>

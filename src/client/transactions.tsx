@@ -1,6 +1,7 @@
 import * as React from 'react';
 import {RouteComponentProps} from 'react-router';
 import * as frames from '../shared/frames'
+import { MONTHS } from './util';
 
 type Props = RouteComponentProps<{month: string, year: string}>;
 
@@ -15,8 +16,16 @@ type State = {
 };
 
 export default class Transactions extends React.Component<Props, State> {
+    private month: number;
+    private monthName: string;
     state: State = {
         kind: "loading",
+    }
+
+    constructor(props: Props) {
+        super(props);
+        this.month = Number(props.match.params.month) - 1;
+        this.monthName = MONTHS[this.month];
     }
 
     setStateStrict(state: Readonly<State>): void {
@@ -36,7 +45,7 @@ export default class Transactions extends React.Component<Props, State> {
     }
 
     async init() {
-        const month = Number(this.props.match.params.month);
+        const month = this.month;
         const year = Number(this.props.match.params.year);
         const frame = frames.index(month, year);
         const res = await fetch("/api/transactions?frame=" + frame);
@@ -65,8 +74,12 @@ export default class Transactions extends React.Component<Props, State> {
 
     renderTransactions(transactions: any[]) {
         const rows = transactions.map((tx) => {
-            return <div>{tx.description}: {tx.amount}</div>
-        })
-        return <div>Transactions: {rows}</div>
+            return <div>{tx.description}: {tx.amount}</div>;
+        });
+        return <div>
+            <h1>{this.monthName + ' ' + this.props.match.params.year}</h1>
+            <h2>Transactions</h2>
+            {rows}
+        </div>;
     }
 }
