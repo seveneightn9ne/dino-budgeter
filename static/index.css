@@ -23,3 +23,10 @@ input.error {
     cursor: pointer;
     text-decoration: underline;
 }
+
+.deleteCr {
+    visibility: hidden;
+}
+tr:hover .deleteCr {
+    visibility: visible;
+}

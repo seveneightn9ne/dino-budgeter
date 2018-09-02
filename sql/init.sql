@@ -1,6 +1,6 @@
 begin;
 
-create table if not exists playground (
+create table playground (
   foo varchar (50) primary key
 );
 
@@ -12,25 +12,25 @@ CREATE TABLE "session" (
 WITH (OIDS=FALSE);
 ALTER TABLE "session" ADD CONSTRAINT "session_pkey" PRIMARY KEY ("sid") NOT DEFERRABLE INITIALLY IMMEDIATE;
 
-create table if not exists users (
+create table users (
   uid char(32) primary key,
   email varchar(255) unique not null,
   password_hash char(60) not null,
   ctime timestamp not null default current_timestamp
 );
 
-create table if not exists groups (
+create table groups (
   gid char(32) not null primary key,
   ctime timestamp not null default current_timestamp
 );
 
-create table if not exists membership (
+create table membership (
   uid char(32) not null references users,
   gid char(32) not null references groups,
   primary key (uid, gid)
 );
 
-create table if not exists frames (
+create table frames (
   gid char(32) not null references groups,
   index int not null,
   balance text not null,
@@ -38,7 +38,7 @@ create table if not exists frames (
   primary key (gid, index)
 );
 
-create table if not exists categories (
+create table categories (
   id char(32) not null, -- there are many entries with the same id
   gid char(32) not null references groups,
   frame int not null,
@@ -52,7 +52,7 @@ create table if not exists categories (
   foreign key (gid, frame) references frames
 );
 
-create table if not exists transactions (
+create table transactions (
   id char(32) primary key,
   gid char(32) not null references groups,
   frame int not null, -- transaction always has a frame, but may not have a category yet
@@ -61,6 +61,7 @@ create table if not exists transactions (
   description text not null,
   alive bool not null default true,
   ctime timestamp not null default current_timestamp,
+  date timestamp not null,
   foreign key (category, frame) references categories
 );
 

@@ -6,7 +6,7 @@ import * as user from './user';
 import * as categories from './categories';
 import { utils } from 'pg-promise';
 import * as util from '../shared/util';
-import { IncomingMessage } from 'http';
+import { IncomingMessage, request } from 'http';
 
 // Wrap an async handler to be called synchronously
 export const wrap = function(handler: (req: Request, res: Response)=>Promise<void>): (req: Request, res: Response)=>void {
@@ -68,13 +68,15 @@ export const handle_transactions_get = wrap(async function(req: Request, res: Re
         });
         return;
     }
+    const frame = Number(req.query.frame);
     const transactions = await db.tx(async t => {
         const gid = await user.getDefaultGroup(req.user, t);
-        const rows = t.many("select id,category,amount,description,ctime \
+        const rows = await t.many("select id,category,amount,description,date \
         from transactions \
         where gid=$1 \
-        and alive", [gid]);
-        return rows
+        and frame=$2 \
+        and alive", [gid, frame]);
+        return rows;
     })
     res.json({transactions});
 });
@@ -83,6 +85,7 @@ export const handle_transaction_post = wrap(async function(req: Request, res: Re
     req.checkBody("frame").notEmpty().isNumeric();
     req.checkBody('amount').notEmpty().isString();
     req.checkBody('description').notEmpty().isString();
+    req.checkBody('date').notEmpty();
     const amount = new Money(req.body.amount);
     const result = await req.getValidationResult();
     if (!result.isEmpty() || !amount.isValid(false /** allowNegative */)) {
@@ -92,13 +95,15 @@ export const handle_transaction_post = wrap(async function(req: Request, res: Re
     const tx_id = util.randomId();
     const frame_index = req.body.frame;
     const category = req.body.category;
+    const date = new Date(req.body.date);
     await db.tx(async t => {
         const gid = await user.getDefaultGroup(req.user, t);
         const frameRow = await t.one("select balance from frames where gid = $1 and index = $2", [gid, frame_index]);
         const newBalance = new Money(frameRow.balance).minus(amount);
+        // TODO if the transaction is in not-the-newest frame, the more recent frames need their balances updated.
         const work = [
-            t.none("insert into transactions (id, gid, frame, amount, description) values ($1, $2, $3, $4, $5)",
-                [tx_id, gid, frame_index, amount.string(), req.body.description]),
+            t.none("insert into transactions (id, gid, frame, amount, description, date) values ($1, $2, $3, $4, $5, $6)",
+                [tx_id, gid, frame_index, amount.string(), req.body.description, date]),
             t.none("update frames set balance = $1 where gid = $2 and index = $3",
                 [newBalance.string(), gid, frame_index])];
         const catRow = await t.oneOrNone("select balance from categories where id = $1 and frame = $2", [category, frame_index]);

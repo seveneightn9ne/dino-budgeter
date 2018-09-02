@@ -53,9 +53,13 @@ export default class Transactions extends React.Component<Props, State> {
             throw new Error(`status ${res.status}`)
         }
         const payload = await res.json();
+        const txns = payload.transactions.map((tx: any) => {
+            tx.date = new Date(tx.date);
+            return tx;
+        });
         this.setStateStrict({
             kind: "loaded",
-            transactions: payload.transactions,
+            transactions: txns,
         });
     }
     
@@ -72,14 +76,20 @@ export default class Transactions extends React.Component<Props, State> {
         }
     }
 
+    formatDate(d: Date): string {
+        return `${d.getMonth() + 1}/${d.getDate()}/${d.getFullYear()}`;
+    }
+
     renderTransactions(transactions: any[]) {
         const rows = transactions.map((tx) => {
-            return <div>{tx.description}: {tx.amount}</div>;
+            return <tr key={tx.id}><td>{this.formatDate(tx.date)}</td><td>{tx.description}</td><td>{tx.amount}</td></tr>;
         });
         return <div>
             <h1>{this.monthName + ' ' + this.props.match.params.year}</h1>
             <h2>Transactions</h2>
+            <table><tbody>
             {rows}
+            </tbody></table>
         </div>;
     }
 }

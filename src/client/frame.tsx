@@ -25,6 +25,7 @@ export default class Frame extends React.Component<FrameProps, FrameState> {
     private year: number;
     private monthName: string;
     private index: number;
+    private newTxDate: Date;
 
     constructor(props: FrameProps) {
       super(props);
@@ -33,6 +34,13 @@ export default class Frame extends React.Component<FrameProps, FrameState> {
       this.monthName = util.MONTHS[this.month];
       this.index = frames.index(this.month, this.year);
       this.state = {setIncome: ''};
+      this.newTxDate = new Date();
+      if (this.newTxDate.getFullYear() != this.year || this.newTxDate.getMonth() != this.month) {
+        // frame is not the current frame
+        this.newTxDate.setFullYear(this.year);
+        this.newTxDate.setMonth(this.month);
+        this.newTxDate.setDate(1);
+      }
     }
 
     getAIs(): AI[] {
@@ -93,19 +101,23 @@ export default class Frame extends React.Component<FrameProps, FrameState> {
         this.setState({frame: newFrame, budgeted});
     }
 
-    onAddTransaction(amount: Money, cid: CategoryId) {
-        const newFrame = {...this.state.frame};
-        newFrame.balance = this.state.frame.balance.minus(amount);
-        newFrame.categories = newFrame.categories.map(c => {
-            const newBalance = c.balance.minus(amount);
-            if (c.id == cid) {
-                return {...c, balance: newBalance};
-            }
-            return c;
-        });
-        this.setState({
-            frame: newFrame,
-        });
+    onAddTransaction(amount: Money, cid: CategoryId, date: Date) {
+        if (date.getFullYear() == this.year && date.getMonth() == this.month) {
+            const newFrame = {...this.state.frame};
+            newFrame.balance = this.state.frame.balance.minus(amount);
+            newFrame.categories = newFrame.categories.map(c => {
+                const newBalance = c.balance.minus(amount);
+                if (c.id == cid) {
+                    return {...c, balance: newBalance};
+                }
+                return c;
+            });
+            this.setState({
+                frame: newFrame,
+            });
+        } else {
+            // TODO: if it's in the past, it needs to reflect in the current balance
+        }
     }
 
     onChangeIncome(event: React.ChangeEvent<HTMLInputElement>): void {
@@ -195,7 +207,8 @@ export default class Frame extends React.Component<FrameProps, FrameState> {
             <table><tbody>
                 {cs}
             </tbody></table>
-            <TxEntry frame={this.index} onAddTransaction={this.onAddTransaction.bind(this)}
+            <TxEntry onAddTransaction={this.onAddTransaction.bind(this)}
+                defaultDate={this.newTxDate}
                 categories={this.state.frame.categories} />
         </div>;
     }
