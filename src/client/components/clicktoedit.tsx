@@ -4,11 +4,14 @@ import {Frame as FrameType, Money, FrameIndex, Category, CategoryId } from '../.
 
 interface ClickToEditProps {
     value: string;
-    validateChange?: (newVal: string) => Promise<boolean>;
+    validateChange?: (newVal: string) => boolean;
     onChange: (newVal: string) => void;
     size?: number;
     formatDisplay?: (value: string) => string;
     className?: string;
+    postTo: string;
+    postData?: {[key: string]: any};
+    postKey: string;
 }
 interface ClickToEditState {
     editing: boolean;
@@ -18,6 +21,14 @@ interface ClickToEditState {
 
 export default class ClickToEdit extends React.Component<ClickToEditProps, ClickToEditState> {
 
+    static defaultProps = {
+        validateChange: (val: string) => true,
+        formatDisplay: (val: string) => val,
+        size: 4,
+        className: '',
+        postData: {},
+    }
+
     constructor(props: ClickToEditProps) {
         super(props);
         this.state = {
@@ -25,9 +36,8 @@ export default class ClickToEdit extends React.Component<ClickToEditProps, Click
         }
     }
 
-    edit(): boolean {
+    edit(): void {
         this.setState({editing: true, newValue: ''});
-        return true;
     }
 
     endEdit(): void {
@@ -38,13 +48,30 @@ export default class ClickToEdit extends React.Component<ClickToEditProps, Click
         this.setState({newValue: event.target.value, newValueErr: false});
     }
 
-    async saveNewValue(event: React.FormEvent): Promise<void> {
+    saveNewValue(event: React.FormEvent): void{
+        console.log("save new value");
         const newValue = this.state.newValue;
-        if (!await this.props.validateChange(newValue)) {
+        if (!this.props.validateChange(newValue)) {
             this.setState({newValueErr: true});
-        } else {
-            this.setState({editing: false});
         }
+        fetch(this.props.postTo, {
+            method: 'POST',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+              },
+            body: JSON.stringify({
+                ...this.props.postData,
+                [this.props.postKey]: newValue,
+            }),
+        }).then(result => {
+            if (result.status != 200) {
+                this.setState({newValueErr: true});
+            } else {
+                this.props.onChange(newValue);
+                this.setState({editing: false});
+            }
+        });
         event.preventDefault();
     }
 
@@ -55,8 +82,8 @@ export default class ClickToEdit extends React.Component<ClickToEditProps, Click
                 <input type="text" size={this.props.size || 4} autoFocus={true}
                     placeholder={this.props.value} value={this.state.newValue} 
                     onChange={(e) => this.updateValue(e)} />
-                <input type="submit" value="Save" /></form>
-            : <a href="#" onClick={() => this.edit()}>{formatDisplay(this.props.value)}</a>;
+                </form>
+            : <span className="clickable" onClick={this.edit.bind(this)}>{formatDisplay(this.props.value)}</span>;
         return <span className={this.props.className}>{val}</span>;
     }
 }

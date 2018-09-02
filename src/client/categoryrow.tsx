@@ -35,6 +35,7 @@ export default class CategoryRow extends React.Component<CategoryRowProps, Categ
     }
 
     onUpdateBudget(newBudgetStr: string) {
+        console.log("final update to " + newBudgetStr);
         const newBudget = new Money(newBudgetStr);
         const newCategory = {...this.props.category};
         newCategory.budget = newBudget;
@@ -43,32 +44,17 @@ export default class CategoryRow extends React.Component<CategoryRowProps, Categ
         this.props.onChangeCategory(newCategory);
     }
 
-    async validateNewBudget(newBudgetStr: string): Promise<boolean> {
-        const newBudget = new Money(newBudgetStr);
-        if (!newBudget.isValid(false /** allowNegative **/)) {
-            return false;
-        }
-        const res = await fetch('/api/category/budget', {
-            method: 'POST',
-            headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json'
-              },
-            body: JSON.stringify({
-                id: this.props.category.id,
-                frame: this.props.category.frame,
-                amount: newBudget,
-            }),
-        });
-        return res.status == 200;
-    }
-
     render() {
         const budget = <ClickToEdit 
             value={this.props.category.budget.string()} 
             onChange={this.onUpdateBudget.bind(this)}
-            validateChange={this.validateNewBudget.bind(this)}
-            formatDisplay={(budget) => new Money(budget).formatted()} />
+            validateChange={(s) => new Money(s).isValid()}
+            formatDisplay={(budget) => new Money(budget).formatted()}
+            postTo="/api/category/budget"
+            postData={{
+                id: this.props.category.id,
+                frame: this.props.category.frame}}
+            postKey="amount" />
         return <tr key={this.props.category.id}>
             <td><a href="#" onClick={() => this.delete()}>X</a></td>
             <td>{this.props.category.name}</td>

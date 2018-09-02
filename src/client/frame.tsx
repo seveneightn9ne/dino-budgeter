@@ -9,6 +9,7 @@ import * as frames from '../shared/frames';
 import * as util from './util';
 import { AI, getAIs } from '../shared/ai';
 import AIComponent from './ai';
+import ClickToEdit from './components/clicktoedit';
 
 type FrameProps = RouteComponentProps<{month: string, year: string}>;
 interface FrameState {
@@ -137,6 +138,14 @@ export default class Frame extends React.Component<FrameProps, FrameState> {
         event.preventDefault();
     }
 
+    onNewIncome(newIncomeStr: string) {
+        const setIncome = new Money(newIncomeStr);
+        const newFrame = {...this.state.frame};
+        newFrame.balance = frames.updateBalanceWithIncome(newFrame.balance, newFrame.income, setIncome);
+        newFrame.income = setIncome;
+        this.setState({frame: newFrame});
+    }
+
     render() {
         if (!this.state.frame) {
             return null;
@@ -165,13 +174,22 @@ export default class Frame extends React.Component<FrameProps, FrameState> {
         const ais = this.getAIs().map(ai => <AIComponent ai={ai} key={ai.message()} />);
         // income - spent = balance;
         // spent = income - balance;
+        const income = <ClickToEdit
+            value={this.state.frame.income.string()}
+            formatDisplay={(s) => new Money(s).formatted()}
+            validateChange={(s) => new Money(s).isValid()}
+            onChange={this.onNewIncome.bind(this)}
+            postTo="/api/income"
+            postData={{frame: this.state.frame.index}}
+            postKey="income"
+        />;
         return <div>
             <h1>{this.monthName + ' ' + this.year}</h1>
-            <p><b>Income: {this.state.frame.income.formatted()}
+            <div><b>Income: {income}
                 {' - '} <Link to={`/app/transactions/${this.month}/${this.year}`}>
                     Spent: {this.state.frame.income.minus(this.state.frame.balance).formatted()}
                 </Link>
-                {' = '} Balance: {this.state.frame.balance.formatted()}</b></p>
+                {' = '} Balance: {this.state.frame.balance.formatted()}</b></div>
             {ais}
             <NewCategory frame={this.state.frame.index} onAddCategory={this.onAddCategory.bind(this)} />
             <table><tbody>

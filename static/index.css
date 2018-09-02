@@ -18,3 +18,8 @@ body {
 input.error {
     border-color: rgb(122, 0, 0);
 }
+
+.clickable {
+    cursor: pointer;
+    text-decoration: underline;
+}

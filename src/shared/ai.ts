@@ -31,7 +31,8 @@ export class Overbudgeted implements AI {
     }
 
     message(): string {
-        return `You've budgeted more than your income! Increase your income or decrease your budget in a category.`;
+        return `You've budgeted ${this.overspent.negate().formatted()} more than your income! ` +
+            `Increase your income or decrease your budget in a category.`;
     }
 }
 
