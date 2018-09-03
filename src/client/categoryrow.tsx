@@ -5,7 +5,7 @@ import TxEntry from './txentry'
 import * as frames from '../shared/frames';
 import * as util from './util';
 import * as categories from '../shared/categories';
-import {ClickToEditMoney} from './components/clicktoedit';
+import {ClickToEditMoney, ClickToEditText} from './components/clicktoedit';
 
 interface CategoryRowProps {
     category: Category;
@@ -42,6 +42,12 @@ export default class CategoryRow extends React.Component<CategoryRowProps, Categ
         this.props.onChangeCategory(newCategory);
     }
 
+    onUpdateName(newName: string) {
+        const newCategory = {...this.props.category};
+        newCategory.name = newName;
+        this.props.onChangeCategory(newCategory);
+    }
+
     render() {
         const budget = <ClickToEditMoney 
             value={this.props.category.budget} 
@@ -51,9 +57,17 @@ export default class CategoryRow extends React.Component<CategoryRowProps, Categ
                 id: this.props.category.id,
                 frame: this.props.category.frame}}
             postKey="amount" />
+        const name = <ClickToEditText
+                value={this.props.category.name}
+                onChange={this.onUpdateName.bind(this)}
+                postTo="/api/category/name"
+                postData={{
+                    id: this.props.category.id,
+                    frame: this.props.category.frame}}
+                postKey="name" />
         return <tr key={this.props.category.id}>
             <td><a className="deleteCr" href="#" onClick={() => this.delete()}>X</a></td>
-            <td>{this.props.category.name}</td>
+            <td>{name}</td>
             <td>{budget}</td>
             <td>{this.props.category.balance.formatted()}</td>
         </tr>;

@@ -267,3 +267,26 @@ export const handle_category_budget_post = wrap(async function(req: Request, res
         res.sendStatus(200);
     });
 });
+
+export const handle_category_name_post = wrap(async function(req: Request, res: Response) {
+    req.checkBody("id").notEmpty();
+    req.checkBody("frame").notEmpty().isNumeric();
+    req.checkBody("name").notEmpty().isString();
+    const result = await req.getValidationResult();
+    if (!result.isEmpty()) {
+        console.log(result.mapped());
+        res.sendStatus(400);
+        return;
+    }
+    const id = req.body.id;
+    const frame = req.body.frame;
+    const name =req.body.name;
+    await db.tx(async t => {
+        const gid = await user.getDefaultGroup(req.user, t);
+        // gid included to make sure user has permission to edit this category
+        await t.none("update categories set name = $1 where id = $2 and frame = $3 and gid = $4", [
+            name, id, frame, gid,
+        ]);
+        res.sendStatus(200);
+    });
+});
