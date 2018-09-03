@@ -1,7 +1,7 @@
 import * as React from 'react';
-import * as util from './util';
 import {ClickToEditDate, ClickToEditMoney, ClickToEditText} from './components/clicktoedit';
-import { Frame, Money } from '../shared/types';
+import { Frame, Transaction } from '../shared/types';
+import { fromSerialized } from '../shared/transactions';
 
 interface Props {
     month: number;
@@ -16,18 +16,12 @@ type State = {
     message: string
 } | {
     kind: "loaded"
-    transactions: any[]
+    transactions: Transaction[]
 };
 
 export default class Transactions extends React.Component<Props, State> {
-    private monthName: string;
     state: State = {
         kind: "loading",
-    }
-
-    constructor(props: Props) {
-        super(props);
-        this.monthName = util.MONTHS[props.month];
     }
 
     setStateStrict(state: Readonly<State>): void {
@@ -52,18 +46,14 @@ export default class Transactions extends React.Component<Props, State> {
             throw new Error(`status ${res.status}`)
         }
         const payload = await res.json();
-        const txns = payload.transactions.map((tx: any) => {
-            tx.date = new Date(tx.date);
-            tx.amount = new Money(tx.amount);
-            return tx;
-        });
+        const txns = payload.transactions.map(fromSerialized);
         this.setStateStrict({
             kind: "loaded",
             transactions: txns,
         });
     }
 
-    updateTransactionState<T>(txid: string, transform: (txn: T) => T) {
+    updateTransactionState(txid: string, transform: (txn: Transaction) => Transaction) {
         if (this.state.kind != "loaded") throw new Error("impossible.");
         const transactions = this.state.transactions.map(tx => {
             if (tx.id == txid) {
@@ -87,13 +77,13 @@ export default class Transactions extends React.Component<Props, State> {
         }
     }
 
-    onAddTransaction(t: any) {
+    onAddTransaction(t: Transaction) {
         if (this.state.kind != "loaded") throw new Error("impossible.");
         const transactions = [...this.state.transactions, t];
         this.setState({kind: 'loaded', transactions});
     }
 
-    renderTransactions(transactions: any[]) {
+    renderTransactions(transactions: Transaction[]) {
         const rows = transactions.map((tx) => {
             console.log(tx);
             return <tr key={tx.id}>
