@@ -1,15 +1,12 @@
 import * as React from 'react';
-import {RouteComponentProps} from 'react-router';
-import { Link } from 'react-router-dom'
+import {RouteComponentProps, Switch, Route} from 'react-router';
 import {Frame as FrameType, Category, CategoryId, Money} from '../shared/types';
 import TxEntry from './txentry'
-import NewCategory from './newcategory';
-import CategoryRow from './categoryrow';
 import * as frames from '../shared/frames';
 import * as util from './util';
 import { AI, getAIs } from '../shared/ai';
-import AIComponent from './ai';
-import ClickToEdit from './components/clicktoedit';
+import Categories from './categories';
+import Transactions from './transactions';
 
 type FrameProps = RouteComponentProps<{month: string, year: string}>;
 interface FrameState {
@@ -178,35 +175,23 @@ export default class Frame extends React.Component<FrameProps, FrameState> {
             </div>;
         }
 
-        const cs = this.state.frame.categories.map(c => 
-            <CategoryRow key={c.id} category={c} 
-                onDeleteCategory={this.onDeleteCategory.bind(this)}
-                onChangeCategory={this.onChangeCategory.bind(this)} />
-        );
-        const ais = this.getAIs().map(ai => <AIComponent ai={ai} key={ai.message()} />);
-        // income - spent = balance;
-        // spent = income - balance;
-        const income = <ClickToEdit
-            value={this.state.frame.income.string()}
-            formatDisplay={(s) => new Money(s).formatted()}
-            validateChange={(s) => new Money(s).isValid()}
-            onChange={this.onNewIncome.bind(this)}
-            postTo="/api/income"
-            postData={{frame: this.state.frame.index}}
-            postKey="income"
-        />;
+        const categories = <Categories month={this.month} year={this.year}
+            frame={this.state.frame}
+            onAddCategory={this.onAddCategory.bind(this)}
+            onChangeCategory={this.onChangeCategory.bind(this)}
+            onDeleteCategory={this.onDeleteCategory.bind(this)}
+            onNewIncome={this.onNewIncome.bind(this)} />
+        
+        // TODO - have to tell Transactions when we add a new transaction.
+        const transactions = <Transactions month={this.month} year={this.year} frame={this.state.frame} />
+
         return <div>
             <h1>{this.monthName + ' ' + this.year}</h1>
-            <div><b>Income: {income}
-                {' - '} <Link to={`/app/transactions/${this.month+1}/${this.year}`}>
-                    Spent: {this.state.frame.income.minus(this.state.frame.balance).formatted()}
-                </Link>
-                {' = '} Balance: {this.state.frame.balance.formatted()}</b></div>
-            {ais}
-            <NewCategory frame={this.state.frame.index} onAddCategory={this.onAddCategory.bind(this)} />
-            <table><tbody>
-                {cs}
-            </tbody></table>
+            <Switch>
+                <Route path={"/app/:month/:year"} exact render={() => categories} />
+                <Route path={"/app/:month/:year/transactions"} render={() => transactions} />
+            </Switch>
+            
             <TxEntry onAddTransaction={this.onAddTransaction.bind(this)}
                 defaultDate={this.newTxDate}
                 categories={this.state.frame.categories} />

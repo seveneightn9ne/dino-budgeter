@@ -5,7 +5,7 @@ import TxEntry from './txentry'
 import * as frames from '../shared/frames';
 import * as util from './util';
 import * as categories from '../shared/categories';
-import ClickToEdit from './components/clicktoedit';
+import {ClickToEditMoney} from './components/clicktoedit';
 
 interface CategoryRowProps {
     category: Category;
@@ -34,9 +34,7 @@ export default class CategoryRow extends React.Component<CategoryRowProps, Categ
         return true;
     }
 
-    onUpdateBudget(newBudgetStr: string) {
-        console.log("final update to " + newBudgetStr);
-        const newBudget = new Money(newBudgetStr);
+    onUpdateBudget(newBudget: Money) {
         const newCategory = {...this.props.category};
         newCategory.budget = newBudget;
         newCategory.balance = categories.updateBalanceWithBudget(
@@ -45,11 +43,9 @@ export default class CategoryRow extends React.Component<CategoryRowProps, Categ
     }
 
     render() {
-        const budget = <ClickToEdit 
-            value={this.props.category.budget.string()} 
+        const budget = <ClickToEditMoney 
+            value={this.props.category.budget} 
             onChange={this.onUpdateBudget.bind(this)}
-            validateChange={(s) => new Money(s).isValid()}
-            formatDisplay={(budget) => new Money(budget).formatted()}
             postTo="/api/category/budget"
             postData={{
                 id: this.props.category.id,

@@ -4,9 +4,10 @@ import db from './db';
 import * as frames from './frames';
 import * as user from './user';
 import * as categories from './categories';
-import { utils } from 'pg-promise';
+import { utils, txMode } from 'pg-promise';
 import * as util from '../shared/util';
 import { IncomingMessage, request } from 'http';
+import * as transactions from './transactions';
 
 // Wrap an async handler to be called synchronously
 export const wrap = function(handler: (req: Request, res: Response)=>Promise<void>): (req: Request, res: Response)=>void {
@@ -115,6 +116,49 @@ export const handle_transaction_post = wrap(async function(req: Request, res: Re
         res.send({tx_id});
     });
 });
+
+export const handle_transaction_description_post = wrap(async function(req: Request, res: Response) {
+    await handle_transaction_update_post('description')(req, res);
+});
+
+export const handle_transaction_amount_post = wrap(async function(req: Request, res: Response) {
+    await handle_transaction_update_post('amount',
+        s => new Money(s).isValid(),
+        s => new Money(s).string())(req, res);
+});
+
+export const handle_transaction_date_post = wrap(async function(req: Request, res: Response) {
+    await handle_transaction_update_post('date', 
+        s => !isNaN(new Date(Number(s)).valueOf()),
+        s => new Date(Number(s)))(req, res);
+});
+
+function handle_transaction_update_post(
+        field: string, 
+        isValid?: (val: string) => boolean,
+        transform?: (val: string) => any,
+    ): (req: Request, res: Response) => Promise<void> {
+    return async (req: Request, res: Response) => {
+        if (!isValid) isValid = (s) => true;
+        if (!transform) transform = (s) => s;
+        req.checkBody("id").notEmpty().isString();
+        req.checkBody(field).notEmpty();
+        const result = await req.getValidationResult();
+        const value = req.body[field];
+        if (!result.isEmpty() || !isValid(value)) {
+            res.sendStatus(400);
+            return;
+        }
+        const id = req.body.id;
+        await db.tx(async t => {
+            const gid = await user.getDefaultGroup(req.user, t);
+            // Include gid to make sure the user has permission to the transaction.
+            await t.none("update transactions set " + field + " = $1 where id = $2 and gid = $3",
+                [transform(value), id, gid]);
+        });
+        res.sendStatus(200);
+    }
+}
 
 export const handle_category_post = wrap(async function(req: Request, res: Response) {
     req.checkBody("frame").notEmpty().isNumeric();

@@ -1,9 +1,13 @@
 import * as React from 'react';
-import {RouteComponentProps} from 'react-router';
-import * as frames from '../shared/frames'
-import { MONTHS } from './util';
+import * as util from './util';
+import {ClickToEditDate, ClickToEditMoney, ClickToEditText} from './components/clicktoedit';
+import { Frame, Money } from '../shared/types';
 
-type Props = RouteComponentProps<{month: string, year: string}>;
+interface Props {
+    month: number;
+    year: number;
+    frame: Frame;
+}
 
 type State = {
     kind: "loading"
@@ -16,7 +20,6 @@ type State = {
 };
 
 export default class Transactions extends React.Component<Props, State> {
-    private month: number;
     private monthName: string;
     state: State = {
         kind: "loading",
@@ -24,8 +27,7 @@ export default class Transactions extends React.Component<Props, State> {
 
     constructor(props: Props) {
         super(props);
-        this.month = Number(props.match.params.month) - 1;
-        this.monthName = MONTHS[this.month];
+        this.monthName = util.MONTHS[props.month];
     }
 
     setStateStrict(state: Readonly<State>): void {
@@ -45,22 +47,31 @@ export default class Transactions extends React.Component<Props, State> {
     }
 
     async init() {
-        const month = this.month;
-        const year = Number(this.props.match.params.year);
-        const frame = frames.index(month, year);
-        const res = await fetch("/api/transactions?frame=" + frame);
+        const res = await fetch("/api/transactions?frame=" + this.props.frame.index);
         if (res.status != 200) {
             throw new Error(`status ${res.status}`)
         }
         const payload = await res.json();
         const txns = payload.transactions.map((tx: any) => {
             tx.date = new Date(tx.date);
+            tx.amount = new Money(tx.amount);
             return tx;
         });
         this.setStateStrict({
             kind: "loaded",
             transactions: txns,
         });
+    }
+
+    updateTransactionState<T>(txid: string, transform: (txn: T) => T) {
+        if (this.state.kind != "loaded") throw new Error("impossible.");
+        const transactions = this.state.transactions.map(tx => {
+            if (tx.id == txid) {
+                return transform(tx);
+            }
+            return tx;
+        });
+        this.setState({kind: 'loaded', transactions});
     }
     
     render() {
@@ -76,16 +87,39 @@ export default class Transactions extends React.Component<Props, State> {
         }
     }
 
-    formatDate(d: Date): string {
-        return `${d.getMonth() + 1}/${d.getDate()}/${d.getFullYear()}`;
+    onAddTransaction(t: any) {
+        if (this.state.kind != "loaded") throw new Error("impossible.");
+        const transactions = [...this.state.transactions, t];
+        this.setState({kind: 'loaded', transactions});
     }
 
     renderTransactions(transactions: any[]) {
         const rows = transactions.map((tx) => {
-            return <tr key={tx.id}><td>{this.formatDate(tx.date)}</td><td>{tx.description}</td><td>{tx.amount}</td></tr>;
+            console.log(tx);
+            return <tr key={tx.id}>
+                <td><ClickToEditDate value={tx.date}
+                    onChange={date => 
+                        this.updateTransactionState(tx.id, tx => ({...tx, date}))}
+                    postTo="/api/transaction/date"
+                    postKey="date"
+                    postData={{id: tx.id}}
+                /></td>
+                <td><ClickToEditText value={tx.description} size={20}
+                    onChange={description => 
+                        this.updateTransactionState(tx.id, tx => ({...tx, description}))}
+                    postTo="/api/transaction/description"
+                    postKey="description"
+                    postData={{id: tx.id}}
+                /></td>
+                <td><ClickToEditMoney value={tx.amount}
+                    onChange={amount =>
+                        this.updateTransactionState(tx.id, tx => ({...tx, amount}))}
+                    postTo="/api/transaction/amount"
+                    postKey="amount"
+                    postData={{id: tx.id}}
+                /></td></tr>;
         });
         return <div>
-            <h1>{this.monthName + ' ' + this.props.match.params.year}</h1>
             <h2>Transactions</h2>
             <table><tbody>
             {rows}

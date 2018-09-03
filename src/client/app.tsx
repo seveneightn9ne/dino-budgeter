@@ -25,9 +25,8 @@ export default class App extends React.Component<{}, AppState> {
     }
     render() {
         return <Switch>
-            <Redirect exact from="/app" to={"/app/home/" + this.currentMonth + "/" + this.currentYear} />
-            <Route path="/app/home/:month/:year" component={Frame} />
-            <Route path="/app/transactions/:month/:year" component={Transactions} />
+            <Redirect exact from="/app" to={"/app/" + this.currentMonth + "/" + this.currentYear} />
+            <Route path="/app/:month/:year" component={Frame} />
             <Route path="*" component={NoRoute} />
         </Switch>;
     }

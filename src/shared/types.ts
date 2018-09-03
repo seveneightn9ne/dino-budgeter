@@ -4,6 +4,7 @@ export type UserId = string;
 export type GroupId = string;
 export type CategoryId = string;
 export type FrameIndex = number;
+export type TransactionId = string;
 
 // Corresponds to `users` db table
 export interface User {
@@ -78,4 +79,16 @@ export interface Frame {
     balance: Money;
     income: Money;
     categories?: Category[];
+}
+
+// Corresponds to `transactions` db table
+export interface Transaction {
+    id: TransactionId;
+    gid: GroupId;
+    frame: FrameIndex;
+    category: CategoryId | null;
+    amount: Money;
+    description: string;
+    alive: boolean;
+    date: Date;
 }

@@ -1,4 +1,7 @@
+import { FrameIndex } from '../shared/types';
+
 export * from '../shared/util';
+import * as frames from '../shared/frames';
 
 export const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
@@ -22,4 +25,17 @@ export function fromYyyymmdd(datestring: string): Date {
 
 export function cc(self: React.Component, field: string): (event: React.ChangeEvent<HTMLInputElement> | React.ChangeEvent<HTMLSelectElement>) => void {
     return (event) => self.setState({[field]: event.target.value});
+}
+
+export function defaultTxDate(frame: FrameIndex): Date {
+    const year = frames.year(frame);
+    const month = frames.month(frame);
+    const newTxDate = new Date();
+    if (newTxDate.getFullYear() != year || newTxDate.getMonth() != month) {
+      // frame is not the current frame
+      newTxDate.setFullYear(year);
+      newTxDate.setMonth(month);
+      newTxDate.setDate(1);
+    }
+    return newTxDate;
 }
