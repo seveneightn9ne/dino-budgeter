@@ -108,6 +108,30 @@ export const handle_transaction_post = wrap(async function(req: Request, res: Re
     });
 });
 
+export const handle_transaction_delete = wrap(async function(req: Request, res: Response) {
+    const id = req.body.id;
+    if (!id) {
+        res.sendStatus(400);
+        return;
+    }
+    await db.tx(async t => {
+        const row = await t.oneOrNone("select * from transactions where id = $1", [id]);
+        if (!row) {
+            res.sendStatus(400);
+            return;
+        }
+        const transaction = transactions.fromSerialized(row);
+        const membership = await t.oneOrNone("select * from membership where uid = $1 and gid = $2", [
+            req.user.uid, transaction.gid]);
+        if (!membership) {
+            res.sendStatus(401);
+            return;
+        }
+        await t.none("update transactions set alive = false where id = $1", [id]);
+        res.sendStatus(200);
+    });
+});
+
 export const handle_transaction_description_post = wrap(async function(req: Request, res: Response) {
     await handle_transaction_update_post('description')(req, res);
 });

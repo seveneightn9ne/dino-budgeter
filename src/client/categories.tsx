@@ -76,6 +76,7 @@ export default class Categories extends React.Component<Props, State> {
             {ais}
             <NewCategory frame={this.props.frame.index} onAddCategory={this.props.onAddCategory} />
             <table><tbody>
+                <tr><th></th><th>Category</th><th>Budget</th><th>Spending</th><th>Balance</th></tr>
                 {cs}
             </tbody></table></div>;
     }

@@ -57,6 +57,7 @@ app.get('/api/frame/:month/:year', ensureLogin.ensureLoggedIn(), api.handle_fram
 app.get('/api/frame',              ensureLogin.ensureLoggedIn(), api.handle_frame_get);
 app.get('/api/transactions',       ensureLogin.ensureLoggedIn(), api.handle_transactions_get);
 app.post('/api/transaction',       ensureLogin.ensureLoggedIn(), api.handle_transaction_post);
+app.delete('/api/transaction',     ensureLogin.ensureLoggedIn(), api.handle_transaction_delete);
 app.post('/api/transaction/description', ensureLogin.ensureLoggedIn(), api.handle_transaction_description_post);
 app.post('/api/transaction/amount',ensureLogin.ensureLoggedIn(), api.handle_transaction_amount_post);
 app.post('/api/transaction/date',  ensureLogin.ensureLoggedIn(), api.handle_transaction_date_post);

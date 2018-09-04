@@ -1,12 +1,13 @@
 import * as React from 'react';
 import {RouteComponentProps, Switch, Route} from 'react-router';
-import {Frame as FrameType, Category, CategoryId, Money} from '../shared/types';
+import {Frame as FrameType, Category, CategoryId, Money, Transaction, TransactionId} from '../shared/types';
 import TxEntry from './txentry'
 import * as frames from '../shared/frames';
 import * as util from './util';
 import { AI, getAIs } from '../shared/ai';
 import Categories from './categories';
 import Transactions from './transactions';
+import * as transactions from '../shared/transactions';
 
 type FrameProps = RouteComponentProps<{month: string, year: string}>;
 interface FrameState {
@@ -14,6 +15,7 @@ interface FrameState {
     budgeted?: Money;
     setIncome: string;
     setIncomeErr?: boolean;
+    transactions?: Transaction[];
 }
 
 /** /app/:month/:year */
@@ -49,6 +51,7 @@ export default class Frame extends React.Component<FrameProps, FrameState> {
 
     componentDidMount() {
         this.initializeFrame();
+        this.initTransactions();
     }
 
     calculateBudgeted(categories: Category[]): Money {
@@ -66,6 +69,18 @@ export default class Frame extends React.Component<FrameProps, FrameState> {
             const budgeted = this.calculateBudgeted(frame.categories);
             this.setState({frame, budgeted});
             return frame;
+        });
+    }
+
+    async initTransactions() {
+        const res = await fetch("/api/transactions?frame=" + this.index);
+        if (res.status != 200) {
+            throw new Error(`status ${res.status}`)
+        }
+        const payload = await res.json();
+        const txns = payload.transactions.map(transactions.fromSerialized);
+        this.setState({
+            transactions: txns,
         });
     }
 
@@ -98,23 +113,41 @@ export default class Frame extends React.Component<FrameProps, FrameState> {
         this.setState({frame: newFrame, budgeted});
     }
 
-    onAddTransaction(amount: Money, cid: CategoryId, date: Date) {
-        if (date.getFullYear() == this.year && date.getMonth() == this.month) {
-            const newFrame = {...this.state.frame};
-            newFrame.balance = this.state.frame.balance.minus(amount);
+    onAddTransaction(t: Transaction) {
+        const newFrame = {...this.state.frame};
+        if (t.frame == this.state.frame.index) {
+            newFrame.balance = this.state.frame.balance.minus(t.amount);
+            newFrame.spending = this.state.frame.spending.plus(t.amount);
             newFrame.categories = newFrame.categories.map(c => {
-                const newBalance = c.balance.minus(amount);
-                if (c.id == cid) {
+                if (c.id == t.category) {
+                    const newBalance = c.balance.minus(t.amount);
                     return {...c, balance: newBalance};
                 }
                 return c;
             });
-            this.setState({
-                frame: newFrame,
-            });
-        } else {
-            // TODO: if it's in the past, it needs to reflect in the current balance
+        } else if (t.frame < this.state.frame.index) {
+            newFrame.balance = this.state.frame.balance.minus(t.amount);
         }
+        const transactions = [...this.state.transactions, t];
+        this.setState({
+            frame: newFrame,
+            transactions,
+        });
+    }
+
+    onUpdateTransaction(t: Transaction) {
+        const transactions = this.state.transactions.map(otherT => {
+            if (t.id == otherT.id) {
+                return t;
+            }
+            return otherT;
+        });
+        this.setState({transactions});
+    }
+
+    onDeleteTransaction(id: TransactionId) {
+        const transactions = this.state.transactions.filter(t => t.id != id);
+        this.setState({transactions});
     }
 
     onChangeIncome(event: React.ChangeEvent<HTMLInputElement>): void {
@@ -182,8 +215,11 @@ export default class Frame extends React.Component<FrameProps, FrameState> {
             onDeleteCategory={this.onDeleteCategory.bind(this)}
             onNewIncome={this.onNewIncome.bind(this)} />
         
-        // TODO - have to tell Transactions when we add a new transaction.
-        const transactions = <Transactions month={this.month} year={this.year} frame={this.state.frame} />
+        const transactions = (this.state.transactions == undefined) ? null :
+            <Transactions transactions={this.state.transactions}
+                onUpdateTransaction={this.onUpdateTransaction.bind(this)}
+                onDeleteTransaction={this.onDeleteTransaction.bind(this)}
+                month={this.month} year={this.year} frame={this.state.frame} />
 
         return <div>
             <h1>{this.monthName + ' ' + this.year}</h1>
@@ -193,7 +229,7 @@ export default class Frame extends React.Component<FrameProps, FrameState> {
             </Switch>
             
             <TxEntry onAddTransaction={this.onAddTransaction.bind(this)}
-                defaultDate={this.newTxDate}
+                defaultDate={this.newTxDate} gid={this.state.frame.gid} frame={this.state.frame.index}
                 categories={this.state.frame.categories} />
         </div>;
     }

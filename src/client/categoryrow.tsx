@@ -66,10 +66,12 @@ export default class CategoryRow extends React.Component<CategoryRowProps, Categ
                     id: this.props.category.id,
                     frame: this.props.category.frame}}
                 postKey="name" />
+        const spending = this.props.category.balance.minus(this.props.category.budget).negate();
         return <tr key={this.props.category.id}>
-            <td><a className="deleteCr" href="#" onClick={() => this.delete()}>X</a></td>
+            <td><span className="deleteCr clickable" onClick={() => this.delete()}>X</span></td>
             <td>{name}</td>
             <td>{budget}</td>
+            <td>{spending.formatted()}</td>
             <td>{this.props.category.balance.formatted()}</td>
         </tr>;
     }

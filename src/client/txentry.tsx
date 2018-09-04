@@ -1,13 +1,15 @@
 import * as React from 'react';
-import {Money, Category} from '../shared/types';
+import {Money, Category, Transaction, GroupId, FrameIndex} from '../shared/types';
 import * as util from './util';
 import { index } from '../shared/frames';
 
 
 interface TxEntryProps {
-    onAddTransaction: (amount: Money, category: string, date: Date) => void;
+    onAddTransaction: (transaction: Transaction) => void;
     categories: Category[];
     defaultDate: Date;
+    gid: GroupId;
+    frame: FrameIndex;
 }
 
 interface TxEntryState {
@@ -54,10 +56,22 @@ export default class TxEntry extends React.Component<TxEntryProps, TxEntryState>
                 date: date,
                 category: category,
             }),
-        }).then(() => {
-            this.props.onAddTransaction(amount, category, date);
-            // Not clearing date & category
-            this.setState({amount: '', description: ''});
+        }).then((response) => {
+            response.json().then((response) => {
+                const transaction: Transaction = {
+                    id: response.tx_id,
+                    gid: this.props.gid,
+                    frame: this.props.frame,
+                    category: category || null,
+                    amount: amount,
+                    description: this.state.description,
+                    alive: true,
+                    date: date,
+                }
+                this.props.onAddTransaction(transaction);
+                // Not clearing date & category
+                this.setState({amount: '', description: ''});
+            });
         });
         event.preventDefault();
     }

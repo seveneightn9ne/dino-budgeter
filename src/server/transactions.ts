@@ -1,5 +1,6 @@
 import {Money, TransactionId, Transaction} from '../shared/types';
 import pgPromise from 'pg-promise';
+export * from '../shared/transactions';
 
 export function getTransaction(id: TransactionId, t: pgPromise.ITask<{}>): Promise<Transaction> {
     return t.one("select * from transactions where id = $1", [id]).then(row => {
