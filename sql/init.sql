@@ -33,7 +33,6 @@ create table membership (
 create table frames (
   gid char(32) not null references groups,
   index int not null,
-  balance text not null,
   income text not null,
   primary key (gid, index)
 );
@@ -47,7 +46,6 @@ create table categories (
   ordering int not null,
   ctime timestamp not null default current_timestamp,
   budget text not null,
-  balance text not null,
   primary key (id, frame),
   foreign key (gid, frame) references frames
 );

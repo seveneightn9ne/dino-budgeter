@@ -25,9 +25,12 @@ export function getNextOrdinal(gid: GroupId, frame: FrameIndex, t: pgPromise.ITa
         [gid, frame]).then(row => row ? row.ordering + 1 : 0);
 }
 
-export function getBalance(id: CategoryId, frame: FrameIndex, t: pgPromise.ITask<{}>): Promise<Money> {
-    return t.one("select balance from categories where id = $1 and frame = $2", [id, frame]).then(row => {
-        return new Money(row.balance);
+export function getSpending(id: CategoryId, frame: FrameIndex, t: pgPromise.ITask<{}>): Promise<Money> {
+    return t.manyOrNone("select amount from transactions where category = $1 and frame = $2 and alive = true", [id, frame]).then(rows => {
+        if (!rows) {
+            return Money.Zero;
+        }
+        return rows.reduce((a: Money, row: any) => a.plus(new Money(row.amount)), Money.Zero);
     });
 }
 

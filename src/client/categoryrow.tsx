@@ -27,6 +27,7 @@ export default class CategoryRow extends React.Component<CategoryRowProps, Categ
               },
             body: JSON.stringify({
                 id: this.props.category.id,
+                frame: this.props.category.frame,
             }),
         }).then(response => {
             this.props.onDeleteCategory(this.props.category.id);

@@ -19,6 +19,15 @@ export class Money {
         this.num = new BigNumber(value);
     }
     static Zero = new Money(0);
+    static sum(ms: Money[]): Money {
+        console.log("will sum", ms);
+        return ms.reduce((a: Money, b: Money) => {
+            if (!b.isValid()) {
+                throw new Error("this is not a good money:" + b.toJSON());
+            }
+            return a.plus(b);
+        }, Money.Zero);
+    }
     string(): string {
         return this.num.toFixed(2);
     }
@@ -61,6 +70,7 @@ export class Money {
     }
 }
 
+// Corresponds to `categories` db table, plus `balance`
 export interface Category {
     id: CategoryId;
     gid: GroupId;
@@ -72,13 +82,14 @@ export interface Category {
     balance: Money;
 }
 
-// Corresponds to `frames` db table joined on `categories`
+// Corresponds to `frames` db table joined on `categories`, plus `balance` and `spending`
 export interface Frame {
     gid: GroupId;
     index: FrameIndex;
-    balance: Money;
     income: Money;
     categories?: Category[];
+    balance?: Money;
+    spending?: Money;
 }
 
 // Corresponds to `transactions` db table

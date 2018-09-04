@@ -3,6 +3,7 @@ import * as util from './util';
 import * as categories from './categories';
 
 export function index(month: number, year: number): FrameIndex {
+    console.log(month, year, typeof month, typeof year);
     return (year - 1970) * 12 + month;
 }
 
@@ -32,6 +33,9 @@ export function fromSerialized(row: any): Frame {
     }
     if (row.categories) {
         frame.categories = row.categories.map(categories.fromSerialized);
+    }
+    if (row.spending) {
+        frame.spending = new Money(row.spending);
     }
     return frame;
 }

@@ -48,15 +48,18 @@ export const handle_frame_get = wrap(async function(req: Request, res: Response)
     }
     await db.tx(async t => {
         const gid = await user.getDefaultGroup(req.user, t);
-        const frame = await frames.getOrCreateFrame(gid, frames.index(
-            Number(req.params.month),
-            Number(req.params.year)));
+        const index = frames.index(Number(req.params.month), Number(req.params.year));
+        console.log("look at this index...", index);
+        const frame = await frames.getOrCreateFrame(gid, index, t);
+        //console.log("From handle_frame_get");
+        //console.log(frame);
         res.send(frame);
     });
 });
 
 export const handle_transactions_get = wrap(async function(req: Request, res: Response): Promise<void> {
     req.checkQuery("frame").notEmpty().isNumeric();
+    console.log("THEY TYPE OF THE FRAME", typeof req.query.frame);
     let result = await req.getValidationResult()
     if (!result.isEmpty()) {
         const status = 400;
@@ -72,12 +75,12 @@ export const handle_transactions_get = wrap(async function(req: Request, res: Re
     const frame = Number(req.query.frame);
     const transactions = await db.tx(async t => {
         const gid = await user.getDefaultGroup(req.user, t);
-        const rows = await t.many("select id,category,amount,description,date \
+        const rows = await t.manyOrNone("select id,category,amount,description,category,date \
         from transactions \
         where gid=$1 \
         and frame=$2 \
         and alive", [gid, frame]);
-        return rows;
+        return rows || [];
     })
     res.json({transactions});
 });
@@ -99,20 +102,8 @@ export const handle_transaction_post = wrap(async function(req: Request, res: Re
     const date = new Date(req.body.date);
     await db.tx(async t => {
         const gid = await user.getDefaultGroup(req.user, t);
-        const frameRow = await t.one("select balance from frames where gid = $1 and index = $2", [gid, frame_index]);
-        const newBalance = new Money(frameRow.balance).minus(amount);
-        // TODO if the transaction is in not-the-newest frame, the more recent frames need their balances updated.
-        const work = [
-            t.none("insert into transactions (id, gid, frame, amount, description, date) values ($1, $2, $3, $4, $5, $6)",
-                [tx_id, gid, frame_index, amount.string(), req.body.description, date]),
-            t.none("update frames set balance = $1 where gid = $2 and index = $3",
-                [newBalance.string(), gid, frame_index])];
-        const catRow = await t.oneOrNone("select balance from categories where id = $1 and frame = $2", [category, frame_index]);
-        if (catRow) {
-            const newBalance = new Money(catRow.balance).minus(amount);
-            work.push(t.none("update categories set balance = $1 where id = $2 and frame = $3", [newBalance.string(), category, frame_index]));
-        }
-        await t.batch(work);
+        await t.none("insert into transactions (id, gid, frame, amount, description, category, date) values ($1, $2, $3, $4, $5, $6, $7)",
+            [tx_id, gid, frame_index, amount.string(), req.body.description, category || null, date]);
         res.send({tx_id});
     });
 });
@@ -175,27 +166,26 @@ export const handle_category_post = wrap(async function(req: Request, res: Respo
         id: util.randomId(),
         alive: true,
         budget: Money.Zero,
-        balance: Money.Zero,
     }
     await db.tx(async t => {
         c.gid = await user.getDefaultGroup(req.user, t);
         c.ordering = await categories.getNextOrdinal(c.gid, c.frame, t);
         await t.none("insert into categories (id, gid, frame, alive, name, ordering, " +
-            "budget, balance) values ($1, $2, $3, $4, $5, $6, $7, $8)", [
-                c.id, c.gid, c.frame, c.alive, c.name, c.ordering, c.budget.string(), c.balance.string()]);
-        
+            "budget) values ($1, $2, $3, $4, $5, $6, $7)", [
+                c.id, c.gid, c.frame, c.alive, c.name, c.ordering, c.budget.string()]);
     })
     res.send({category: c});
 });
 
 export const handle_category_delete = wrap(async function(req: Request, res: Response) {
     const id = req.body.id;
+    const frame = Number(req.body.frame);
     if (!id) {
         res.sendStatus(400);
         return;
     }
     await db.tx(async t => {
-        const row = await t.oneOrNone("select * from categories where id = $1", [req.body.id]);
+        const row = await t.oneOrNone("select * from categories where id = $1 and frame = $2", [id, frame]);
         if (!row) {
             res.sendStatus(400);
             return;
@@ -207,7 +197,7 @@ export const handle_category_delete = wrap(async function(req: Request, res: Res
             res.sendStatus(401);
             return;
         }
-        await t.none("update categories set alive = false where id = $1", [id]);
+        await t.none("update categories set alive = false where id = $1 and frame = $2", [id, frame]);
         res.sendStatus(200);
     });
 });
@@ -228,11 +218,8 @@ export const handle_income_post = wrap(async function(req: Request, res: Respons
     const frame = Number(req.body.frame);
     await db.tx(async t => {
         const gid = await user.getDefaultGroup(req.user, t);
-        const prevIncome = await frames.getIncome(gid, frame, t);
-        const prevBalance = await frames.getBalance(gid, frame, t);
-        const newBalance = frames.updateBalanceWithIncome(prevBalance, prevIncome, income);
-        await t.none("update frames set income = $1, balance = $2 where gid = $3 and index = $4",
-            [income.string(), newBalance.string(), gid, frame]);
+        await t.none("update frames set income = $1, where gid = $2 and index = $3",
+            [income.string(), gid, frame]);
         res.sendStatus(200);
     });
 });
@@ -256,13 +243,9 @@ export const handle_category_budget_post = wrap(async function(req: Request, res
     }
     await db.tx(async t => {
         const gid = await user.getDefaultGroup(req.user, t);
-        const prevBalance = await categories.getBalance(id, frame, t);
-        const prevBudget = await categories.getBudget(id, frame, t)
-        const prevCat = {balance: prevBalance, budget: prevBudget};
-        const newBalance = categories.updateBalanceWithBudget(prevCat, amount);
         // gid included to make sure user has permission to edit this category
-        await t.none("update categories set budget = $1, balance = $2 where id = $3 and frame = $4 and gid = $5", [
-            amount.string(), newBalance.string(), id, frame, gid,
+        await t.none("update categories set budget = $1 where id = $2 and frame = $3 and gid = $4", [
+            amount.string(), id, frame, gid,
         ]);
         res.sendStatus(200);
     });
