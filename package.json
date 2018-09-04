@@ -1,5 +1,5 @@
 {
-  "name": "budgeter",
+  "name": "dino-budgeter",
   "version": "1.0.0",
   "description": "budgeting webapp",
   "main": "dist/server/server.js",
