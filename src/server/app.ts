@@ -63,6 +63,7 @@ app.post('/api/transaction/amount',ensureLogin.ensureLoggedIn(), api.handle_tran
 app.post('/api/transaction/date',  ensureLogin.ensureLoggedIn(), api.handle_transaction_date_post);
 app.post('/api/category',          ensureLogin.ensureLoggedIn(), api.handle_category_post);
 app.delete('/api/category',        ensureLogin.ensureLoggedIn(), api.handle_category_delete);
+app.get('/api/categories',         ensureLogin.ensureLoggedIn(), api.handle_categories_get);
 app.post('/api/category/budget',   ensureLogin.ensureLoggedIn(), api.handle_category_budget_post);
 app.post('/api/category/name',     ensureLogin.ensureLoggedIn(), api.handle_category_name_post);
 app.post('/api/income',            ensureLogin.ensureLoggedIn(), api.handle_income_post);

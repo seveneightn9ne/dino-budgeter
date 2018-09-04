@@ -4,6 +4,7 @@ import Frame from './frame';
 import Transactions from './transactions';
 import NoRoute from './noroute';
 import { Switch, Route, Redirect } from 'react-router';
+import AddTransaction from './addtransaction';
 
 interface AppState {
     group?: GroupId;
@@ -27,6 +28,7 @@ export default class App extends React.Component<{}, AppState> {
         return <Switch>
             <Redirect exact from="/app" to={"/app/" + this.currentMonth + "/" + this.currentYear} />
             <Route path="/app/:month/:year" component={Frame} />
+            <Route path="/app/add-transaction" component={AddTransaction} />
             <Route path="*" component={NoRoute} />
         </Switch>;
     }

@@ -226,10 +226,11 @@ export default class Frame extends React.Component<FrameProps, FrameState> {
             <Switch>
                 <Route path={"/app/:month/:year"} exact render={() => categories} />
                 <Route path={"/app/:month/:year/transactions"} render={() => transactions} />
+                <Route path={"/app/add-transaction"} render={() => null} />
             </Switch>
             
             <TxEntry onAddTransaction={this.onAddTransaction.bind(this)}
-                defaultDate={this.newTxDate} gid={this.state.frame.gid} frame={this.state.frame.index}
+                defaultDate={this.newTxDate} gid={this.state.frame.gid}
                 categories={this.state.frame.categories} />
         </div>;
     }

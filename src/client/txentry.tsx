@@ -8,8 +8,7 @@ interface TxEntryProps {
     onAddTransaction: (transaction: Transaction) => void;
     categories: Category[];
     defaultDate: Date;
-    gid: GroupId;
-    frame: FrameIndex;
+    gid?: GroupId;
 }
 
 interface TxEntryState {
@@ -61,7 +60,7 @@ export default class TxEntry extends React.Component<TxEntryProps, TxEntryState>
                 const transaction: Transaction = {
                     id: response.tx_id,
                     gid: this.props.gid,
-                    frame: this.props.frame,
+                    frame: frame,
                     category: category || null,
                     amount: amount,
                     description: this.state.description,

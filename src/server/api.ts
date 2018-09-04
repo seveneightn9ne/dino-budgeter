@@ -226,6 +226,17 @@ export const handle_category_delete = wrap(async function(req: Request, res: Res
     });
 });
 
+// Does not send the balance
+export const handle_categories_get = wrap(async function(req: Request, res: Response): Promise<void> {
+    const frame = Number(req.query.frame);
+    await db.tx(async t => {
+        const gid = await user.getDefaultGroup(req.user, t);
+        const rows = await db.manyOrNone("select * from categories where gid = $1 and frame = $2 and alive = true", [gid, frame]);
+        const cs = rows.map(categories.fromSerialized);
+        res.send({categories: cs});
+    })
+});
+
 export const handle_income_post = wrap(async function(req: Request, res: Response): Promise<void> {
     req.checkBody("frame").isNumeric();
     req.checkBody("income").isNumeric();
