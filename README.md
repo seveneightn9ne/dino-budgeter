@@ -1,4 +1,4 @@
-# budgeter
+# Dino Budgeter
 Budgeting webapp.
 
 ## Development
