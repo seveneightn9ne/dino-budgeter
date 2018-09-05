@@ -54,10 +54,10 @@ async function getOrCreateFrameInner(gid: GroupId, index: FrameIndex, t: pgPromi
     }
     // Save the new frame and categories
     await t.none("insert into frames (gid, index, income) values ($1, $2, $3)", [
-        frame.gid, frame.index, frame.income]);
+        frame.gid, frame.index, frame.income.string()]);
     await t.batch(frame.categories.map(c => 
             t.none("insert into categories (id, gid, frame, name, ordering, budget) values ($1, $2, $3, $4, $5, $6)", [
-                c.id, c.gid, c.frame, c.name, c.ordering, c.budget])));
+                c.id, c.gid, c.frame, c.name, c.ordering, c.budget.string()])));
     return frame;
 }
 

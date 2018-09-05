@@ -253,7 +253,7 @@ export const handle_income_post = wrap(async function(req: Request, res: Respons
     const frame = Number(req.body.frame);
     await db.tx(async t => {
         const gid = await user.getDefaultGroup(req.user, t);
-        await t.none("update frames set income = $1, where gid = $2 and index = $3",
+        await t.none("update frames set income = $1 where gid = $2 and index = $3",
             [income.string(), gid, frame]);
         res.sendStatus(200);
     });
