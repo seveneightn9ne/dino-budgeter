@@ -36,10 +36,6 @@ export default class Categories extends React.Component<Props, State> {
         return getAIs(this.props.frame);
     }
 
-    calculateBudgeted(categories: Category[]): Money {
-        return categories.reduce((a, b) => a.plus(b.budget), Money.Zero);
-    }
-
     render() {
         const cs = this.props.frame.categories.map(c => 
             <CategoryRow key={c.id} category={c} 

@@ -79,7 +79,7 @@ export interface Category {
     name: string;
     ordering: number;
     budget: Money;
-    balance: Money;
+    balance?: Money;
 }
 
 // Corresponds to `frames` db table joined on `categories`, plus `balance` and `spending`

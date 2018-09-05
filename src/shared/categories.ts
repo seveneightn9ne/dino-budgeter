@@ -1,9 +1,10 @@
 import {Money, Category} from '../shared/types';
 
 export function updateBalanceWithBudget(category: {
-        balance: Money,
+        balance?: Money,
         budget: Money,
     }, newBudget: Money): Money {
+    if (!category.balance) throw new Error("balance is required");
     return category.balance.minus(category.budget).plus(newBudget);
 }
 

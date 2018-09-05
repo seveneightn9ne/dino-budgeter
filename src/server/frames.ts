@@ -26,31 +26,29 @@ async function getOrCreateFrameInner(gid: GroupId, index: FrameIndex, t: pgPromi
     }
     console.log("creating new frame");
     const frame: Frame = {gid, index, balance: Money.Zero, income: Money.Zero};
+    frame.spending = await getSpending(gid, index, t);
+    frame.balance = await getBalance(gid, index, t);
     const prevFrame = await getPreviousFrame(gid, index, t);
     if (prevFrame) {
-        const prevBalance = await getBalance(gid, prevFrame.index, t);
-        frame.balance = prevBalance.plus(prevFrame.income);
         frame.income = prevFrame.income;
-        const cs = await getCategories(gid, prevFrame.index, t);
-        frame.categories = cs.map(old_category => {
-            return {...old_category, frame: frame.index, balance: old_category.budget};
-        });
+        frame.categories = await getCategories(gid, prevFrame.index, t);
     } else {
         console.log("no previous frame");
         let i = -1;
-        frame.categories = categories.DEFAULT_CATEGORIES.map(c => {
+        frame.categories = await t.batch(categories.DEFAULT_CATEGORIES.map(async c => {
             i += 1;
+            const id = util.randomId();
             return {
                 name: c,
                 gid: gid,
                 frame: index,
                 alive: true,
-                id: util.randomId(),
+                id: id,
                 ordering: i,
                 budget: Money.Zero,
-                balance: Money.Zero,
-            }
-        });
+                balance: Money.Zero.minus(await categories.getSpending(id, index, t)),
+            };
+        }));
     }
     // Save the new frame and categories
     await t.none("insert into frames (gid, index, income) values ($1, $2, $3)", [
