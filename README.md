@@ -3,7 +3,7 @@ Budgeting webapp.
 
 ## Development
 
-See [Database setup] first.
+See [Dev Setup] first.
 
 Build the stuff
 ```
@@ -20,48 +20,90 @@ Restarting server
 npm run watch-serve
 ```
 
-## Database setup
-(ubuntu)
+## Dev Setup
 
-1. Install Postgres
+### 1. Install Postgres
+
+*Ubuntu*
+
 ```
 sudo apt update
 sudo apt install postgresql postgresql-contrib
 ```
 
-2. Create a user named `budgeter` and give it no special priveleges.
+*macOS*
+
+```
+brew install postgresql
+```
+
+### 2. Create a user named `budgeter` and give it no special priveleges.
+
+*Ubuntu*
 
 Ignore non-fatal errors about changing directories.
 ```
 sudo -u postgres createuser --interactive
 ```
 
-3. Set the user's password. Pick a good password and save it somewhere.
+*macOS*
+
+```
+createuser --interactive
+```
+
+### 3. Set the user's password. Pick a good password and save it somewhere.
+
+*Ubuntu*
+
 ```
 sudo -u postgres psql
 postgres=# \password budgeter
 ```
 
-4. Create a database named `budgeter`.
+*macOS*
+
+```
+psql postgres
+postgres=# \password budgeter
+```
+
+### 4. Create a database named `budgeter`.
+
+*Ubuntu*
+
 ```
 sudo -u postgres createdb budgeter
 ```
 
-5. Add this to your `.envrc` file for the project.
+*macOS*
 
-Create a `.envrc` file if you don't have one. Make sure it's gitignored!
+```
+createdb budgeter
+```
+
+### 5. Set up your `.envrc` file for the project.
 
 Install [`direnv`](https://direnv.net/) if you haven't.
 
-You may need to run `direnv allow`.
+Create a `.envrc` file in the repo root with the following contents:
 
 ```
 export PGPASSWORD=blahblahpassword
 ```
 
-6. Initialize the db
+You may need to run `direnv allow`.
+
+### 6. Initialize the db
 ```
 sql/init.sh
 ```
 
-That's it, the app should now be able to connect to the db.
+### 7. Install nodejs and npm
+
+https://nodejs.org/en/
+
+### 8. Install typescript
+```
+npm install -g typescript
+```
