@@ -39,8 +39,7 @@
     "react": "^16.4.2",
     "react-dom": "^16.4.2",
     "react-media": "^1.8.0",
-    "react-router-dom": "^4.3.1",
-    "typescript": "^3.0.1"
+    "react-router-dom": "^4.3.1"
   },
   "devDependencies": {
     "awesome-typescript-loader": "^5.2.0",
@@ -58,8 +57,7 @@
     "watch-serve": "find dist/server | entr -r sh -c \"npm run serve\"",
     "watch-client": "node_modules/.bin/webpack --mode=development --watch",
     "lint": "tslint -c tslint.json -p tsconfig.json",
-    "serve": "node dist/server/server.js",
-    "server": "npm run serve"
+    "serve": "node dist/server/server.js"
   },
   "repository": {
     "type": "git",
