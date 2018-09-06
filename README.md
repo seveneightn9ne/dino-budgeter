@@ -10,13 +10,15 @@ Build the stuff
 npm run build
 ```
 
-Watching compiler for the server
+Run the server
 ```
-npm run watch-server
+npm run serve
 ```
 
-Restarting server
+Watching
 ```
+npm run watch-server
+npm run watch-client
 npm run watch-serve
 ```
 
@@ -106,4 +108,9 @@ https://nodejs.org/en/
 ### 8. Install typescript
 ```
 npm install -g typescript
+```
+
+### 9. Install dependencies
+```
+npm install
 ```
