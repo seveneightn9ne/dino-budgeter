@@ -82,10 +82,10 @@ abstract class ClickToEdit<T> extends React.Component<ClickToEditProps<T>, Click
     }
 
     render() {
-        const val = (this.state.editing) 
-            ? <form onBlur={this.endEdit.bind(this)} onSubmit={this.saveNewValue.bind(this)}>
+        const val = (this.state.editing)
+            ? <form className="cte" onBlur={this.endEdit.bind(this)} onSubmit={this.saveNewValue.bind(this)}>
                 <input type={this.type} size={this.props.size} autoFocus={true}
-                    placeholder={this.toInput(this.props.value)} value={this.state.newValue} 
+                    placeholder={this.toInput(this.props.value)} value={this.state.newValue}
                     onChange={(e) => this.updateValue(e)} />
                 <input type="submit" value="Save" style={{display: 'none'}} />
                 </form>

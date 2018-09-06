@@ -21,7 +21,7 @@ export const DEFAULT_CATEGORIES = [
 ];
 
 export function getNextOrdinal(gid: GroupId, frame: FrameIndex, t: pgPromise.ITask<{}>): Promise<number> {
-    return t.oneOrNone("select ordering from categories where gid = $1 and frame = $2 order by ordering asc limit 1",
+    return t.oneOrNone("select ordering from categories where gid = $1 and frame = $2 order by ordering desc limit 1",
         [gid, frame]).then(row => row ? row.ordering + 1 : 0);
 }
 

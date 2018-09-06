@@ -6,13 +6,15 @@ import App from './app';
 
 const Home = () => <div className="home">
     <h1>Dino Budgeter</h1>
+    <main>
     <Link className="button" to="/login">Log In</Link>{' '}
     <Link className="button" to="/signup">Sign Up</Link>
+    </main>
 </div>;
 
 const msg = (text: string) => () => <div>{text}</div>;
 
-const Login = () => <form action="/login" method="post">
+const Login = () => <main><form action="/login" method="post">
     <Route path="/login/error" render={msg("There was an error. Fix it!")} />
     <div>
         <label>Email:</label>
@@ -25,9 +27,9 @@ const Login = () => <form action="/login" method="post">
     <div>
         <input type="submit" value="Log In"/>
     </div>
-</form>;
+</form></main>;
 
-const Signup = () => <form action="/signup" method="post">
+const Signup = () => <main><form action="/signup" method="post">
     <Route path="/signup/no-password" render={msg("You must enter a password.")} />
     <Route path="/signup/invalid-email" render={msg("You must enter a valid email.")} />
     <Route path="/signup/user-exists" render={msg("There is already an account with that email.")} />
@@ -42,7 +44,7 @@ const Signup = () => <form action="/signup" method="post">
     <div>
         <input type="submit" value="Sign Up"/>
     </div>
-</form>;
+</form></main>;
 
 class Index extends React.Component {
     render() {
@@ -57,7 +59,7 @@ class Index extends React.Component {
         );
     }
 }
-  
+
 ReactDOM.render(
     <BrowserRouter>
         <Index />

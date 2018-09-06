@@ -191,3 +191,11 @@ td.amount {
 td.date {
     width: 100px;
 }
+
+form {
+    margin: 0;
+}
+
+.cte input {
+    height: 16px;
+}

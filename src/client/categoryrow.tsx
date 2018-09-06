@@ -50,8 +50,8 @@ export default class CategoryRow extends React.Component<CategoryRowProps, Categ
     }
 
     render() {
-        const budget = <ClickToEditMoney 
-            value={this.props.category.budget} 
+        const budget = <ClickToEditMoney
+            value={this.props.category.budget}
             onChange={this.onUpdateBudget.bind(this)}
             postTo="/api/category/budget"
             postData={{
@@ -59,6 +59,7 @@ export default class CategoryRow extends React.Component<CategoryRowProps, Categ
                 frame: this.props.category.frame}}
             postKey="amount" />
         const name = <ClickToEditText
+                size={40}
                 value={this.props.category.name}
                 onChange={this.onUpdateName.bind(this)}
                 postTo="/api/category/name"

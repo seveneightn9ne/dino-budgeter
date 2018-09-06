@@ -139,13 +139,13 @@ export const handle_transaction_amount_post = wrap(async function(req: Request, 
 });
 
 export const handle_transaction_date_post = wrap(async function(req: Request, res: Response) {
-    await handle_transaction_update_post('date', 
+    await handle_transaction_update_post('date',
         s => !isNaN(new Date(Number(s)).valueOf()),
         s => new Date(Number(s)))(req, res);
 });
 
 function handle_transaction_update_post(
-        field: string, 
+        field: string,
         isValid?: (val: string) => boolean,
         transform?: (val: string) => any,
     ): (req: Request, res: Response) => Promise<void> {
@@ -186,6 +186,7 @@ export const handle_category_post = wrap(async function(req: Request, res: Respo
         id: util.randomId(),
         alive: true,
         budget: Money.Zero,
+        balance: Money.Zero,
     }
     await db.tx(async t => {
         c.gid = await user.getDefaultGroup(req.user, t);

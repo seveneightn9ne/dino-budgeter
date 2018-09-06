@@ -26,7 +26,7 @@ export default class NewCategory extends React.Component<NewCategoryProps, NewCa
         this.setState({value: event.target.value});
     }
 
-    submit(): void {
+    submit(event: React.FormEvent): void {
         fetch('/api/category', {
             method: 'POST',
             headers: {
@@ -43,15 +43,17 @@ export default class NewCategory extends React.Component<NewCategoryProps, NewCa
             this.props.onAddCategory(fromSerialized(response.category));
             this.setState({expanded: false, value: ""});
         });
+        event.preventDefault();
     }
 
     render() {
         if (!this.state.expanded) {
             return <span onClick={() => this.expand()} className="clickable new-category"><span className="fa-plus-circle fas"></span> Category</span>;
         }
-        return <div onBlur={() => this.setState({expanded: false})}>
-            <input type="text" placeholder="New Category" value={this.state.value} onChange={(e) => this.updateValue(e)} />
-            <button onClick={() => this.submit()} disabled={!this.state.value}>Add</button>
-        </div>;
+        return <form onSubmit={this.submit.bind(this)} onBlur={() => this.setState({expanded: false})}>
+            <input type="text" placeholder="New Category" autoFocus
+                value={this.state.value} onChange={(e) => this.updateValue(e)} />
+            <input type="submit" disabled={!this.state.value} value="Add" />
+        </form>;
     }
 }
