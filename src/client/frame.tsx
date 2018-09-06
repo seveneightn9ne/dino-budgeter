@@ -23,7 +23,7 @@ interface FrameState {
 export default class Frame extends React.Component<FrameProps, FrameState> {
 
     state: FrameState = {setIncome: ''};
-    
+
     month = () => Number(this.props.match.params.month) - 1;
     year = () =>  Number(this.props.match.params.year);
     monthName = () => util.MONTHS[this.month()];
@@ -189,8 +189,7 @@ export default class Frame extends React.Component<FrameProps, FrameState> {
         event.preventDefault();
     }
 
-    onNewIncome(newIncomeStr: string) {
-        const setIncome = new Money(newIncomeStr);
+    onNewIncome(setIncome: Money) {
         const newFrame = {...this.state.frame};
         newFrame.balance = frames.updateBalanceWithIncome(newFrame.balance, newFrame.income, setIncome);
         newFrame.income = setIncome;
@@ -208,7 +207,7 @@ export default class Frame extends React.Component<FrameProps, FrameState> {
                 <p>What is your total expected income for {this.monthName()}?</p>
                 <form onSubmit={this.onSetIncome.bind(this)}>
                     <input className={className} type="number" placeholder="0.00"
-                        value={this.state.setIncome} 
+                        value={this.state.setIncome}
                         onChange={this.onChangeIncome.bind(this)} />
                     <input type="submit" value="Continue" />
                 </form>
@@ -221,7 +220,7 @@ export default class Frame extends React.Component<FrameProps, FrameState> {
             onChangeCategory={this.onChangeCategory.bind(this)}
             onDeleteCategory={this.onDeleteCategory.bind(this)}
             onNewIncome={this.onNewIncome.bind(this)} />
-        
+
         const transactions = (this.state.transactions == undefined) ? null :
             <Transactions transactions={this.state.transactions}
                 onUpdateTransaction={this.onUpdateTransaction.bind(this)}
@@ -247,7 +246,7 @@ export default class Frame extends React.Component<FrameProps, FrameState> {
                 <Route path={"/app/:month/:year/transactions"} render={() => transactions} />
                 <Route path={"/app/add-transaction"} render={() => null} />
             </Switch>
-            
+
             <TxEntry onAddTransaction={this.onAddTransaction.bind(this)}
                 defaultDate={this.newTxDate()} gid={this.state.frame.gid}
                 categories={this.state.frame.categories} />

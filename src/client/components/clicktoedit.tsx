@@ -59,6 +59,7 @@ abstract class ClickToEdit<T> extends React.Component<ClickToEditProps<T>, Click
         const newValue = this.fromInput(this.state.newValue);
         if (!this.validateChange(newValue)) {
             this.setState({newValueErr: true});
+            return;
         }
         fetch(this.props.postTo, {
             method: 'POST',
