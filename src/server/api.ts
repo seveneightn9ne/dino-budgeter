@@ -49,17 +49,13 @@ export const handle_frame_get = wrap(async function(req: Request, res: Response)
     await db.tx(async t => {
         const gid = await user.getDefaultGroup(req.user, t);
         const index = frames.index(Number(req.params.month), Number(req.params.year));
-        console.log("look at this index...", index);
         const frame = await frames.getOrCreateFrame(gid, index, t);
-        //console.log("From handle_frame_get");
-        //console.log(frame);
         res.send(frame);
     });
 });
 
 export const handle_transactions_get = wrap(async function(req: Request, res: Response): Promise<void> {
     req.checkQuery("frame").notEmpty().isNumeric();
-    console.log("THEY TYPE OF THE FRAME", typeof req.query.frame);
     let result = await req.getValidationResult()
     if (!result.isEmpty()) {
         const status = 400;

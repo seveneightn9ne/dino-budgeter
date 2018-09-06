@@ -1,5 +1,6 @@
 import * as React from 'react';
-import {RouteComponentProps, Switch, Route} from 'react-router';
+import {RouteComponentProps, Switch, Route, Redirect } from 'react-router';
+import { Link, NavLink } from 'react-router-dom';
 import {Frame as FrameType, Category, CategoryId, Money, Transaction, TransactionId} from '../shared/types';
 import TxEntry from './txentry'
 import * as frames from '../shared/frames';
@@ -20,27 +21,27 @@ interface FrameState {
 
 /** /app/:month/:year */
 export default class Frame extends React.Component<FrameProps, FrameState> {
-    private month: number;
-    private year: number;
-    private monthName: string;
-    private index: number;
-    private newTxDate: Date;
 
-    constructor(props: FrameProps) {
-      super(props);
-      this.month = Number(props.match.params.month) - 1;
-      this.year = Number(props.match.params.year);
-      this.monthName = util.MONTHS[this.month];
-      this.index = frames.index(this.month, this.year);
-      this.state = {setIncome: ''};
-      this.newTxDate = new Date();
-      if (this.newTxDate.getFullYear() != this.year || this.newTxDate.getMonth() != this.month) {
+    state: FrameState = {setIncome: ''};
+    
+    month = () => Number(this.props.match.params.month) - 1;
+    year = () =>  Number(this.props.match.params.year);
+    monthName = () => util.MONTHS[this.month()];
+    index = () => frames.index(this.month(), this.year());
+    newTxDate = () => {
+      const newTxDate = new Date();
+      if (newTxDate.getFullYear() != this.year() || newTxDate.getMonth() != this.month()) {
         // frame is not the current frame
-        this.newTxDate.setFullYear(this.year);
-        this.newTxDate.setMonth(this.month);
-        this.newTxDate.setDate(1);
+        newTxDate.setFullYear(this.year());
+        newTxDate.setMonth(this.month());
+        newTxDate.setDate(1);
       }
+      return newTxDate;
     }
+    prevMonth = () => (this.month() - 1) % 12;
+    prevYear = () => (this.prevMonth() == 11) ? this.year() - 1 : this.year();
+    nextMonth = () => (this.month() + 1) % 12;
+    nextYear = () => (this.nextMonth() == 0) ? this.year() + 1 : this.year();
 
     getAIs(): AI[] {
         if (!this.state.frame) {
@@ -54,14 +55,22 @@ export default class Frame extends React.Component<FrameProps, FrameState> {
         this.initTransactions();
     }
 
+    componentDidUpdate(prevProps: FrameProps) {
+        if (prevProps.match.params.month != this.props.match.params.month ||
+            prevProps.match.params.year != this.props.match.params.year) {
+            this.initializeFrame();
+            this.initTransactions();
+        }
+    }
+
     calculateBudgeted(categories: Category[]): Money {
         return categories.reduce((a, b) => a.plus(b.budget), Money.Zero);
     }
 
     // TODO update the frame in the background.
 
-    initializeFrame(): Promise<FrameType> {
-        const path = '/api/frame/' + this.month + '/' + this.year;
+    initializeFrame(props = this.props): Promise<FrameType> {
+        const path = '/api/frame/' + this.month() + '/' + this.year();
         return fetch(path).then((response) => {
             return response.json();
         }).then(response => {
@@ -72,8 +81,8 @@ export default class Frame extends React.Component<FrameProps, FrameState> {
         });
     }
 
-    async initTransactions() {
-        const res = await fetch("/api/transactions?frame=" + this.index);
+    async initTransactions(props = this.props) {
+        const res = await fetch("/api/transactions?frame=" + this.index());
         if (res.status != 200) {
             throw new Error(`status ${res.status}`)
         }
@@ -193,12 +202,10 @@ export default class Frame extends React.Component<FrameProps, FrameState> {
             return null;
         }
 
-        console.log(this.state.frame);
-
         if (this.state.frame.income.cmp(Money.Zero) == 0) {
             const className = this.state.setIncomeErr ? "error" : "";
             return <div className="splash">
-                <p>What is your total expected income for {this.monthName}?</p>
+                <p>What is your total expected income for {this.monthName()}?</p>
                 <form onSubmit={this.onSetIncome.bind(this)}>
                     <input className={className} type="number" placeholder="0.00"
                         value={this.state.setIncome} 
@@ -208,7 +215,7 @@ export default class Frame extends React.Component<FrameProps, FrameState> {
             </div>;
         }
 
-        const categories = <Categories month={this.month} year={this.year}
+        const categories = <Categories month={this.month()} year={this.year()}
             frame={this.state.frame}
             onAddCategory={this.onAddCategory.bind(this)}
             onChangeCategory={this.onChangeCategory.bind(this)}
@@ -219,19 +226,32 @@ export default class Frame extends React.Component<FrameProps, FrameState> {
             <Transactions transactions={this.state.transactions}
                 onUpdateTransaction={this.onUpdateTransaction.bind(this)}
                 onDeleteTransaction={this.onDeleteTransaction.bind(this)}
-                month={this.month} year={this.year} frame={this.state.frame} />
+                month={this.month()} year={this.year()} frame={this.state.frame} />
+
+        const prevButton = <Link to={`/app/${this.prevMonth()+1}/${this.prevYear()}`} className="fa-chevron-left fas framenav" />;
+        const nextButton = <Link to={`/app/${this.nextMonth()+1}/${this.nextYear()}`} className="fa-chevron-right fas framenav" />;
+        const nav = <nav>
+            <NavLink to={`/app/${this.month()+1}/${this.year()}/categories`} activeClassName="active">Categories</NavLink>
+            <NavLink to={`/app/${this.month()+1}/${this.year()}/transactions`} activeClassName="active">Transactions</NavLink>
+        </nav>;
 
         return <div>
-            <h1>{this.monthName + ' ' + this.year}</h1>
+            <header><div className="inner">
+                <h1>{prevButton}{this.monthName() + ' ' + this.year()}{nextButton}</h1>
+                {nav}
+            </div></header>
+            <main>
             <Switch>
-                <Route path={"/app/:month/:year"} exact render={() => categories} />
+                <Redirect exact from="/app/:month/:year" to="/app/:month/:year/categories" />
+                <Route path={"/app/:month/:year/categories"} render={() => categories} />
                 <Route path={"/app/:month/:year/transactions"} render={() => transactions} />
                 <Route path={"/app/add-transaction"} render={() => null} />
             </Switch>
             
             <TxEntry onAddTransaction={this.onAddTransaction.bind(this)}
-                defaultDate={this.newTxDate} gid={this.state.frame.gid}
+                defaultDate={this.newTxDate()} gid={this.state.frame.gid}
                 categories={this.state.frame.categories} />
+            </main>
         </div>;
     }
 }

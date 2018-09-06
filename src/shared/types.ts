@@ -20,13 +20,7 @@ export class Money {
     }
     static Zero = new Money(0);
     static sum(ms: Money[]): Money {
-        console.log("will sum", ms);
-        return ms.reduce((a: Money, b: Money) => {
-            if (!b.isValid()) {
-                throw new Error("this is not a good money:" + b.toJSON());
-            }
-            return a.plus(b);
-        }, Money.Zero);
+        return ms.reduce((a: Money, b: Money) => a.plus(b), Money.Zero);
     }
     string(): string {
         return this.num.toFixed(2);

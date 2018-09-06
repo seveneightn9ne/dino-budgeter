@@ -4,6 +4,7 @@ import Frame from './frame';
 import Transactions from './transactions';
 import NoRoute from './noroute';
 import { Switch, Route, Redirect } from 'react-router';
+import Media from 'react-media';
 import AddTransaction from './addtransaction';
 
 interface AppState {
@@ -24,9 +25,15 @@ export default class App extends React.Component<{}, AppState> {
       this.currentYear = date.getFullYear();
       this.state = {};
     }
+
+    renderLandingPage = () => <Media query="(max-width: 599px)">
+        {(isMobile: boolean) => isMobile ? <AddTransaction /> :
+            <Redirect from="/app" to={"/app/" + this.currentMonth + "/" + this.currentYear} />}
+    </Media>;
+
     render() {
         return <Switch>
-            <Redirect exact from="/app" to={"/app/" + this.currentMonth + "/" + this.currentYear} />
+            <Route exact path="/app" render={this.renderLandingPage} />
             <Route path="/app/:month/:year" component={Frame} />
             <Route path="/app/add-transaction" component={AddTransaction} />
             <Route path="*" component={NoRoute} />

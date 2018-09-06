@@ -16,12 +16,9 @@ async function getOrCreateFrameInner(gid: GroupId, index: FrameIndex, t: pgPromi
     if (row) {
         console.log("frame exists");
         const frame = shared.fromSerialized(row);
-        //console.log(frame);
         frame.categories = await getCategories(gid, index, t);
         frame.balance = await getBalance(gid, index, t);
         frame.spending = await getSpending(gid, index, t);
-        console.log("frame balanceee", frame.balance);
-        //console.log(frame);
         return frame;
     }
     console.log("creating new frame");
@@ -31,7 +28,11 @@ async function getOrCreateFrameInner(gid: GroupId, index: FrameIndex, t: pgPromi
     const prevFrame = await getPreviousFrame(gid, index, t);
     if (prevFrame) {
         frame.income = prevFrame.income;
-        frame.categories = await getCategories(gid, prevFrame.index, t);
+        frame.categories = (await getCategories(gid, prevFrame.index, t)).map(c => ({
+            ...c,
+            frame: frame.index,
+        }));
+        frame.balance = frame.balance.plus(frame.income);
     } else {
         console.log("no previous frame");
         let i = -1;
@@ -53,6 +54,7 @@ async function getOrCreateFrameInner(gid: GroupId, index: FrameIndex, t: pgPromi
     // Save the new frame and categories
     await t.none("insert into frames (gid, index, income) values ($1, $2, $3)", [
         frame.gid, frame.index, frame.income.string()]);
+    console.log("creating categories")
     await t.batch(frame.categories.map(c => 
             t.none("insert into categories (id, gid, frame, name, ordering, budget) values ($1, $2, $3, $4, $5, $6)", [
                 c.id, c.gid, c.frame, c.name, c.ordering, c.budget.string()])));
@@ -68,11 +70,8 @@ export function getIncome(gid: GroupId, index: FrameIndex, t: pgPromise.ITask<{}
 export function getBalance(gid: GroupId, index: FrameIndex, t: pgPromise.ITask<{}>): Promise<Money> {
     return t.manyOrNone("select amount from transactions where gid = $1 and frame <= $2 and alive = true", [gid, index]).then(rows => {
         const totalSpent = rows ? Money.sum(rows.map(r => new Money(r.amount))): Money.Zero;
-        console.log("totalSpent", totalSpent.string());
         return t.manyOrNone("select income from frames where gid = $1 and index <= $2", [gid, index]).then(rows => {
-            console.log(rows);
             const totalIncome = rows ? Money.sum(rows.map(r => new Money(r.income))): Money.Zero;
-            console.log("totalIncome", totalIncome.string());
             return totalIncome.minus(totalSpent);
         })
     });

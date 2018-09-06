@@ -32,24 +32,23 @@ export default class Transactions extends React.Component<Props, State> {
 
     render() {
         const rows = this.props.transactions.map((tx) => {
-            console.log(tx);
             return <tr key={tx.id}>
-                <td><span className="deleteCr clickable" onClick={() => this.delete(tx.id)}>X</span></td>
-                <td><ClickToEditDate value={tx.date}
+                <td className="del"><span className="deleteCr clickable fa-times fas" onClick={() => this.delete(tx.id)}></span></td>
+                <td className="date"><ClickToEditDate value={tx.date}
                     onChange={date => 
                         this.props.onUpdateTransaction({...tx, date})}
                     postTo="/api/transaction/date"
                     postKey="date"
                     postData={{id: tx.id}}
                 /></td>
-                <td><ClickToEditText value={tx.description} size={20}
+                <td className="stretch"><ClickToEditText value={tx.description} size={20}
                     onChange={description => 
                         this.props.onUpdateTransaction({...tx, description})}
                     postTo="/api/transaction/description"
                     postKey="description"
                     postData={{id: tx.id}}
                 /></td>
-                <td><ClickToEditMoney value={tx.amount}
+                <td className="amount"><ClickToEditMoney value={tx.amount}
                     onChange={amount =>
                         this.props.onUpdateTransaction({...tx, amount})}
                     postTo="/api/transaction/amount"
@@ -60,7 +59,8 @@ export default class Transactions extends React.Component<Props, State> {
         return <div>
             <h2>Transactions</h2>
             <table><tbody>
-            {rows}
+                <tr><th></th><th>Date</th><th>Description</th><th>Amount</th></tr>
+                {rows}
             </tbody></table>
         </div>;
     }

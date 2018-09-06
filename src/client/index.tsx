@@ -4,9 +4,10 @@ import { BrowserRouter, Switch, Route, Link } from 'react-router-dom'
 import NoRoute from './noroute';
 import App from './app';
 
-const Home = () => <div>
-    <Link to="/login">Log In</Link>{ }
-    <Link to="/signup">Sign Up</Link>
+const Home = () => <div className="home">
+    <h1>Dino Budgeter</h1>
+    <Link className="button" to="/login">Log In</Link>{' '}
+    <Link className="button" to="/signup">Sign Up</Link>
 </div>;
 
 const msg = (text: string) => () => <div>{text}</div>;

@@ -63,7 +63,10 @@ export function getAIs(frame: Frame): AI[] {
             overspends.push(new OverspentCategory(frame.index, c.name, c.budget, c.balance));
         }
     });
-    const needsBudgeting = frame.balance.minus(frame.spending);
+    const needsBudgeting = frame.balance.plus(frame.spending);
+    console.log("frame balance:", frame.balance.formatted());
+    console.log("frame spending: ", frame.spending.formatted());
+    console.log("needs budgeting:", needsBudgeting.formatted());
     const cmpIncome = totalBudgeted.cmp(needsBudgeting);
     if (cmpIncome == 1) {
         ais.push(new Overbudgeted(frame.index, totalBudgeted, needsBudgeting));

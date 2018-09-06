@@ -2,17 +2,60 @@ body {
     background-color: #eeeeee;
     color: #333333;
     font-size: 16px;
+    font-family: sans-serif;
+    margin: 0;
 }
-
-#root {
+main {
     max-width: 1000px;
-    margin: 40px 80px;
+    margin: 20px auto;
 }
 
-.ai {
-    background-color: #aaccff;
-    padding: 10px;
-    margin: 10px 0;
+header {
+    background-color: #7c4dff;
+    color: white;
+    padding-top: 20px;
+}
+
+header .inner {
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+h1 {
+    margin: 0;
+}
+
+.framenav {
+    font-size: 22px;
+    text-decoration: none;
+    color: rgba(255, 255, 255, 0.5);
+    vertical-align: middle;
+    padding: 0 20px;
+}
+.framenav:hover {
+    color: #ffffff;
+}
+
+nav a {
+    padding: 5px 20px;
+    margin-top: 20px;
+    color: #fff;
+    display: inline-block;
+    background-color: #512da8;
+    text-decoration: none;
+    font-size: 14px;
+}
+
+nav a.active {
+    background-color: #eeeeee;
+    color: #333333;
+}
+
+nav a:hover {
+    background-color: rgba(81, 45, 168, 0.5);
+}
+nav a.active:hover {
+    background-color: #eeeeee;
 }
 
 input.error {
@@ -21,12 +64,130 @@ input.error {
 
 .clickable {
     cursor: pointer;
+}
+.clickable:hover {
     text-decoration: underline;
 }
 
 .deleteCr {
     visibility: hidden;
+    text-align: right;
+    width: 100%;
+}
+.deleteCr:hover {
+    color: #7c4dff;
+    text-decoration: none;
 }
 tr:hover .deleteCr {
     visibility: visible;
+}
+
+.button {
+    background-color: #7c4dff;
+    color: white;
+    padding: 10px;
+    border-radius: 4px;
+    margin: 4px 8px;
+    text-decoration: none;
+}
+
+@media (max-width: 599px) {
+    #root {
+        margin: 10px;
+    }
+}
+
+.home {
+    text-align: center;
+}
+
+/* Categories Page */
+.blobs {
+    display: flex;
+    align-items: stretch;
+}
+
+.blob {
+    background-color: #dddddd;
+    border-radius: 4px;
+    padding: 8px;
+    margin: 0 10px;
+    text-align: center;
+}
+.blob .title {
+    color: #555555;
+    font-size: 14px;
+}
+
+.blob-op {
+    align-self: center;
+    font-weight: bold;
+    font-size: 18px;
+}
+
+.blob.bold .amount {
+    font-weight: bold;
+}
+
+.ai {
+    background-color: #FFEB3B;
+    padding: 10px;
+    margin: 10px 0;
+    border-radius: 20px;
+}
+
+.ai .fa-star {
+    color: #7c4dff;
+    padding: 0 10px;
+}
+
+table {
+    /*background-color: white;*/
+    border-radius: 20px;
+    width: 100%;
+    border: none;
+    margin: 20px 0;
+    border-collapse: collapse;
+}
+tr {
+    background-color: white;
+    border-bottom: 1px solid #eeeeee;
+}
+th {
+    text-align: left;
+    font-weight: normal;
+    color: #555555;
+    font-size: 14px;
+    padding: 4px;
+    padding-top: 20px;
+    border: none;
+}
+.new-category .fas {
+    font-size: 12px;
+    margin-top: -3px;
+}
+.new-category:hover {
+    text-decoration: none;
+    color: #000000;
+}
+td {
+    padding: 4px;
+}
+td.zero {
+    color: #aaaaaa;
+}
+tr.hoverable:hover {
+    background-color: #eeeeee;
+}
+.stretch {
+    max-width: 100%;
+}
+.del {
+    width: 16px;
+}
+td.amount {
+    width: 100px;
+}
+td.date {
+    width: 100px;
 }

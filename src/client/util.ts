@@ -6,15 +6,12 @@ import * as frames from '../shared/frames';
 export const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
 export function yyyymmdd(date: Date): string {
-    console.log(date);
     let y = '' + date.getFullYear(),
         m = '' + (date.getMonth() + 1),
         d = '' + date.getDate();
     if (m.length == 1) m = "0" + m;
     if (d.length == 1) d = "0" + d;
-    const ret = y + "-" + m + "-" + d;
-    console.log(ret);
-    return ret;
+    return y + "-" + m + "-" + d;
 }
 
 export function fromYyyymmdd(datestring: string): Date {

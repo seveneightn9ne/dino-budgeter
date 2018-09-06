@@ -70,12 +70,15 @@ app.post('/api/income',            ensureLogin.ensureLoggedIn(), api.handle_inco
 
 /* Static Routes */
 app.use(serveStatic(path.join(__dirname, '../client')));
-app.use(serveStatic(path.join(__dirname, '../../static')));
+//app.use(serveStatic(path.join(__dirname, '../../static')));
 app.use(serveStatic(path.join(__dirname, '../../node_modules/react/umd')));
 app.use(serveStatic(path.join(__dirname, '../../node_modules/react-dom/umd')));
+app.get('/index.css', serveStatic(path.join(__dirname, '../../static/')));
 
-const index = (req: Request, res: Response) =>
+
+const index = (req: Request, res: Response) => 
   res.sendFile(path.join(__dirname + '../../../static/index.html'));
+
 app.get('/', ensureLogin.ensureLoggedOut('/app'), index);
 app.get('/app', ensureLogin.ensureLoggedIn(''), index);
 app.get('/app/home/:month/:year', ensureLogin.ensureLoggedIn(''), index);

@@ -47,9 +47,9 @@ export default class NewCategory extends React.Component<NewCategoryProps, NewCa
 
     render() {
         if (!this.state.expanded) {
-            return <a onClick={() => this.expand()} href="#">+ Category</a>;
+            return <span onClick={() => this.expand()} className="clickable new-category"><span className="fa-plus-circle fas"></span> Category</span>;
         }
-        return <div>
+        return <div onBlur={() => this.setState({expanded: false})}>
             <input type="text" placeholder="New Category" value={this.state.value} onChange={(e) => this.updateValue(e)} />
             <button onClick={() => this.submit()} disabled={!this.state.value}>Add</button>
         </div>;

@@ -36,6 +36,16 @@ export default class Categories extends React.Component<Props, State> {
         return getAIs(this.props.frame);
     }
 
+    blob(title: string, amount: JSX.Element | string, bold = false){
+        return <div className={'blob' + (bold ? ' bold' : '')}>
+            <div className="title">{title}</div>
+            <div className="amount">{amount}</div>
+            </div>;
+    }
+    blobOp(operator: string) {
+        return <div className="blob-op">{operator}</div>
+    }
+
     render() {
         const cs = this.props.frame.categories.map(c => 
             <CategoryRow key={c.id} category={c} 
@@ -56,23 +66,27 @@ export default class Categories extends React.Component<Props, State> {
         const rolloverAmt = this.props.frame.balance.minus(this.props.frame.income).plus(this.props.frame.spending);
         switch (rolloverAmt.cmp(Money.Zero)) {
             case 1: 
-                rollover = <span>{' + '} {rolloverAmt.formatted()} from last month</span>;
+                rollover = [this.blobOp('+'),this.blob("last month", rolloverAmt.formatted())];
                 break;
             case -1:
-                rollover = <span>{' - '} {rolloverAmt.formatted()} overspent last month</span>;
+                rollover = [this.blobOp('-'),this.blob("last month", rolloverAmt.negate().formatted())];
                 break;
         }
+
+        const transactionLink = <Link to={`/app/${this.props.month+1}/${this.props.year}/transactions`}>
+            {this.props.frame.spending.formatted()}</Link>;
         
-        return <div><div><b>Income: {income}
+        return <div><div className="blobs">{this.blob("Income", income)}
                 {rollover}
-                {' - '} <Link to={`/app/${this.props.month+1}/${this.props.year}/transactions`}>
-                    Spent: {this.props.frame.spending.formatted()}
-                </Link>
-                {' = '} Balance: {this.props.frame.balance.formatted()}</b></div>
+                {this.blobOp('-')}
+                {this.blob('Spent', transactionLink)}
+                {this.blobOp('=')}
+                {this.blob('Balance', this.props.frame.balance.formatted(), true/**bold**/)}
+                </div>
             {ais}
-            <NewCategory frame={this.props.frame.index} onAddCategory={this.props.onAddCategory} />
-            <table><tbody>
-                <tr><th></th><th>Category</th><th>Budget</th><th>Spending</th><th>Balance</th></tr>
+            <table className="categories" cellPadding={0} cellSpacing={0} ><tbody>
+                <tr><th></th><th className="stretch">Category</th><th>Budget</th><th>Spending</th><th>Balance</th></tr>
+                <tr><td></td><td colSpan={4}><NewCategory frame={this.props.frame.index} onAddCategory={this.props.onAddCategory} /></td></tr>
                 {cs}
             </tbody></table></div>;
     }
