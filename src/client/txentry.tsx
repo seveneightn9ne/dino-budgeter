@@ -80,18 +80,18 @@ export default class TxEntry extends React.Component<TxEntryProps, TxEntryState>
             return <option key={c.id} value={c.id}>{c.name}</option>;
         });
         const className = this.state.error ? "error" : "";
-        return <div>
+        return <div className="txentry">
             <form onSubmit={this.handleSubmit.bind(this)}>
                 <label>Amount:
-                <input className={className} value={this.state.amount} onChange={util.cc(this, 'amount')} size={4} /></label>
+                <input autoFocus className={className} value={this.state.amount} onChange={util.cc(this, 'amount')} size={4} /></label>
                 <label>Description:
                 <input value={this.state.description} onChange={util.cc(this, 'description')} /></label>
-                <input type="date" value={this.state.date} onChange={util.cc(this, 'date')} />
-                <select onChange={util.cc(this, 'category')} value={this.state.category}>
+                <label><input type="date" value={this.state.date} onChange={util.cc(this, 'date')} /></label>
+                <label><select onChange={util.cc(this, 'category')} value={this.state.category}>
                     <option value="">Uncategorized</option>
                     {options}
-                </select>
-                <input type="submit" value="Add" />
+                </select></label>
+                <input className="button" type="submit" value="Save" />
             </form>
         </div>;
     }

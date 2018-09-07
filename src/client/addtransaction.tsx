@@ -1,12 +1,14 @@
 import * as React from 'react';
-import {Category} from '../shared/types';
+import {Category, Transaction} from '../shared/types';
 import { index } from '../shared/frames';
 import TxEntry from './txentry';
+import { Redirect } from 'react-router';
 
 interface Props {}
 
 interface State {
     categories: Category[];
+    redirectTo?: string;
 }
 
 export default class AddTransaction extends React.Component<Props, State> {
@@ -34,10 +36,19 @@ export default class AddTransaction extends React.Component<Props, State> {
         });
     }
 
+    onAddTransaction(tx: Transaction) {
+        const month = tx.date.getMonth();
+        const year = tx.date.getFullYear();
+        this.setState({redirectTo: `/app/${month+1}/${year}/transactions`});
+    }
+
     render(): JSX.Element {
-        return <div>
+        if (this.state.redirectTo) {
+            return <Redirect to={this.state.redirectTo} />;
+        }
+        return <div className="fullpage">
             <h1>Add Transaction</h1>
-            <TxEntry onAddTransaction={() => {}}
+            <TxEntry onAddTransaction={this.onAddTransaction.bind(this)}
             defaultDate={new Date()}
             categories={this.state.categories} /></div>;
     }

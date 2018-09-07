@@ -225,7 +225,10 @@ export default class Frame extends React.Component<FrameProps, FrameState> {
             <Transactions transactions={this.state.transactions}
                 onUpdateTransaction={this.onUpdateTransaction.bind(this)}
                 onDeleteTransaction={this.onDeleteTransaction.bind(this)}
-                month={this.month()} year={this.year()} frame={this.state.frame} />
+                onAddTransaction={this.onAddTransaction.bind(this)}
+                month={this.month()} year={this.year()} frame={this.state.frame}
+                newTxDate={this.newTxDate()} gid={this.state.frame.gid}
+                categories={this.state.frame.categories} />
 
         const prevButton = <Link to={`/app/${this.prevMonth()+1}/${this.prevYear()}`} className="fa-chevron-left fas framenav" />;
         const nextButton = <Link to={`/app/${this.nextMonth()+1}/${this.nextYear()}`} className="fa-chevron-right fas framenav" />;
@@ -246,10 +249,6 @@ export default class Frame extends React.Component<FrameProps, FrameState> {
                 <Route path={"/app/:month/:year/transactions"} render={() => transactions} />
                 <Route path={"/app/add-transaction"} render={() => null} />
             </Switch>
-
-            <TxEntry onAddTransaction={this.onAddTransaction.bind(this)}
-                defaultDate={this.newTxDate()} gid={this.state.frame.gid}
-                categories={this.state.frame.categories} />
             </main>
         </div>;
     }

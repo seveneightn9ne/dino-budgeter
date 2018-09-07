@@ -1,4 +1,4 @@
-import { FrameIndex, Money, Frame } from "./types";
+import { FrameIndex, Money, Frame, TransactionId, Transaction } from "./types";
 
 export interface AI {
     frame: FrameIndex;
@@ -26,7 +26,7 @@ export class Overbudgeted implements AI {
         public frame: FrameIndex,
         public budgetedAmount: Money,
         public income: Money,
-    ) { 
+    ) {
         this.overspent = income.minus(budgetedAmount);
     }
 
@@ -49,6 +49,19 @@ export class Underbudgeted implements AI {
 
     message(): string {
         return `${this.balance.formatted()} needs to be budgeted into categories.`;
+    }
+}
+
+export class UncategorizedMulti implements AI {
+    constructor(
+        public frame: FrameIndex,
+        public tids: TransactionId[],
+    ) {}
+
+    message(): string {
+        return this.tids.length > 1 ?
+            `${this.tids.length} transactions need to be categorized.` :
+            `A transaction needs to be categorized.`
     }
 }
 
@@ -76,6 +89,20 @@ export function getAIs(frame: Frame): AI[] {
     if (ais.length == 0) {
         // Only send ovespends if there aren't bigger problems.
         ais.push(...overspends);
+    }
+    return ais;
+}
+
+export function getTransactionAIs(frame: Frame, transactions: Transaction[]): AI[] {
+    const ais: AI[] = [];
+    const uncategorized: TransactionId[] = [];
+    transactions.forEach(transaction => {
+        if (!transaction.category) {
+            uncategorized.push(transaction.id);
+        }
+    });
+    if (uncategorized.length) {
+        ais.push(new UncategorizedMulti(frame.index, uncategorized));
     }
     return ais;
 }

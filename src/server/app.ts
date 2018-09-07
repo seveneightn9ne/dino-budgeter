@@ -61,6 +61,7 @@ app.delete('/api/transaction',     ensureLogin.ensureLoggedIn(), api.handle_tran
 app.post('/api/transaction/description', ensureLogin.ensureLoggedIn(), api.handle_transaction_description_post);
 app.post('/api/transaction/amount',ensureLogin.ensureLoggedIn(), api.handle_transaction_amount_post);
 app.post('/api/transaction/date',  ensureLogin.ensureLoggedIn(), api.handle_transaction_date_post);
+app.post('/api/transaction/category', ensureLogin.ensureLoggedIn(), api.handle_transaction_category_post);
 app.post('/api/category',          ensureLogin.ensureLoggedIn(), api.handle_category_post);
 app.delete('/api/category',        ensureLogin.ensureLoggedIn(), api.handle_category_delete);
 app.get('/api/categories',         ensureLogin.ensureLoggedIn(), api.handle_categories_get);
@@ -76,7 +77,7 @@ app.use(serveStatic(path.join(__dirname, '../../node_modules/react-dom/umd')));
 app.get('/index.css', serveStatic(path.join(__dirname, '../../static/')));
 
 
-const index = (req: Request, res: Response) => 
+const index = (req: Request, res: Response) =>
   res.sendFile(path.join(__dirname + '../../../static/index.html'));
 
 app.get('/', ensureLogin.ensureLoggedOut('/app'), index);

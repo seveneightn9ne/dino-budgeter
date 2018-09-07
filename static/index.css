@@ -89,12 +89,7 @@ tr:hover .deleteCr {
     border-radius: 4px;
     margin: 4px 8px;
     text-decoration: none;
-}
-
-@media (max-width: 599px) {
-    #root {
-        margin: 10px;
-    }
+    border-style: none;
 }
 
 .home {
@@ -191,11 +186,41 @@ td.amount {
 td.date {
     width: 100px;
 }
-
+td.category {
+    width: 200px;
+}
 form {
     margin: 0;
 }
 
 .cte input {
     height: 16px;
+}
+
+/* mobile page */
+.fullpage .txentry label {
+    display: block;
+    background-color: white;
+    border-bottom: solid 1px #eeeeee;
+    padding: 20px;
+}
+
+.fullpage h1 {
+    background-color: #7c4dff;
+    color: white;
+    font-weight: normal;
+    padding: 20px;
+}
+
+@media (max-width: 599px) {
+    nav a {
+        padding: 20px;
+    }
+    .transactions .txentry {
+        display: none;
+    }
+}
+
+.highlighted .formatted {
+    background-color: #FFEB3B;
 }

@@ -14,7 +14,7 @@ const Home = () => <div className="home">
 
 const msg = (text: string) => () => <div>{text}</div>;
 
-const Login = () => <main><form action="/login" method="post">
+const Login = () => <main className="login"><form action="/login" method="post">
     <Route path="/login/error" render={msg("There was an error. Fix it!")} />
     <div>
         <label>Email:</label>
@@ -29,7 +29,7 @@ const Login = () => <main><form action="/login" method="post">
     </div>
 </form></main>;
 
-const Signup = () => <main><form action="/signup" method="post">
+const Signup = () => <main className="signup"><form action="/signup" method="post">
     <Route path="/signup/no-password" render={msg("You must enter a password.")} />
     <Route path="/signup/invalid-email" render={msg("You must enter a valid email.")} />
     <Route path="/signup/user-exists" render={msg("There is already an account with that email.")} />

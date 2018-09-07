@@ -144,6 +144,11 @@ export const handle_transaction_date_post = wrap(async function(req: Request, re
         s => new Date(Number(s)))(req, res);
 });
 
+export const handle_transaction_category_post = wrap(async function(req: Request, res: Response) {
+    // TODO: validate that the category exists, is alive, is owned by the user, etc.
+    await handle_transaction_update_post('category')(req, res);
+});
+
 function handle_transaction_update_post(
         field: string,
         isValid?: (val: string) => boolean,
