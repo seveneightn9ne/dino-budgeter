@@ -2,6 +2,7 @@ import * as React from 'react';
 import {Money, Category, Transaction, GroupId, FrameIndex} from '../shared/types';
 import * as util from './util';
 import { index } from '../shared/frames';
+import { withRouter, RouteComponentProps } from 'react-router';
 
 
 interface TxEntryProps {
@@ -19,9 +20,9 @@ interface TxEntryState {
     date: string;
 }
 
-export default class TxEntry extends React.Component<TxEntryProps, TxEntryState> {
+class TxEntry extends React.Component<TxEntryProps & RouteComponentProps<TxEntryProps>, TxEntryState> {
 
-    constructor(props: TxEntryProps) {
+    constructor(props: TxEntryProps & RouteComponentProps<TxEntryProps>) {
         super(props);
         this.state = {
             amount: '',
@@ -42,35 +43,31 @@ export default class TxEntry extends React.Component<TxEntryProps, TxEntryState>
         const category = this.state.category;
         const date = util.fromYyyymmdd(this.state.date);
         const frame = index(date.getMonth(), date.getFullYear());
-        fetch('/api/transaction', {
-            method: 'POST',
-            headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json'
-              },
-            body: JSON.stringify({
+        util.apiPost({
+            path: '/api/transaction',
+            body: {
                 frame: frame,
                 amount: amount,
                 description: this.state.description,
                 date: date,
                 category: category,
-            }),
+            },
+            location: this.props.location,
+            history: this.props.history,
         }).then((response) => {
-            response.json().then((response) => {
-                const transaction: Transaction = {
-                    id: response.tx_id,
-                    gid: this.props.gid,
-                    frame: frame,
-                    category: category || null,
-                    amount: amount,
-                    description: this.state.description,
-                    alive: true,
-                    date: date,
-                }
-                this.props.onAddTransaction(transaction);
-                // Not clearing date & category
-                this.setState({amount: '', description: ''});
-            });
+            const transaction: Transaction = {
+                id: response.tx_id,
+                gid: this.props.gid,
+                frame: frame,
+                category: category || null,
+                amount: amount,
+                description: this.state.description,
+                alive: true,
+                date: date,
+            }
+            this.props.onAddTransaction(transaction);
+            // Not clearing date & category
+            this.setState({amount: '', description: ''});
         });
         event.preventDefault();
     }
@@ -96,3 +93,5 @@ export default class TxEntry extends React.Component<TxEntryProps, TxEntryState>
         </div>;
     }
 }
+
+export default withRouter(TxEntry);

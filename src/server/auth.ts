@@ -34,6 +34,7 @@ passport.use(new LocalStrategy(
   }
 ));
 
+// TODO - successRedirect to the `redirect` parameter
 export const handle_login_post = passport.authenticate('local', {
     successRedirect: '/app',
     failureRedirect: '/login/error'});

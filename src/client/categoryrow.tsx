@@ -1,5 +1,5 @@
 import * as React from 'react';
-import {RouteComponentProps} from 'react-router';
+import {RouteComponentProps, withRouter} from 'react-router';
 import {Frame as FrameType, Money, FrameIndex, Category, CategoryId } from '../shared/types';
 import TxEntry from './txentry'
 import * as frames from '../shared/frames';
@@ -15,21 +15,20 @@ interface CategoryRowProps {
 interface CategoryRowState {
 }
 
-export default class CategoryRow extends React.Component<CategoryRowProps, CategoryRowState> {
+class CategoryRow extends React.Component<CategoryRowProps & RouteComponentProps<CategoryRowProps>, CategoryRowState> {
     state = {};
 
     delete(): boolean {
-        fetch('/api/category', {
+        util.apiPost({
+            path: '/api/category',
             method: 'DELETE',
-            headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json'
-              },
-            body: JSON.stringify({
+            body: {
                 id: this.props.category.id,
                 frame: this.props.category.frame,
-            }),
-        }).then(response => {
+            },
+            location: this.props.location,
+            history: this.props.history,
+        }).then(() => {
             this.props.onDeleteCategory(this.props.category.id);
         });
         return true;
@@ -80,3 +79,5 @@ export default class CategoryRow extends React.Component<CategoryRowProps, Categ
         </tr>;
     }
 }
+
+export default withRouter(CategoryRow);

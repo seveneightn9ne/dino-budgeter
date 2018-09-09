@@ -1,5 +1,5 @@
 import * as React from 'react';
-import {RouteComponentProps, Switch, Route, Redirect } from 'react-router';
+import {RouteComponentProps, Switch, Route, Redirect, withRouter } from 'react-router';
 import { Link, NavLink } from 'react-router-dom';
 import {Frame as FrameType, Category, CategoryId, Money, Transaction, TransactionId} from '../shared/types';
 import TxEntry from './txentry'
@@ -20,14 +20,14 @@ interface FrameState {
 }
 
 /** /app/:month/:year */
-export default class Frame extends React.Component<FrameProps, FrameState> {
+export default class Frame extends React.Component<FrameProps & RouteComponentProps<FrameProps>, FrameState> {
 
     state: FrameState = {setIncome: ''};
 
-    month = () => Number(this.props.match.params.month) - 1;
-    year = () =>  Number(this.props.match.params.year);
+    month = (props = this.props) => Number(props.match.params.month) - 1;
+    year = (props = this.props) =>  Number(props.match.params.year);
     monthName = () => util.MONTHS[this.month()];
-    index = () => frames.index(this.month(), this.year());
+    index = (props = this.props) => frames.index(this.month(props), this.year(props));
     newTxDate = () => {
       const newTxDate = new Date();
       if (newTxDate.getFullYear() != this.year() || newTxDate.getMonth() != this.month()) {
@@ -70,9 +70,10 @@ export default class Frame extends React.Component<FrameProps, FrameState> {
     // TODO update the frame in the background.
 
     initializeFrame(props = this.props): Promise<FrameType> {
-        const path = '/api/frame/' + this.month() + '/' + this.year();
-        return fetch(path).then((response) => {
-            return response.json();
+        return util.apiGet({
+            path: '/api/frame/' + this.month(props) + '/' + this.year(props),
+            location: props.location,
+            history: props.history,
         }).then(response => {
             const frame = frames.fromSerialized(response);
             const budgeted = this.calculateBudgeted(frame.categories);
@@ -82,11 +83,11 @@ export default class Frame extends React.Component<FrameProps, FrameState> {
     }
 
     async initTransactions(props = this.props) {
-        const res = await fetch("/api/transactions?frame=" + this.index());
-        if (res.status != 200) {
-            throw new Error(`status ${res.status}`)
-        }
-        const payload = await res.json();
+        const payload = await util.apiGet({
+            path: `/api/transactions?frame=${this.index(props)}`,
+            location: props.location,
+            history: props.history,
+        })
         const txns = payload.transactions.map(transactions.fromSerialized);
         this.setState({
             transactions: txns,
@@ -170,16 +171,14 @@ export default class Frame extends React.Component<FrameProps, FrameState> {
             event.preventDefault();
             return;
         }
-        fetch('/api/income', {
-            method: 'POST',
-            headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
+        util.apiPost({
+            path: '/api/income',
+            body: {
                 frame: this.state.frame.index,
                 income: setIncome,
-            }),
+            },
+            location: this.props.location,
+            history: this.props.history,
         }).then(() => {
             const newFrame = {...this.state.frame};
             newFrame.balance = frames.updateBalanceWithIncome(newFrame.balance, newFrame.income, setIncome);
@@ -228,7 +227,8 @@ export default class Frame extends React.Component<FrameProps, FrameState> {
                 onAddTransaction={this.onAddTransaction.bind(this)}
                 month={this.month()} year={this.year()} frame={this.state.frame}
                 newTxDate={this.newTxDate()} gid={this.state.frame.gid}
-                categories={this.state.frame.categories} />
+                categories={this.state.frame.categories}
+                location={this.props.location} history={this.props.history} />;
 
         const prevButton = <Link to={`/app/${this.prevMonth()+1}/${this.prevYear()}`} className="fa-chevron-left fas framenav" />;
         const nextButton = <Link to={`/app/${this.nextMonth()+1}/${this.nextYear()}`} className="fa-chevron-right fas framenav" />;

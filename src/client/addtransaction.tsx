@@ -2,9 +2,14 @@ import * as React from 'react';
 import {Category, Transaction} from '../shared/types';
 import { index } from '../shared/frames';
 import TxEntry from './txentry';
-import { Redirect } from 'react-router';
+import { Redirect, RouteComponentProps } from 'react-router';
+import * as util from './util';
+import { History, Location } from 'history';
 
-interface Props {}
+interface Props {
+    history: History;
+    location: Location;
+}
 
 interface State {
     categories: Category[];
@@ -25,12 +30,10 @@ export default class AddTransaction extends React.Component<Props, State> {
 
     initialize(): Promise<void> {
         const frame = index(this.date.getMonth(), this.date.getFullYear());
-        const path = '/api/categories?frame=' + frame;
-        return fetch(path).then((response) => {
-            if (response.status != 200) {
-                throw new Error(`Failed to get categories: ${response.body}`)
-            }
-            return response.json();
+        return util.apiGet({
+            path: '/api/categories?frame=' + frame,
+            location: this.props.location,
+            history: this.props.history,
         }).then(response => {
             this.setState({categories: response.categories});
         });

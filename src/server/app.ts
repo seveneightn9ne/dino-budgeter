@@ -51,23 +51,24 @@ app.post("/playground", playground.handle_playground_post);
 /**
  * API Routes. They require login.
  */
-app.get('/api/current-email',      ensureLogin.ensureLoggedIn(), api.handle_current_email_get);
-app.get('/api/groups',             ensureLogin.ensureLoggedIn(), api.handle_groups_get);
-app.get('/api/frame/:month/:year', ensureLogin.ensureLoggedIn(), api.handle_frame_get);
-app.get('/api/frame',              ensureLogin.ensureLoggedIn(), api.handle_frame_get);
-app.get('/api/transactions',       ensureLogin.ensureLoggedIn(), api.handle_transactions_get);
-app.post('/api/transaction',       ensureLogin.ensureLoggedIn(), api.handle_transaction_post);
-app.delete('/api/transaction',     ensureLogin.ensureLoggedIn(), api.handle_transaction_delete);
-app.post('/api/transaction/description', ensureLogin.ensureLoggedIn(), api.handle_transaction_description_post);
-app.post('/api/transaction/amount',ensureLogin.ensureLoggedIn(), api.handle_transaction_amount_post);
-app.post('/api/transaction/date',  ensureLogin.ensureLoggedIn(), api.handle_transaction_date_post);
-app.post('/api/transaction/category', ensureLogin.ensureLoggedIn(), api.handle_transaction_category_post);
-app.post('/api/category',          ensureLogin.ensureLoggedIn(), api.handle_category_post);
-app.delete('/api/category',        ensureLogin.ensureLoggedIn(), api.handle_category_delete);
-app.get('/api/categories',         ensureLogin.ensureLoggedIn(), api.handle_categories_get);
-app.post('/api/category/budget',   ensureLogin.ensureLoggedIn(), api.handle_category_budget_post);
-app.post('/api/category/name',     ensureLogin.ensureLoggedIn(), api.handle_category_name_post);
-app.post('/api/income',            ensureLogin.ensureLoggedIn(), api.handle_income_post);
+app.get('/api/auth-redirect',      api.handle_auth_redirect_get);
+app.get('/api/current-email',      ensureLogin.ensureLoggedIn('/api/auth-redirect'), api.handle_current_email_get);
+app.get('/api/groups',             ensureLogin.ensureLoggedIn('/api/auth-redirect'), api.handle_groups_get);
+app.get('/api/frame/:month/:year', ensureLogin.ensureLoggedIn('/api/auth-redirect'), api.handle_frame_get);
+app.get('/api/frame',              ensureLogin.ensureLoggedIn('/api/auth-redirect'), api.handle_frame_get);
+app.get('/api/transactions',       ensureLogin.ensureLoggedIn('/api/auth-redirect'), api.handle_transactions_get);
+app.post('/api/transaction',       ensureLogin.ensureLoggedIn('/api/auth-redirect'), api.handle_transaction_post);
+app.delete('/api/transaction',     ensureLogin.ensureLoggedIn('/api/auth-redirect'), api.handle_transaction_delete);
+app.post('/api/transaction/description', ensureLogin.ensureLoggedIn('/api/auth-redirect'), api.handle_transaction_description_post);
+app.post('/api/transaction/amount',ensureLogin.ensureLoggedIn('/api/auth-redirect'), api.handle_transaction_amount_post);
+app.post('/api/transaction/date',  ensureLogin.ensureLoggedIn('/api/auth-redirect'), api.handle_transaction_date_post);
+app.post('/api/transaction/category', ensureLogin.ensureLoggedIn('/api/auth-redirect'), api.handle_transaction_category_post);
+app.post('/api/category',          ensureLogin.ensureLoggedIn('/api/auth-redirect'), api.handle_category_post);
+app.delete('/api/category',        ensureLogin.ensureLoggedIn('/api/auth-redirect'), api.handle_category_delete);
+app.get('/api/categories',         ensureLogin.ensureLoggedIn('/api/auth-redirect'), api.handle_categories_get);
+app.post('/api/category/budget',   ensureLogin.ensureLoggedIn('/api/auth-redirect'), api.handle_category_budget_post);
+app.post('/api/category/name',     ensureLogin.ensureLoggedIn('/api/auth-redirect'), api.handle_category_name_post);
+app.post('/api/income',            ensureLogin.ensureLoggedIn('/api/auth-redirect'), api.handle_income_post);
 
 /* Static Routes */
 app.use(serveStatic(path.join(__dirname, '../client')));

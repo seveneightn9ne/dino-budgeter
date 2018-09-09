@@ -1,8 +1,9 @@
 import * as React from 'react';
-import {RouteComponentProps} from 'react-router';
+import {RouteComponentProps, withRouter} from 'react-router';
 import {Frame as FrameType, Money, FrameIndex, Category } from '../shared/types';
 import TxEntry from './txentry'
 import {fromSerialized} from '../shared/categories';
+import * as util from './util';
 
 interface NewCategoryProps {
     frame: FrameIndex;
@@ -13,7 +14,7 @@ interface NewCategoryState {
     value: string;
 }
 
-export default class NewCategory extends React.Component<NewCategoryProps, NewCategoryState> {
+class NewCategory extends React.Component<RouteComponentProps<NewCategoryProps> & NewCategoryProps, NewCategoryState> {
 
     state = {expanded: false, value: ''};
 
@@ -27,18 +28,14 @@ export default class NewCategory extends React.Component<NewCategoryProps, NewCa
     }
 
     submit(event: React.FormEvent): void {
-        fetch('/api/category', {
-            method: 'POST',
-            headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json'
-              },
-            body: JSON.stringify({
+        util.apiPost({
+            path: '/api/category',
+            body: {
                 frame: this.props.frame,
                 name: this.state.value,
-            }),
-        }).then(response => {
-            return response.json();
+            },
+            location: this.props.location,
+            history: this.props.history,
         }).then(response => {
             this.props.onAddCategory(fromSerialized(response.category));
             this.setState({expanded: false, value: ""});
@@ -57,3 +54,5 @@ export default class NewCategory extends React.Component<NewCategoryProps, NewCa
         </form>;
     }
 }
+
+export default withRouter(NewCategory);

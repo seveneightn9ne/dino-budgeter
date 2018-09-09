@@ -1,6 +1,6 @@
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
-import { BrowserRouter, Switch, Route, Link } from 'react-router-dom'
+import { BrowserRouter, Switch, Route, Link, RouteComponentProps } from 'react-router-dom'
 import NoRoute from './noroute';
 import App from './app';
 
@@ -14,7 +14,8 @@ const Home = () => <div className="home">
 
 const msg = (text: string) => () => <div>{text}</div>;
 
-const Login = () => <main className="login"><form action="/login" method="post">
+const Login = (props: RouteComponentProps<{}>) => <main className="login"><form action="/login" method="post">
+    <input type="hidden" name="redirect" value={props.location.search.substring("?redirectTo=".length)} />
     <Route path="/login/error" render={msg("There was an error. Fix it!")} />
     <div>
         <label>Email:</label>

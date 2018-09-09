@@ -1,6 +1,8 @@
 import * as React from 'react';
 import {Money} from '../../shared/types';
 import { fromYyyymmdd, yyyymmdd } from '../util';
+import { withRouter, RouteComponentProps } from 'react-router-dom';
+import * as util from '../util';
 
 interface ClickToEditProps<T> {
     value: T;
@@ -23,7 +25,7 @@ interface ClickToEditState {
     newValueErr?: boolean;
 }
 
-abstract class ClickToEdit<T,P extends ClickToEditProps<T>> extends React.Component<P, ClickToEditState> {
+abstract class ClickToEdit<T,P extends ClickToEditProps<T>> extends React.Component<P & RouteComponentProps<P>, ClickToEditState> {
 
     static defaultProps = {
         size: 4,
@@ -32,7 +34,7 @@ abstract class ClickToEdit<T,P extends ClickToEditProps<T>> extends React.Compon
         type: 'text',
     }
 
-    constructor(props: P) {
+    constructor(props: P & RouteComponentProps<P>) {
         super(props);
         this.state = {
             editing: false,
@@ -64,23 +66,17 @@ abstract class ClickToEdit<T,P extends ClickToEditProps<T>> extends React.Compon
         }
         // Why did I need to pull out and type postData?
         const postData: {[key: string]: any} = this.props.postData;
-        fetch(this.props.postTo, {
-            method: 'POST',
-            headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json'
-              },
-            body: JSON.stringify({
-                ...postData,
-                [this.props.postKey]: this.postTransform(newValue),
-            }),
-        }).then(result => {
-            if (result.status != 200) {
-                this.setState({newValueErr: true});
-            } else {
-                this.props.onChange(newValue);
-                this.setState({editing: false});
-            }
+        util.apiPost({
+            path: this.props.postTo,
+            body: {...postData, [this.props.postKey]: this.postTransform(newValue)},
+            history: this.props.history,
+            location: this.props.location,
+        }).then(() => {
+            this.props.onChange(newValue);
+            this.setState({editing: false});
+        }).catch((err) => {
+            console.error(err);
+            this.setState({newValueErr: true});
         });
         event.preventDefault();
     }
@@ -106,7 +102,7 @@ abstract class ClickToEditInput<T> extends ClickToEdit<T, ClickToEditInputProps<
     }
 }
 
-export class ClickToEditText extends ClickToEditInput<string> {
+class ClickToEditTextBare extends ClickToEditInput<string> {
     type = 'text';
     validateChange(val: string): boolean {
         return true;
@@ -125,7 +121,9 @@ export class ClickToEditText extends ClickToEditInput<string> {
     }
 }
 
-export class ClickToEditMoney extends ClickToEditInput<Money> {
+export const ClickToEditText = withRouter(ClickToEditTextBare);
+
+class ClickToEditMoneyBare extends ClickToEditInput<Money> {
     type = 'text';
     validateChange(val: Money): boolean {
         return val.isValid();
@@ -144,7 +142,9 @@ export class ClickToEditMoney extends ClickToEditInput<Money> {
     }
 }
 
-export class ClickToEditDate extends ClickToEditInput<Date> {
+export const ClickToEditMoney = withRouter(ClickToEditMoneyBare);
+
+class ClickToEditDateBare extends ClickToEditInput<Date> {
     type = 'date';
     validateChange(val: Date): boolean {
         return !isNaN(val.valueOf());
@@ -167,8 +167,9 @@ export class ClickToEditDate extends ClickToEditInput<Date> {
             onChange={(e) => this.updateValue(e)} />;
     }
 }
+export const ClickToEditDate = withRouter(ClickToEditDateBare);
 
-export class ClickToEditDropdown extends ClickToEdit<string, ClickToEditDropdownProps> {
+class ClickToEditDropdownBare extends ClickToEdit<string, ClickToEditDropdownProps> {
     validateChange(val: string): boolean {
         return this.props.values.get(val) != undefined;
     }
@@ -190,3 +191,4 @@ export class ClickToEditDropdown extends ClickToEdit<string, ClickToEditDropdown
         </select>;
     }
 }
+export const ClickToEditDropdown = withRouter(ClickToEditDropdownBare);

@@ -3,9 +3,9 @@ import { GroupId, Frame as FrameType } from '../shared/types';
 import Frame from './frame';
 import Transactions from './transactions';
 import NoRoute from './noroute';
-import { Switch, Route, Redirect } from 'react-router';
-import Media from 'react-media';
+import { Switch, Route, Redirect, RouteComponentProps } from 'react-router';
 import AddTransaction from './addtransaction';
+import { MobileQuery } from './components/media';
 
 interface AppState {
     group?: GroupId;
@@ -15,10 +15,10 @@ interface AppState {
 }
 
 /** /app */
-export default class App extends React.Component<{}, AppState> {
+export default class App extends React.Component<RouteComponentProps<{}>, AppState> {
     private currentMonth: number;
     private currentYear: number;
-    constructor(props: {}) {
+    constructor(props: RouteComponentProps<{}>) {
       super(props);
       const date = new Date();
       this.currentMonth = date.getMonth() + 1; // To make it look right in the URL ;)
@@ -26,10 +26,10 @@ export default class App extends React.Component<{}, AppState> {
       this.state = {};
     }
 
-    renderLandingPage = () => <Media query="(max-width: 599px)">
-        {(isMobile: boolean) => isMobile ? <AddTransaction /> :
-            <Redirect from="/app" to={"/app/" + this.currentMonth + "/" + this.currentYear} />}
-    </Media>;
+    renderLandingPage = () => <MobileQuery
+        mobile={<Redirect to="/app/add-transaction" />}
+        desktop={<Redirect from="/app" to={"/app/" + this.currentMonth + "/" + this.currentYear} />}
+        />;
 
     render() {
         return <Switch>

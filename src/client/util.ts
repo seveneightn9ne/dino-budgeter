@@ -1,5 +1,5 @@
 import { FrameIndex } from '../shared/types';
-
+import { Location, History } from 'history';
 export * from '../shared/util';
 import * as frames from '../shared/frames';
 
@@ -35,4 +35,51 @@ export function defaultTxDate(frame: FrameIndex): Date {
       newTxDate.setDate(1);
     }
     return newTxDate;
+}
+
+function apiFetch(options: {
+    path: string,
+    body?: {[key: string]: any},
+    location: Location,
+    history: History,
+    method: 'GET' | 'POST' | 'PUT' | 'DELETE',
+}): Promise<any> {
+    return fetch(options.path, {
+        method: options.method,
+        headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+          },
+        body: options.body ? JSON.stringify(options.body) : undefined,
+    }).then(result => {
+        if (result.status != 200) {
+            throw new Error(`Server responded with status ${result.status}`);
+        }
+        return result.json().then(json => {
+            if (json.error == 'reauth') {
+                // Note, discarding non-path bits of the location
+                options.history.push(`/login?redirectTo=${options.location.pathname}`);
+                throw new Error(`Reauth required`);
+            }
+            return json;
+        });
+    });
+}
+
+export function apiPost(options: {
+    path: string,
+    body: {[key: string]: any},
+    location: Location,
+    history: History,
+    method?: 'POST' | 'PUT' | 'DELETE',
+}): Promise<any> {
+    return apiFetch({...options, method: options.method || 'POST'});
+}
+
+export function apiGet(options: {
+    path: string,
+    location: Location,
+    history: History,
+}): Promise<any> {
+    return apiFetch({...options, method: 'GET'});
 }
