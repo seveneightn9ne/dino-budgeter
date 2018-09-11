@@ -5,18 +5,35 @@ import TxEntry from './txentry'
 import * as frames from '../shared/frames';
 import * as util from './util';
 import * as categories from '../shared/categories';
-import {ClickToEditMoney, ClickToEditText} from './components/clicktoedit';
+import {ClickToEditMoney, ClickToEditText, ClickToEditDropdown} from './components/clicktoedit';
+import Poplet from './components/poplet';
 
 interface CategoryRowProps {
     category: Category;
+    categories: Category[];
     onDeleteCategory: (id: CategoryId) => void;
     onChangeCategory: (newCategory: Category) => void;
 }
-interface CategoryRowState {
-}
+type Props = CategoryRowProps & RouteComponentProps<CategoryRowProps>;
+interface CategoryRowState {}
 
-class CategoryRow extends React.Component<CategoryRowProps & RouteComponentProps<CategoryRowProps>, CategoryRowState> {
+class CategoryRow extends React.Component<Props, CategoryRowState> {
     state = {};
+    private poplet: React.RefObject<Poplet>;
+
+    constructor(props: Props) {
+        super(props);
+        // create a ref to store the textInput DOM element
+        this.poplet = React.createRef();
+      }
+
+    categoryMap(): Map<string, string> {
+        const map = new Map();
+        this.props.categories.forEach(c => {
+            map.set(c.id, `${c.name} - ${c.balance.formatted()}`);
+        });
+        return map;
+    }
 
     delete(): boolean {
         util.apiPost({
@@ -48,6 +65,20 @@ class CategoryRow extends React.Component<CategoryRowProps & RouteComponentProps
         this.props.onChangeCategory(newCategory);
     }
 
+    onCoverBalance(fromId: CategoryId) {
+        const that = this.props.categories.filter(c => c.id == fromId)[0];
+        const thatNew = {...that};
+        // This balance ought to be negative
+        thatNew.balance = thatNew.balance.plus(this.props.category.balance);
+        this.props.onChangeCategory(thatNew);
+    
+        const thisNew = {...this.props.category};
+        thisNew.balance = Money.Zero;
+        this.props.onChangeCategory(thisNew);
+
+        this.poplet.current.close();
+    }
+
     render() {
         const budget = <ClickToEditMoney
             value={this.props.category.budget}
@@ -69,13 +100,26 @@ class CategoryRow extends React.Component<CategoryRowProps & RouteComponentProps
         const spending = this.props.category.balance.minus(this.props.category.budget).negate();
         const spendingCls = spending.cmp(Money.Zero) == 0 ? "zero" : "";
         const budgetCls = this.props.category.budget.cmp(Money.Zero) == 0 ? "zero" : "";
-        const balanceCls = this.props.category.balance.cmp(Money.Zero) == 0 ? "zero" : "";
+        const balanceCls = this.props.category.balance.cmp(Money.Zero) == 0 ? "zero" : 
+            (this.props.category.balance.cmp(Money.Zero) == -1 ? "highlighted" : "");
+
+        const balance = <Poplet text={this.props.category.balance.formatted()} ref={this.poplet}
+            title={"Cover from another category"}>
+            Cover from:
+            <ClickToEditDropdown open value={this.props.category.id || ""}
+                values={this.categoryMap()}
+                onChange={this.onCoverBalance.bind(this)}
+                postTo="/api/budgeting/move"
+                postKey="from"
+                postData={{to: this.props.category.id, amount: this.props.category.balance.negate()}} />
+        </Poplet>;
+
         return <tr key={this.props.category.id} className="hoverable">
             <td className="del"><span className="deleteCr clickable fa-times fas" onClick={() => this.delete()}></span></td>
             <td className="stretch">{name}</td>
             <td className={"amount " + budgetCls}>{budget}</td>
             <td className={"amount " + spendingCls}>{spending.formatted()}</td>
-            <td className={"amount " + balanceCls}>{this.props.category.balance.formatted()}</td>
+            <td className={"amount balance " + balanceCls}><span className="formatted">{balance}</span></td>
         </tr>;
     }
 }

@@ -48,7 +48,7 @@ export default class Categories extends React.Component<Props, State> {
 
     render() {
         const cs = this.props.frame.categories.map(c => 
-            <CategoryRow key={c.id} category={c} 
+            <CategoryRow key={c.id} category={c} categories={this.props.frame.categories}
                 onDeleteCategory={this.props.onDeleteCategory}
                 onChangeCategory={this.props.onChangeCategory} />
         );
@@ -73,7 +73,7 @@ export default class Categories extends React.Component<Props, State> {
                 break;
         }
 
-        const transactionLink = <Link to={`/app/${this.props.month+1}/${this.props.year}/transactions`}>
+        const transactionLink = <Link className="spent" to={`/app/${this.props.month+1}/${this.props.year}/transactions`}>
             {this.props.frame.spending.formatted()}</Link>;
         
         return <div><div className="blobs">{this.blob("Income", income)}

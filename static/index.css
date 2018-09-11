@@ -125,6 +125,15 @@ tr:hover .deleteCr {
     font-weight: bold;
 }
 
+a.spent {
+    color: inherit;
+    text-decoration: none;
+}
+
+a.spent:hover {
+    text-decoration: underline;
+}
+
 .ai {
     background-color: #FFEB3B;
     padding: 10px;
@@ -261,4 +270,25 @@ footer .link {
     text-decoration: none;
     color: #7c4dff;
     margin-left: 20px;
+}
+
+/* poplet */
+.poplet-background {
+    position: absolute;
+    top: 0;
+    left: 0;
+    background-color: rgba(255, 255, 255, 0.8);
+    width: 100%;
+    height: 100%;
+}
+.poplet {
+    width: 500px;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translateX(-250px);
+    padding: 40px;
+    background-color: #ffffff;
+    border: 1px solid #eeeeee;
+    border-radius: 20px;
 }

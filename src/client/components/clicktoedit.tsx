@@ -11,6 +11,7 @@ interface ClickToEditProps<T> {
     postTo: string;
     postData?: {[key: string]: any};
     postKey: string;
+    open?: boolean;
 }
 interface ClickToEditInputProps<T> extends ClickToEditProps<T> {
     size?: number;
@@ -37,7 +38,7 @@ abstract class ClickToEdit<T,P extends ClickToEditProps<T>> extends React.Compon
     constructor(props: P & RouteComponentProps<P>) {
         super(props);
         this.state = {
-            editing: false,
+            editing: !!props.open,
         }
     }
     abstract postTransform(val: T): string;
