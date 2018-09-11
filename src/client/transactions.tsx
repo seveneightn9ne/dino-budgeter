@@ -98,12 +98,6 @@ export default class Transactions extends React.Component<Props, State> {
             />} /></td></tr>);
         const rows = <MobileQuery mobile={rowsList.reverse()} desktop={rowsList} />;
         return <div className="transactions">
-            <MobileQuery
-                mobile={<span className="button">Add Transaction</span>}
-                desktop={<TxEntry onAddTransaction={this.props.onAddTransaction}
-                    defaultDate={this.props.newTxDate} gid={this.props.gid}
-                    categories={this.props.categories} />}
-            />
             {ais}
             {this.props.transactions.length > 0 ?
                 <table><tbody>

@@ -9,6 +9,7 @@ import { AI, getAIs } from '../shared/ai';
 import Categories from './categories';
 import Transactions from './transactions';
 import * as transactions from '../shared/transactions';
+import { MobileOnly, DesktopOnly } from './components/media';
 
 type FrameProps = RouteComponentProps<{month: string, year: string}>;
 interface FrameState {
@@ -220,6 +221,8 @@ export default class Frame extends React.Component<FrameProps & RouteComponentPr
             onDeleteCategory={this.onDeleteCategory.bind(this)}
             onNewIncome={this.onNewIncome.bind(this)} />
 
+        const appPrefix = `/app/${this.month()+1}/${this.year()}`;
+
         const transactions = (this.state.transactions == undefined) ? null :
             <Transactions transactions={this.state.transactions}
                 onUpdateTransaction={this.onUpdateTransaction.bind(this)}
@@ -232,10 +235,10 @@ export default class Frame extends React.Component<FrameProps & RouteComponentPr
 
         const prevButton = <Link to={`/app/${this.prevMonth()+1}/${this.prevYear()}`} className="fa-chevron-left fas framenav" />;
         const nextButton = <Link to={`/app/${this.nextMonth()+1}/${this.nextYear()}`} className="fa-chevron-right fas framenav" />;
-        const nav = <nav>
-            <NavLink to={`/app/${this.month()+1}/${this.year()}/categories`} activeClassName="active">Categories</NavLink>
-            <NavLink to={`/app/${this.month()+1}/${this.year()}/transactions`} activeClassName="active">Transactions</NavLink>
-        </nav>;
+        const nav = <DesktopOnly><nav>
+            <NavLink to={`${appPrefix}/categories`} activeClassName="active">Categories</NavLink>
+            <NavLink to={`${appPrefix}/transactions`} activeClassName="active">Transactions</NavLink>
+        </nav></DesktopOnly>;
 
         return <div>
             <header><div className="inner">
@@ -250,6 +253,16 @@ export default class Frame extends React.Component<FrameProps & RouteComponentPr
                 <Route path={"/app/add-transaction"} render={() => null} />
             </Switch>
             </main>
+            <MobileOnly>
+                <footer>
+                    <Link to="/app/add-transaction" className="add-transaction-button">
+                        <span className="fa-plus-circle fas icon" />
+                        <span className="text">Transaction</span>
+                    </Link>
+                    <Link to={`${appPrefix}/categories`} className="link">Categories</Link>
+                    <Link to={`${appPrefix}/transactions`} className="link">Transactions</Link>
+                </footer>
+            </MobileOnly>
         </div>;
     }
 }

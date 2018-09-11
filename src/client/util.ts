@@ -62,6 +62,9 @@ function apiFetch(options: {
                 throw new Error(`Reauth required`);
             }
             return json;
+        }).catch(() => {
+            // The response was not JSON but it was 200 so it probably was just "OK"
+            return {};
         });
     });
 }

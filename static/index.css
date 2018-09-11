@@ -8,6 +8,7 @@ body {
 main {
     max-width: 1000px;
     margin: 20px auto;
+    margin-bottom: 100px;
 }
 
 header {
@@ -23,6 +24,7 @@ header .inner {
 
 h1 {
     margin: 0;
+    padding-bottom: 20px;
 }
 
 .framenav {
@@ -38,7 +40,6 @@ h1 {
 
 nav a {
     padding: 5px 20px;
-    margin-top: 20px;
     color: #fff;
     display: inline-block;
     background-color: #512da8;
@@ -223,4 +224,41 @@ form {
 
 .highlighted .formatted {
     background-color: #FFEB3B;
+}
+
+/* footer */
+footer {
+    position: fixed;
+    left: 0px;
+    bottom: 0px;
+    background-color: #eeeeee;
+    height: 50px;
+    width: 100%;
+    border-top: 1px solid white;
+}
+.add-transaction-button {
+    display: inline-block;
+    text-decoration: none;
+    color: #7c4dff;
+    text-align: center;
+    margin-left: 30px;
+}
+.add-transaction-button .icon {
+    font-size: 48px;
+    height: 48px;
+    width: 48px;
+    display: block;
+    margin-top: -28px;
+    background-color: #ffffff;
+    border-radius: 28px;
+    padding: 4px;
+    border-top: 1px solid #eeeeee;
+}
+.add-transaction-button .text {
+    font-size: 12px;
+}
+footer .link {
+    text-decoration: none;
+    color: #7c4dff;
+    margin-left: 20px;
 }
