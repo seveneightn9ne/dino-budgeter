@@ -18,6 +18,7 @@ create table users (
   password_hash char(60) not null,
   ctime timestamp not null default current_timestamp
 );
+create index email on users(email);
 
 create table groups (
   gid char(32) not null primary key,
@@ -29,6 +30,15 @@ create table membership (
   gid char(32) not null references groups,
   primary key (uid, gid)
 );
+
+create table friendship (
+  u1 char(32) not null references users,
+  u2 char(32) not null references users,
+  u1_accepted bool not null,
+  u2_accepted bool not null,
+  primary key (u1, u2)
+);
+create index friendship_u2 on friendship(u2);
 
 create table frames (
   gid char(32) not null references groups,
@@ -62,5 +72,17 @@ create table transactions (
   date timestamp not null,
   foreign key (category, frame) references categories
 );
+
+create table shared_transactions (
+  id char(32) primary key,
+  payer char(32) references users,
+  settled bool not null default false
+);
+
+create table transaction_splits (
+  tid char(32) primary key references transactions,
+  sid char(32) references shared_transactions
+);
+create index split_sid on transaction_splits(sid);
 
 commit;

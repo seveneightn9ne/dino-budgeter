@@ -18,4 +18,32 @@ then
 end if;
 end $$;
 
+-- migration 3: add shared transactions & user friendships.
+do $$ begin
+if not exists(select * from information_schema.tables where table_name = 'shared_transactions')
+then
+create index email on users(email);
+create table friendship (
+  u1 char(32) not null references users,
+  u2 char(32) not null references users,
+  u1_accepted bool not null,
+  u2_accepted bool not null,
+  primary key (u1, u2)
+);
+create index friendship_u2 on friendship(u2);
+create table shared_transactions (
+  id char(32) primary key,
+  payer char(32) references users,
+  settled bool not null default false
+);
+create table transaction_splits (
+  tid char(32) primary key references transactions,
+  sid char(32) references shared_transactions
+);
+create index split_sid on transaction_splits(sid);
+end if;
+end $$;
+
+-- migration 4:
+
 commit;
