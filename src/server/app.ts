@@ -69,6 +69,7 @@ app.get('/api/categories',         ensureLogin.ensureLoggedIn('/api/auth-redirec
 app.post('/api/category/budget',   ensureLogin.ensureLoggedIn('/api/auth-redirect'), api.handle_category_budget_post);
 app.post('/api/category/name',     ensureLogin.ensureLoggedIn('/api/auth-redirect'), api.handle_category_name_post);
 app.post('/api/income',            ensureLogin.ensureLoggedIn('/api/auth-redirect'), api.handle_income_post);
+app.post('/api/budgeting/move',    ensureLogin.ensureLoggedIn('/api/auth-redirect'), api.handle_budgeting_move_post);
 
 /* Static Routes */
 app.use(serveStatic(path.join(__dirname, '../client')));

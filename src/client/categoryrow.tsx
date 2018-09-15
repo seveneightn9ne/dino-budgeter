@@ -15,10 +15,12 @@ interface CategoryRowProps {
     onChangeCategory: (newCategory: Category) => void;
 }
 type Props = CategoryRowProps & RouteComponentProps<CategoryRowProps>;
-interface CategoryRowState {}
+interface CategoryRowState {
+    provisionalCoverFrom?: CategoryId;
+}
 
 class CategoryRow extends React.Component<Props, CategoryRowState> {
-    state = {};
+    state: CategoryRowState = {};
     private poplet: React.RefObject<Poplet>;
 
     constructor(props: Props) {
@@ -27,10 +29,12 @@ class CategoryRow extends React.Component<Props, CategoryRowState> {
         this.poplet = React.createRef();
       }
 
-    categoryMap(): Map<string, string> {
+    categoryMap(minBalance: Money): Map<string, string> {
         const map = new Map();
         this.props.categories.forEach(c => {
-            map.set(c.id, `${c.name} - ${c.balance.formatted()}`);
+            if (c.balance.cmp(minBalance) >= 0) {
+                map.set(c.id, `${c.name} - ${c.balance.formatted()}`);
+            }
         });
         return map;
     }
@@ -76,7 +80,16 @@ class CategoryRow extends React.Component<Props, CategoryRowState> {
         thisNew.balance = Money.Zero;
         this.props.onChangeCategory(thisNew);
 
+        this.closePoplet();
+    }
+
+    closePoplet() {
+        //this.poplet.current.close2.bind(this.poplet.current)();
         this.poplet.current.close();
+    }
+
+    previewCover(from: CategoryId) {
+        this.setState({provisionalCoverFrom: from});
     }
 
     render() {
@@ -103,16 +116,23 @@ class CategoryRow extends React.Component<Props, CategoryRowState> {
         const balanceCls = this.props.category.balance.cmp(Money.Zero) == 0 ? "zero" : 
             (this.props.category.balance.cmp(Money.Zero) == -1 ? "highlighted" : "");
 
-        const balance = <Poplet text={this.props.category.balance.formatted()} ref={this.poplet}
-            title={"Cover from another category"}>
-            Cover from:
-            <ClickToEditDropdown open value={this.props.category.id || ""}
-                values={this.categoryMap()}
-                onChange={this.onCoverBalance.bind(this)}
-                postTo="/api/budgeting/move"
-                postKey="from"
-                postData={{to: this.props.category.id, amount: this.props.category.balance.negate()}} />
-        </Poplet>;
+
+        const balance = this.props.category.balance.cmp(Money.Zero) < 0 ? 
+            <Poplet text={this.props.category.balance.formatted()} ref={this.poplet}
+                title={"Cover from another category"}>
+                Cover from {' '}
+                <ClickToEditDropdown open value=""
+                    values={this.categoryMap(this.props.category.balance.negate())}
+                    onChange={this.onCoverBalance.bind(this)}
+                    postTo="/api/budgeting/move"
+                    postKey="from"
+                    postData={{
+                        to: this.props.category.id,
+                        amount: this.props.category.balance.negate(),
+                        frame: this.props.category.frame,
+                    }} />
+                <span className="clickable" onClick={() => this.closePoplet()}>Close</span>
+            </Poplet> : this.props.category.balance.formatted();
 
         return <tr key={this.props.category.id} className="hoverable">
             <td className="del"><span className="deleteCr clickable fa-times fas" onClick={() => this.delete()}></span></td>

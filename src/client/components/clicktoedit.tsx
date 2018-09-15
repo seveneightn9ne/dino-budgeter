@@ -12,6 +12,7 @@ interface ClickToEditProps<T> {
     postData?: {[key: string]: any};
     postKey: string;
     open?: boolean;
+    onProvisionalChange?: (newVal: T) => void;
 }
 interface ClickToEditInputProps<T> extends ClickToEditProps<T> {
     size?: number;
@@ -46,20 +47,27 @@ abstract class ClickToEdit<T,P extends ClickToEditProps<T>> extends React.Compon
     abstract fromInput(val: string): T;
     abstract formatDisplay(val: T): string;
     abstract renderInput(): JSX.Element;
+    abstract blur(): void;
+    abstract saveStyle: React.CSSProperties;
+    abstract getInitialValue(): string;
 
     edit(): void {
-        this.setState({editing: true, newValue: ''});
+        this.setState({editing: true, newValue: this.getInitialValue()});
     }
 
     endEdit(): void {
-        this.setState({editing: false});
+        this.setState({editing: !!this.props.open});
     }
 
     updateValue(event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>): void {
+        if (this.props.onProvisionalChange) {
+            this.props.onProvisionalChange(this.fromInput(event.target.value));
+        }
         this.setState({newValue: event.target.value, newValueErr: false});
     }
 
     saveNewValue(event: React.FormEvent): void{
+        console.log("Save new value")
         const newValue = this.fromInput(this.state.newValue);
         if (!this.validateChange(newValue)) {
             this.setState({newValueErr: true});
@@ -74,7 +82,7 @@ abstract class ClickToEdit<T,P extends ClickToEditProps<T>> extends React.Compon
             location: this.props.location,
         }).then(() => {
             this.props.onChange(newValue);
-            this.setState({editing: false});
+            this.endEdit();
         }).catch((err) => {
             console.error(err);
             this.setState({newValueErr: true});
@@ -84,9 +92,9 @@ abstract class ClickToEdit<T,P extends ClickToEditProps<T>> extends React.Compon
 
     render() {
         const val = (this.state.editing)
-            ? <form className="cte" onBlur={this.endEdit.bind(this)} onSubmit={this.saveNewValue.bind(this)}>
+            ? <form className="cte" onBlur={this.blur.bind(this)} onSubmit={this.saveNewValue.bind(this)}>
                 {this.renderInput()}
-                <input type="submit" value="Save" style={{display: 'none'}} />
+                <input type="submit" value="Save" style={this.saveStyle} />
                 </form>
             : <span className="clickable formatted" onClick={this.edit.bind(this)}>{this.formatDisplay(this.props.value)}</span>;
         return <span className={this.props.className}>{val}</span>;
@@ -96,6 +104,13 @@ abstract class ClickToEdit<T,P extends ClickToEditProps<T>> extends React.Compon
 abstract class ClickToEditInput<T> extends ClickToEdit<T, ClickToEditInputProps<T>> {
     abstract type: string;
     abstract toInput(val: T): string;
+    saveStyle = {display: 'none'};
+    blur(): void {
+        this.endEdit();
+    }
+    getInitialValue() {
+        return "";
+    }
     renderInput() {
         return <input type={this.type} size={this.props.size} autoFocus={true}
             placeholder={this.toInput(this.props.value)} value={this.state.newValue}
@@ -170,7 +185,20 @@ class ClickToEditDateBare extends ClickToEditInput<Date> {
 }
 export const ClickToEditDate = withRouter(ClickToEditDateBare);
 
+
+type CTEDP = ClickToEditDropdownProps & RouteComponentProps<ClickToEditDropdownProps>;
 class ClickToEditDropdownBare extends ClickToEdit<string, ClickToEditDropdownProps> {
+    saveStyle = {};
+    constructor(props: CTEDP) {
+        super(props);
+        this.state = {...this.state, newValue: this.getInitialValue(props)};
+    }
+    getInitialValue(props = this.props) {
+        return props.value;
+    }
+    blur(): void {
+
+    }
     validateChange(val: string): boolean {
         return this.props.values.get(val) != undefined;
     }
@@ -187,7 +215,7 @@ class ClickToEditDropdownBare extends ClickToEdit<string, ClickToEditDropdownPro
         const options: JSX.Element[] = [];
         this.props.values.forEach((display, val) =>
             options.push(<option key={val} value={val}>{display}</option>));
-        return <select autoFocus onChange={(e) => this.updateValue(e)} value={this.props.value}>
+        return <select autoFocus onChange={(e) => this.updateValue(e)} value={this.state.newValue}>
             {options}
         </select>;
     }

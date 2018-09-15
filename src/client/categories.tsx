@@ -37,13 +37,13 @@ export default class Categories extends React.Component<Props, State> {
     }
 
     blob(title: string, amount: JSX.Element | string, bold = false){
-        return <div className={'blob' + (bold ? ' bold' : '')}>
+        return <div key={title} className={'blob' + (bold ? ' bold' : '')}>
             <div className="title">{title}</div>
             <div className="amount">{amount}</div>
             </div>;
     }
     blobOp(operator: string) {
-        return <div className="blob-op">{operator}</div>
+        return <div key={operator} className="blob-op">{operator}</div>
     }
 
     render() {

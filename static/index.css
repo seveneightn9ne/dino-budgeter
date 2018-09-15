@@ -197,7 +197,7 @@ td.date {
     width: 100px;
 }
 td.category {
-    width: 200px;
+    width: 300px;
 }
 form {
     margin: 0;
@@ -205,6 +205,13 @@ form {
 
 .cte input {
     height: 16px;
+}
+.cte select {
+    height: 24px;
+}
+.cte input[type=submit] {
+    height: 24px;
+    width: 70px;
 }
 
 /* mobile page */

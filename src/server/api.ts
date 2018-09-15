@@ -79,7 +79,7 @@ export const handle_transactions_get = wrap(async function(req: Request, res: Re
         from transactions \
         where gid=$1 \
         and frame=$2 \
-        and alive", [gid, frame]);
+        and alive order by date asc", [gid, frame]);
         return rows || [];
     })
     res.json({transactions});
@@ -313,4 +313,38 @@ export const handle_category_name_post = wrap(async function(req: Request, res: 
         ]);
         res.sendStatus(200);
     });
+});
+
+export const handle_budgeting_move_post = wrap(async function(req: Request, res: Response) {
+    req.checkBody("to").notEmpty().isString();
+    req.checkBody("from").notEmpty().isString();
+    req.checkBody("amount").notEmpty().isNumeric();
+    req.checkBody("frame").notEmpty().isNumeric();
+    const amount = new Money(req.body.amount);
+    const from = req.body.from;
+    const to = req.body.to;
+    const frame = Number(req.body.frame);
+    const result = await req.getValidationResult();
+    if (!result.isEmpty() || !amount.isValid()) {
+        console.log(result.mapped());
+        res.sendStatus(400);
+        return;
+    }
+    await db.tx(async t => {
+        const gid = await user.getDefaultGroup(req.user, t);
+        const fromRow = (await t.oneOrNone("select * from categories where id = $1 and gid = $2 and frame = $3",
+            [from, gid, frame])).exists;
+        const toRow = (await t.one("select * from categories where id = $1 and gid = $2 and frame = $3",
+            [to, gid, frame])).exists;
+        if (!fromRow || !toRow) {
+            res.sendStatus(400);
+            return;
+        }
+        const newFromBudget = new Money(fromRow.budget).minus(amount);
+        const newToBudget = new Money(toRow.budget).plus(amount);
+        await t.none("update categories set budget = $1 where id = $2 and frame = $3 limit 1", [newFromBudget, from, frame]);
+        await t.none("update categories set budget = $1 where id = $2 and frame = $3 limit 1", [newToBudget, to, frame]);
+        res.sendStatus(200);
+    });
+
 });
