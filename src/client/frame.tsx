@@ -1,8 +1,7 @@
 import * as React from 'react';
-import {RouteComponentProps, Switch, Route, Redirect, withRouter } from 'react-router';
+import {RouteComponentProps, Switch, Route, Redirect } from 'react-router';
 import { Link, NavLink } from 'react-router-dom';
-import {Frame as FrameType, Category, CategoryId, Money, Transaction, TransactionId} from '../shared/types';
-import TxEntry from './txentry'
+import {Frame as FrameType, Category, CategoryId, Money, Transaction, TransactionId, FrameIndex} from '../shared/types';
 import * as frames from '../shared/frames';
 import * as util from './util';
 import { AI, getAIs } from '../shared/ai';
@@ -43,6 +42,11 @@ export default class Frame extends React.Component<FrameProps & RouteComponentPr
     prevYear = () => (this.prevMonth() == 11) ? this.year() - 1 : this.year();
     nextMonth = () => (this.month() + 1) % 12;
     nextYear = () => (this.nextMonth() == 0) ? this.year() + 1 : this.year();
+
+    todayFrame(): FrameIndex {
+        const today = new Date();
+        return frames.index(today.getMonth(), today.getFullYear());
+    }
 
     getAIs(): AI[] {
         if (!this.state.frame) {
@@ -227,7 +231,7 @@ export default class Frame extends React.Component<FrameProps & RouteComponentPr
             return null;
         }
 
-        if (this.state.frame.income.cmp(Money.Zero) == 0) {
+        if (this.state.frame.income.cmp(Money.Zero) == 0 && this.state.frame.index >= this.todayFrame()) {
             const className = this.state.setIncomeErr ? "error" : "";
             return <div className="splash">
                 <p>What is your total expected income for {this.monthName()}?</p>
