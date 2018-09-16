@@ -1,7 +1,7 @@
 import * as React from 'react';
 import {RouteComponentProps, Switch, Route, Redirect } from 'react-router';
 import { Link, NavLink } from 'react-router-dom';
-import {Frame as FrameType, Category, CategoryId, Money, Transaction, TransactionId, FrameIndex} from '../shared/types';
+import {Frame as FrameType, Category, CategoryId, Transaction, TransactionId, FrameIndex} from '../shared/types';
 import * as frames from '../shared/frames';
 import * as util from './util';
 import { AI, getAIs } from '../shared/ai';
@@ -9,6 +9,7 @@ import Categories from './categories';
 import Transactions from './transactions';
 import * as transactions from '../shared/transactions';
 import { MobileOnly, DesktopOnly } from './components/media';
+import Money from '../shared/Money';
 
 type FrameProps = RouteComponentProps<{month: string, year: string}>;
 interface FrameState {
@@ -268,8 +269,8 @@ export default class Frame extends React.Component<FrameProps & RouteComponentPr
         const nav = <DesktopOnly><nav>
             <NavLink to={`${appPrefix}/categories`} activeClassName="active">Categories</NavLink>
             <NavLink to={`${appPrefix}/transactions`} activeClassName="active">Transactions</NavLink>
+            <NavLink className="right" to={`/app/account`} activeClassName="active">Account</NavLink>
         </nav></DesktopOnly>;
-
         return <div>
             <header><div className="inner">
                 <h1>{prevButton}{this.monthName() + ' ' + this.year()}{nextButton}</h1>

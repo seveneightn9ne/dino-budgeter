@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { Link } from 'react-router-dom'
-import {Frame as FrameType, Category, CategoryId, Money} from '../shared/types';
+import {Frame as FrameType, Category, CategoryId} from '../shared/types';
+import Money from '../shared/Money';
 import NewCategory from './newcategory';
 import CategoryRow from './categoryrow';
 import { AI, getAIs } from '../shared/ai';

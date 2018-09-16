@@ -1,4 +1,5 @@
-import {Money, TransactionId, Transaction} from '../shared/types';
+import {TransactionId, Transaction} from '../shared/types';
+import Money from '../shared/Money';
 import pgPromise from 'pg-promise';
 export * from '../shared/transactions';
 

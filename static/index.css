@@ -59,6 +59,11 @@ nav a.active:hover {
     background-color: #eeeeee;
 }
 
+nav a.right {
+    float: right;
+    background-color: transparent;
+}
+
 input.error {
     border-color: rgb(122, 0, 0);
 }

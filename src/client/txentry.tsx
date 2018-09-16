@@ -1,5 +1,6 @@
 import * as React from 'react';
-import {Money, Category, Transaction, GroupId, FrameIndex} from '../shared/types';
+import {Category, Transaction, GroupId} from '../shared/types';
+import Money from '../shared/Money';
 import * as util from './util';
 import { index } from '../shared/frames';
 import { withRouter, RouteComponentProps } from 'react-router';

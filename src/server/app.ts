@@ -58,6 +58,9 @@ app.post("/playground", playground.handle_playground_post);
 app.get('/api/auth-redirect',      user.handle_auth_redirect_get);
 app.get('/api/current-email',      ensureLogin.ensureLoggedIn('/api/auth-redirect'), user.handle_current_email_get);
 app.get('/api/groups',             ensureLogin.ensureLoggedIn('/api/auth-redirect'), user.handle_groups_get);
+app.get('/api/friends',            ensureLogin.ensureLoggedIn('/api/auth-redirect'), user.handle_friends_get);
+app.post('/api/friend',            ensureLogin.ensureLoggedIn('/api/auth-redirect'), user.handle_add_friend_post);
+app.post('/api/friend/reject',     ensureLogin.ensureLoggedIn('/api/auth-redirect'), user.handle_reject_friend_post);
 
 app.get('/api/frame/:month/:year', ensureLogin.ensureLoggedIn('/api/auth-redirect'), frame.handle_frame_get);
 app.get('/api/frame',              ensureLogin.ensureLoggedIn('/api/auth-redirect'), frame.handle_frame_get);

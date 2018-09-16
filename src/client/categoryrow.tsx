@@ -1,8 +1,7 @@
 import * as React from 'react';
 import {RouteComponentProps, withRouter} from 'react-router';
-import {Frame as FrameType, Money, FrameIndex, Category, CategoryId } from '../shared/types';
-import TxEntry from './txentry'
-import * as frames from '../shared/frames';
+import {Category, CategoryId } from '../shared/types';
+import Money from '../shared/Money';
 import * as util from './util';
 import * as categories from '../shared/categories';
 import {ClickToEditMoney, ClickToEditText, ClickToEditDropdown} from './components/clicktoedit';

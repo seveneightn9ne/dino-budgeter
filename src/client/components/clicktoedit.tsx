@@ -1,5 +1,5 @@
 import * as React from 'react';
-import {Money} from '../../shared/types';
+import Money from '../../shared/Money';
 import { fromYyyymmdd, yyyymmdd } from '../util';
 import { withRouter, RouteComponentProps } from 'react-router-dom';
 import * as util from '../util';

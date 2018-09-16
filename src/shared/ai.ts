@@ -1,5 +1,5 @@
-import { FrameIndex, Money, Frame, TransactionId, Transaction } from "./types";
-
+import { FrameIndex, Frame, TransactionId, Transaction } from "./types";
+import Money from './Money';
 export interface AI {
     frame: FrameIndex;
     message(): string;

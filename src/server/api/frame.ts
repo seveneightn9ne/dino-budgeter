@@ -1,5 +1,5 @@
 import {Request, Response} from 'express';
-import {Money} from '../../shared/types';
+import Money from '../../shared/Money';
 import db from '../db';
 import * as frames from '../frames';
 import * as user from '../user';

@@ -1,4 +1,5 @@
-import {Frame, GroupId, Money, FrameIndex, Category} from '../shared/types';
+import {Frame, GroupId, FrameIndex, Category} from '../shared/types';
+import Money from '../shared/Money';
 import db from './db';
 import pgPromise from 'pg-promise';
 import * as categories from './categories';

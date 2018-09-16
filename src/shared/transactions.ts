@@ -1,5 +1,5 @@
-import {Money, Transaction} from '../shared/types';
-
+import {Transaction} from '../shared/types';
+import Money from '../shared/Money';
 export function fromSerialized(row: any): Transaction {
     if (!row) {
         return null;

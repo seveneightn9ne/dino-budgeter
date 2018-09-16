@@ -1,5 +1,6 @@
 import {Request, Response} from 'express';
-import {Money, Category} from '../../shared/types';
+import {Category} from '../../shared/types';
+import Money from '../../shared/Money';
 import db from '../db';
 import * as user from '../user';
 import * as categories from '../categories';

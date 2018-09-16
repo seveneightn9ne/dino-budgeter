@@ -1,11 +1,11 @@
 import * as React from 'react';
 import { GroupId, Frame as FrameType } from '../shared/types';
 import Frame from './frame';
-import Transactions from './transactions';
 import NoRoute from './noroute';
 import { Switch, Route, Redirect, RouteComponentProps } from 'react-router';
 import AddTransaction from './addtransaction';
 import { MobileQuery } from './components/media';
+import Account from './account';
 
 interface AppState {
     group?: GroupId;
@@ -36,6 +36,7 @@ export default class App extends React.Component<RouteComponentProps<{}>, AppSta
             <Route exact path="/app" render={this.renderLandingPage} />
             <Route path="/app/:month/:year" component={Frame} />
             <Route path="/app/add-transaction" component={AddTransaction} />
+            <Route path="/app/account" component={Account} />
             <Route path="*" component={NoRoute} />
         </Switch>;
     }

@@ -40,8 +40,8 @@ export function defaultTxDate(frame: FrameIndex): Date {
 function apiFetch(options: {
     path: string,
     body?: {[key: string]: any},
-    location: Location,
-    history: History,
+    location?: Location,
+    history?: History,
     method: 'GET' | 'POST' | 'PUT' | 'DELETE',
 }): Promise<any> {
     return fetch(options.path, {
@@ -52,14 +52,20 @@ function apiFetch(options: {
           },
         body: options.body ? JSON.stringify(options.body) : undefined,
     }).then(result => {
-        if (result.status != 200) {
-            throw new Error(`Server responded with status ${result.status}`);
+        if (result.status != 200 && result.status != 204) {
+            throw result.status;
         }
         return result.json().then(json => {
             if (json.error == 'reauth') {
                 // Note, discarding non-path bits of the location
-                options.history.push(`/login?redirectTo=${options.location.pathname}`);
-                throw new Error(`Reauth required`);
+                const redir = options.location ? options.location.pathname : '';
+                const path = `/login?redirectTo=${redir}`;
+                if (options.history) {
+                    options.history.push(path);
+                    throw new Error(`Reauth required`);
+                } else {
+                    window.location.href = path;
+                }
             }
             return json;
         }).catch(() => {
@@ -72,8 +78,8 @@ function apiFetch(options: {
 export function apiPost(options: {
     path: string,
     body: {[key: string]: any},
-    location: Location,
-    history: History,
+    location?: Location,
+    history?: History,
     method?: 'POST' | 'PUT' | 'DELETE',
 }): Promise<any> {
     return apiFetch({...options, method: options.method || 'POST'});
@@ -81,8 +87,8 @@ export function apiPost(options: {
 
 export function apiGet(options: {
     path: string,
-    location: Location,
-    history: History,
+    location?: Location,
+    history?: History,
 }): Promise<any> {
     return apiFetch({...options, method: 'GET'});
 }
