@@ -6,33 +6,6 @@ import * as util from '../../shared/util';
 import * as transactions from '../transactions';
 import {wrap} from '../api';
 
-export const handle_transactions_get = wrap(async function(req: Request, res: Response): Promise<void> {
-    req.checkQuery("frame").notEmpty().isNumeric();
-    let result = await req.getValidationResult()
-    if (!result.isEmpty()) {
-        const status = 400;
-        res.status(status).send({
-            "error": {
-                "status": status,
-                "message": "invalid parameters",
-                "details": result.mapped(),
-            }
-        });
-        return;
-    }
-    const frame = Number(req.query.frame);
-    const transactions = await db.tx(async t => {
-        const gid = await user.getDefaultGroup(req.user, t);
-        const rows = await t.manyOrNone("select id,category,amount,description,category,date \
-        from transactions \
-        where gid=$1 \
-        and frame=$2 \
-        and alive order by date asc", [gid, frame]);
-        return rows || [];
-    })
-    res.json({transactions});
-});
-
 export const handle_transaction_post = wrap(async function(req: Request, res: Response) {
     req.checkBody("frame").notEmpty().isNumeric();
     req.checkBody('amount').notEmpty().isString();

@@ -1,4 +1,4 @@
-import {TransactionId, Transaction} from '../shared/types';
+import {TransactionId, Transaction, FrameIndex, User, GroupId} from '../shared/types';
 import Money from '../shared/Money';
 import pgPromise from 'pg-promise';
 export * from '../shared/transactions';
@@ -16,4 +16,13 @@ export function getTransaction(id: TransactionId, t: pgPromise.ITask<{}>): Promi
             date: row.date,
         };
     });
+}
+
+export async function getTransactions(frame: FrameIndex, gid: GroupId, t: pgPromise.ITask<{}>): Promise<Transaction[]> {
+    const rows = await t.manyOrNone("select id,category,amount,description,category,date \
+    from transactions \
+    where gid=$1 \
+    and frame=$2 \
+    and alive order by date asc", [gid, frame]);
+    return rows || [];
 }

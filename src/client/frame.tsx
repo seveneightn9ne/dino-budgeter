@@ -18,6 +18,7 @@ interface FrameState {
     setIncome: string;
     setIncomeErr?: boolean;
     transactions?: Transaction[];
+    invites?: string[];
 }
 
 /** /app/:month/:year */
@@ -58,14 +59,12 @@ export default class Frame extends React.Component<FrameProps & RouteComponentPr
 
     componentDidMount() {
         this.initializeFrame();
-        this.initTransactions();
     }
 
     componentDidUpdate(prevProps: FrameProps) {
         if (prevProps.match.params.month != this.props.match.params.month ||
             prevProps.match.params.year != this.props.match.params.year) {
             this.initializeFrame();
-            this.initTransactions();
         }
     }
 
@@ -81,22 +80,12 @@ export default class Frame extends React.Component<FrameProps & RouteComponentPr
             location: props.location,
             history: props.history,
         }).then(response => {
-            const frame = frames.fromSerialized(response);
+            const frame = frames.fromSerialized(response.frame);
             const budgeted = this.calculateBudgeted(frame.categories);
-            this.setState({frame, budgeted});
+            const txns = response.transactions.map(transactions.fromSerialized);
+            const invites = response.invites;
+            this.setState({frame, budgeted, transactions: txns, invites});
             return frame;
-        });
-    }
-
-    async initTransactions(props = this.props) {
-        const payload = await util.apiGet({
-            path: `/api/transactions?frame=${this.index(props)}`,
-            location: props.location,
-            history: props.history,
-        })
-        const txns = payload.transactions.map(transactions.fromSerialized);
-        this.setState({
-            transactions: txns,
         });
     }
 
@@ -266,10 +255,11 @@ export default class Frame extends React.Component<FrameProps & RouteComponentPr
 
         const prevButton = <Link to={`/app/${this.prevMonth()+1}/${this.prevYear()}`} className="fa-chevron-left fas framenav" />;
         const nextButton = <Link to={`/app/${this.nextMonth()+1}/${this.nextYear()}`} className="fa-chevron-right fas framenav" />;
+        const inviteBadge = this.state.invites.length > 0 ? <span title="Friend Requests" className="badge">{this.state.invites.length}</span> : null;
         const nav = <DesktopOnly><nav>
             <NavLink to={`${appPrefix}/categories`} activeClassName="active">Categories</NavLink>
             <NavLink to={`${appPrefix}/transactions`} activeClassName="active">Transactions</NavLink>
-            <NavLink className="right" to={`/app/account`} activeClassName="active">Account</NavLink>
+            <NavLink className="right" to={`/app/account`} activeClassName="active">Account{inviteBadge}</NavLink>
         </nav></DesktopOnly>;
         return <div>
             <header><div className="inner">

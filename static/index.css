@@ -45,6 +45,7 @@ nav a {
     background-color: #512da8;
     text-decoration: none;
     font-size: 14px;
+    position: relative;
 }
 
 nav a.active {
@@ -62,6 +63,20 @@ nav a.active:hover {
 nav a.right {
     float: right;
     background-color: transparent;
+}
+.badge {
+    background-color: #FFEB3B;
+    color: #512da8;
+    width: 20px;
+    height: 20px;
+    border-radius: 10px;
+    display: block;
+    position: absolute;
+    right: -5px;
+    top: -5px;
+    text-align: center;
+    line-height: 1.5;
+
 }
 
 input.error {

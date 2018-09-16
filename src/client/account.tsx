@@ -93,7 +93,9 @@ export default class Account extends React.Component<Props, State> {
             history: this.props.history,
         }).then(() => {
             const newInvites = this.state.invites.filter(i => i.email != email);
+            const newFriends = this.state.friends.filter(f => f.email != email);
             this.setState({
+                friends: newFriends,
                 invites: newInvites,
             });
         });
@@ -105,7 +107,7 @@ export default class Account extends React.Component<Props, State> {
             friends = this.state.friends.map(friend => {
                 const thing = friend.pending ? 
                     <span className="pending">Pending</span> : 
-                    <span className="clickable">Remove</span>;
+                    <span className="clickable" onClick={() => this.rejectFriend(friend.email)}>Remove</span>;
                 return <li key={friend.email}>{friend.email}{' '}{thing}</li>
             });
         }

@@ -4,6 +4,7 @@ import db from '../db';
 import * as frames from '../frames';
 import * as user from '../user';
 import {wrap} from '../api';
+import * as transactions from '../transactions';
 
 
 export const handle_frame_get = wrap(async function(req: Request, res: Response): Promise<void> {
@@ -18,7 +19,9 @@ export const handle_frame_get = wrap(async function(req: Request, res: Response)
         const gid = await user.getDefaultGroup(req.user, t);
         const index = frames.index(Number(req.params.month), Number(req.params.year));
         const frame = await frames.getOrCreateFrame(gid, index, t);
-        res.send(frame);
+        const ts = await transactions.getTransactions(index, gid, t);
+        const invites = await user.getEmails(await user.getFriendInvites(req.user.uid, t), t);
+        res.send({frame, transactions: ts, invites});
     });
 });
 

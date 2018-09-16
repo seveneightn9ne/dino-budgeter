@@ -67,7 +67,6 @@ app.get('/api/frame',              ensureLogin.ensureLoggedIn('/api/auth-redirec
 app.post('/api/income',            ensureLogin.ensureLoggedIn('/api/auth-redirect'), frame.handle_income_post);
 app.post('/api/budgeting/move',    ensureLogin.ensureLoggedIn('/api/auth-redirect'), frame.handle_budgeting_move_post);
 
-app.get('/api/transactions',       ensureLogin.ensureLoggedIn('/api/auth-redirect'), transactions.handle_transactions_get);
 app.post('/api/transaction',       ensureLogin.ensureLoggedIn('/api/auth-redirect'), transactions.handle_transaction_post);
 app.delete('/api/transaction',     ensureLogin.ensureLoggedIn('/api/auth-redirect'), transactions.handle_transaction_delete);
 app.post('/api/transaction/description', ensureLogin.ensureLoggedIn('/api/auth-redirect'), transactions.handle_transaction_description_post);
