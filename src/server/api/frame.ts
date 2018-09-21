@@ -1,29 +1,8 @@
 import {Request, Response} from 'express';
 import Money from '../../shared/Money';
 import db from '../db';
-import * as frames from '../frames';
 import * as user from '../user';
 import {wrap} from '../api';
-import * as transactions from '../transactions';
-
-
-export const handle_frame_get = wrap(async function(req: Request, res: Response): Promise<void> {
-    req.checkParams("month").isNumeric();
-    req.checkParams("year").isNumeric();
-    let result = await req.getValidationResult();
-    if (!result.isEmpty()) {
-        res.sendStatus(400);
-        return;
-    }
-    await db.tx(async t => {
-        const gid = await user.getDefaultGroup(req.user, t);
-        const index = frames.index(Number(req.params.month), Number(req.params.year));
-        const frame = await frames.getOrCreateFrame(gid, index, t);
-        const ts = await transactions.getTransactions(index, gid, t);
-        const invites = await user.getEmails(await user.getFriendInvites(req.user.uid, t), t);
-        res.send({frame, transactions: ts, invites});
-    });
-});
 
 export const handle_income_post = wrap(async function(req: Request, res: Response): Promise<void> {
     req.checkBody("frame").isNumeric();
@@ -65,17 +44,17 @@ export const handle_budgeting_move_post = wrap(async function(req: Request, res:
     await db.tx(async t => {
         const gid = await user.getDefaultGroup(req.user, t);
         const fromRow = (await t.oneOrNone("select * from categories where id = $1 and gid = $2 and frame = $3",
-            [from, gid, frame])).exists;
-        const toRow = (await t.one("select * from categories where id = $1 and gid = $2 and frame = $3",
-            [to, gid, frame])).exists;
+            [from, gid, frame]));
+        const toRow = (await t.oneOrNone("select * from categories where id = $1 and gid = $2 and frame = $3",
+            [to, gid, frame]));
         if (!fromRow || !toRow) {
             res.sendStatus(400);
             return;
         }
         const newFromBudget = new Money(fromRow.budget).minus(amount);
         const newToBudget = new Money(toRow.budget).plus(amount);
-        await t.none("update categories set budget = $1 where id = $2 and frame = $3 limit 1", [newFromBudget, from, frame]);
-        await t.none("update categories set budget = $1 where id = $2 and frame = $3 limit 1", [newToBudget, to, frame]);
+        await t.none("update categories set budget = $1 where id = $2 and frame = $3", [newFromBudget.string(), from, frame]);
+        await t.none("update categories set budget = $1 where id = $2 and frame = $3", [newToBudget.string(), to, frame]);
         res.sendStatus(200);
     });
 

@@ -1,7 +1,9 @@
-import { FrameIndex } from '../shared/types';
+import { FrameIndex, InitState } from '../shared/types';
 import { Location, History } from 'history';
 export * from '../shared/util';
 import * as frames from '../shared/frames';
+import * as categories from '../shared/categories';
+import * as transactions from '../shared/transactions';
 
 export const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
@@ -91,4 +93,32 @@ export function apiGet(options: {
     history?: History,
 }): Promise<any> {
     return apiFetch({...options, method: 'GET'});
+}
+
+export function initializeState<S extends {initialized: boolean}, W extends (keyof (InitState & S))[]>
+        (self: React.Component<any, S>, index: FrameIndex, ...wants: W) {
+    let params = wants.map(w => w + "=true").join('&');
+    if (index) {
+        params += "&index=" + index;
+    }
+    return apiGet({
+        path: '/api/init?' + params,
+        location: self.props.location,
+        history: self.props.history,
+    }).then(response => {
+        if (response.frame) {
+            response.frame = frames.fromSerialized(response.frame);
+        }
+        if (response.categories) {
+            response.categories = response.categories.map(categories.fromSerialized);
+        }
+        if (response.transactions) {
+            response.transactions = response.transactions.map(transactions.fromSerialized);
+        }
+        return new Promise((resolve, reject) => {
+            self.setState({...response, initialized: true}, () => {
+                resolve();
+            })
+        })
+    });
 }

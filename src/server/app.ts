@@ -56,14 +56,11 @@ app.post("/playground", playground.handle_playground_post);
  * API Routes. They require login.
  */
 app.get('/api/auth-redirect',      user.handle_auth_redirect_get);
-app.get('/api/current-email',      ensureLogin.ensureLoggedIn('/api/auth-redirect'), user.handle_current_email_get);
-app.get('/api/groups',             ensureLogin.ensureLoggedIn('/api/auth-redirect'), user.handle_groups_get);
-app.get('/api/friends',            ensureLogin.ensureLoggedIn('/api/auth-redirect'), user.handle_friends_get);
 app.post('/api/friend',            ensureLogin.ensureLoggedIn('/api/auth-redirect'), user.handle_add_friend_post);
 app.post('/api/friend/reject',     ensureLogin.ensureLoggedIn('/api/auth-redirect'), user.handle_reject_friend_post);
 
-app.get('/api/frame/:month/:year', ensureLogin.ensureLoggedIn('/api/auth-redirect'), frame.handle_frame_get);
-app.get('/api/frame',              ensureLogin.ensureLoggedIn('/api/auth-redirect'), frame.handle_frame_get);
+app.get('/api/init',               ensureLogin.ensureLoggedIn('/api/auth-redirect'), api.handle_init_get);
+
 app.post('/api/income',            ensureLogin.ensureLoggedIn('/api/auth-redirect'), frame.handle_income_post);
 app.post('/api/budgeting/move',    ensureLogin.ensureLoggedIn('/api/auth-redirect'), frame.handle_budgeting_move_post);
 
@@ -76,7 +73,6 @@ app.post('/api/transaction/category', ensureLogin.ensureLoggedIn('/api/auth-redi
 
 app.post('/api/category',          ensureLogin.ensureLoggedIn('/api/auth-redirect'), categories.handle_category_post);
 app.delete('/api/category',        ensureLogin.ensureLoggedIn('/api/auth-redirect'), categories.handle_category_delete);
-app.get('/api/categories',         ensureLogin.ensureLoggedIn('/api/auth-redirect'), categories.handle_categories_get);
 app.post('/api/category/budget',   ensureLogin.ensureLoggedIn('/api/auth-redirect'), categories.handle_category_budget_post);
 app.post('/api/category/name',     ensureLogin.ensureLoggedIn('/api/auth-redirect'), categories.handle_category_name_post);
 

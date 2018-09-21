@@ -68,8 +68,10 @@ abstract class ClickToEdit<T,P extends ClickToEditProps<T>> extends React.Compon
 
     saveNewValue(event: React.FormEvent): void{
         console.log("Save new value")
+        event.preventDefault();
         const newValue = this.fromInput(this.state.newValue);
         if (!this.validateChange(newValue)) {
+
             this.setState({newValueErr: true});
             return;
         }
@@ -87,7 +89,6 @@ abstract class ClickToEdit<T,P extends ClickToEditProps<T>> extends React.Compon
             console.error(err);
             this.setState({newValueErr: true});
         });
-        event.preventDefault();
     }
 
     render() {
@@ -160,6 +161,26 @@ class ClickToEditMoneyBare extends ClickToEditInput<Money> {
 
 export const ClickToEditMoney = withRouter(ClickToEditMoneyBare);
 
+class ClickToEditNumberBare extends ClickToEditInput<number> {
+    type = 'number';
+    validateChange(val: number): boolean {
+        return !isNaN(val);
+    }
+    postTransform(val: number): string {
+        return JSON.stringify(val);
+    }
+    fromInput(val: string): number {
+        return Number(val);
+    }
+    formatDisplay(val: number): string {
+        return val.toPrecision(3);
+    }
+    toInput(val: number): string {
+        return val.toPrecision(3);
+    }
+}
+export const ClickToEditNumber = withRouter(ClickToEditNumberBare);
+
 class ClickToEditDateBare extends ClickToEditInput<Date> {
     type = 'date';
     validateChange(val: Date): boolean {
@@ -194,7 +215,7 @@ class ClickToEditDropdownBare extends ClickToEdit<string, ClickToEditDropdownPro
         this.state = {...this.state, newValue: this.getInitialValue(props)};
     }
     getInitialValue(props = this.props) {
-        return props.value;
+        return props.value || props.values.keys().next().value;
     }
     blur(): void {
 

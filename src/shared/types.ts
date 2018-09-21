@@ -1,10 +1,12 @@
 import Money from './Money';
+import BigNumber from 'bignumber.js';
 
 export type UserId = string;
 export type GroupId = string;
 export type CategoryId = string;
 export type FrameIndex = number;
 export type TransactionId = string;
+export type SplitId = string;
 
 // Corresponds to `users` db table
 export interface User {
@@ -35,7 +37,7 @@ export interface Frame {
     spending?: Money;
 }
 
-// Corresponds to `transactions` db table
+// Corresponds to `transactions` db table plus shared_transaction data
 export interface Transaction {
     id: TransactionId;
     gid: GroupId;
@@ -45,9 +47,45 @@ export interface Transaction {
     description: string;
     alive: boolean;
     date: Date;
+    split?: {
+        id: SplitId;
+        with: Friend;
+        payer: UserId;
+        settled: boolean;
+        otherAmount: Money;
+    }
 }
 
 export interface Friend {
+    uid: UserId;
+    gid: GroupId;
     email: string;
-    pending?: boolean;
+}
+
+export interface InitState {
+    frame?: Frame,
+    categories?: Category[],
+    friends?: Friend[],
+    pendingFriends?: Friend[],
+    invites?: Friend[],
+    transactions?: Transaction[],
+    email?: string,
+}
+
+export class Share extends Money {
+    formatted() {
+        return this.string();
+    }
+    static normalize(...shares: Share[]): NormalizedShare[] {
+        const total = shares.reduce((a,b) => a.plus(b), Share.Zero);
+        return shares.map(s => new NormalizedShare(s.dividedBy(total).num));
+    }
+    asNumber(): Number {
+        return this.num.toNumber();
+    }
+}
+export class NormalizedShare extends Share {
+    of(money: Money): Money {
+        return new Money(this.num.times(money.num));
+    }
 }

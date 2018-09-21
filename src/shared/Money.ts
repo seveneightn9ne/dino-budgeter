@@ -1,7 +1,8 @@
 import BigNumber from 'bignumber.js';
 
+
 export default class Money {
-    private num: BigNumber;
+    public num: BigNumber; // really it's private. Don't touch.
     constructor(value: BigNumber.Value) {
         this.num = new BigNumber(value);
     }
@@ -40,6 +41,13 @@ export default class Money {
         return new Money(this.num.times(-1));
     }
 
+    times(s: Share): Money {
+        return new Money(this.num.times(s.num));
+    }
+    dividedBy(s: Share): Money {
+        return new Money(this.num.dividedBy(s.num));
+    }
+
     isValid(allowNegative: boolean = true): boolean {
         if (!this.num.isFinite()) {
             return false;
@@ -49,4 +57,10 @@ export default class Money {
         }
         return true;
     }
+
+    asShare(): Share {
+        return new Share(this.num);
+    }
 }
+
+declare class Share extends Money {}

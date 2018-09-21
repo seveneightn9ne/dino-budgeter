@@ -11,71 +11,64 @@ interface Props {
     location: Location;
 }
 
-interface State {
-    email?: string;
-    friends?: Friend[];
+interface InitializedState {
+    email: string;
+    friends: Friend[];
+    pendingFriends: Friend[];
+    invites: Friend[];
+}
+
+interface NonInitializedState {
+    initialized: boolean;
     addFriend: string;
     addFriendError?: string;
-    invites?: Friend[];
 }
+
+interface State extends Partial<InitializedState>, NonInitializedState {}
 
 export default class Account extends React.Component<Props, State> {
 
     state: State = {
+        initialized: false,
         addFriend: '',
     }
 
     componentDidMount() {
-        this.initialize();
-    }
-
-    initialize(): Promise<void[]> {
-        return Promise.all([
-            util.apiGet({
-                path: '/api/friends',
-                location: this.props.location,
-                history: this.props.history,
-            }).then(response => {
-                this.setState({
-                    friends: response.friends,
-                    invites: response.invites,
-                });
-            }),
-            util.apiGet({
-                path: '/api/current-email',
-                location: this.props.location,
-                history: this.props.history,
-            }).then(response => {
-                this.setState({email: response.email});
-            }),
-        ]);
+        util.initializeState(this, 0, 'friends', 'pendingFriends', 'email', 'invites');
     }
 
     onAddFriend(e: React.FormEvent) {
         this.setState({addFriendError: ''});
-        this.acceptFriend(this.state.addFriend, true);
+        this.acceptFriend(this.state.addFriend, false);
         this.setState({
             addFriend: '',
         });
         e.preventDefault();
     }
 
-    acceptFriend(email: string, willBePending = false) {
+    isInitialized(state: State): state is (InitializedState & NonInitializedState) {
+        return state.initialized;
+    }
+
+    acceptFriend(email: string, wasInvited: boolean) {
         util.apiPost({
             path: "/api/friend",
             body: {email},
             location: this.props.location,
             history: this.props.history,
-        }).then(() => {
-            const newFriends = [...this.state.friends];
-            newFriends.push({
-                email, pending: willBePending,
-            });
-            const newInvites = this.state.invites.filter(i => i.email != email);
-            this.setState({
-                friends: newFriends,
-                invites: newInvites,
-            });
+        }).then((res) => {
+            if (wasInvited) {
+                // Invite -> Friend
+                this.setState({
+                    friends: [...this.state.friends, res.friend],
+                    invites: this.state.invites.filter(e => e.email != email),
+                })
+            } else {
+                // {} -> Pending
+                this.setState({
+                    pendingFriends: [...this.state.pendingFriends, res.friend],
+                })
+            }
         }).catch(e => {
             if (e == 404) {
                 this.setState({addFriendError: "That user does not exist."});
@@ -85,6 +78,7 @@ export default class Account extends React.Component<Props, State> {
         });
     }
 
+    // TODO: could/should reject by uid
     rejectFriend(email: string) {
         util.apiPost({
             path: "/api/friend/reject",
@@ -94,32 +88,35 @@ export default class Account extends React.Component<Props, State> {
         }).then(() => {
             const newInvites = this.state.invites.filter(i => i.email != email);
             const newFriends = this.state.friends.filter(f => f.email != email);
+            const newPending = this.state.pendingFriends.filter(p => p.email != email);
             this.setState({
                 friends: newFriends,
                 invites: newInvites,
+                pendingFriends: newPending,
             });
         });
     }
 
     render(): JSX.Element {
-        let friends;
-        if (this.state.friends) {
-            friends = this.state.friends.map(friend => {
-                const thing = friend.pending ? 
-                    <span className="pending">Pending</span> : 
-                    <span className="clickable" onClick={() => this.rejectFriend(friend.email)}>Remove</span>;
-                return <li key={friend.email}>{friend.email}{' '}{thing}</li>
-            });
+        if (!this.state.initialized) {
+            return null;
         }
+        const friends = this.state.friends.map(friend => <li key={friend.uid}>{friend.email}{' '}
+            <span className="clickable" onClick={() => this.rejectFriend(friend.email)}>Remove</span></li>);
+
+        friends.push(...this.state.pendingFriends.map(friend => <li key={friend.uid}>{friend.email}{' '}
+                <span className="pending">(Pending)</span>{' '}
+                <span className="clickable" onClick={() => this.rejectFriend(friend.email)}>Remove</span></li>));
+        
         let errorMessage;
         if (this.state.addFriendError) {
             errorMessage = <p className="errorMessage">{this.state.addFriendError}</p>
         }
         let invites;
-        if (this.state.invites && this.state.invites.length > 0) {
+        if (this.state.invites.length > 0) {
             const invitesLis = this.state.invites.map(i => 
-                <li key={i.email}>{i.email} {' '}
-                    <span className="clickable" onClick={() => this.acceptFriend(i.email)}>Accept</span> {' '}
+                <li key={i.uid}>{i.email} {' '}
+                    <span className="clickable" onClick={() => this.acceptFriend(i.email, true)}>Accept</span> {' '}
                     <span className="clickable" onClick={() => this.rejectFriend(i.email)}>Reject</span>
                 </li>
             );

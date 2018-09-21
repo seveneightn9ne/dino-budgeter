@@ -235,7 +235,7 @@ form {
 }
 
 /* mobile page */
-.fullpage .txentry label {
+.fullpage .txentry label, .fullpage .txentry .section {
     display: block;
     background-color: white;
     border-bottom: solid 1px #eeeeee;
@@ -267,7 +267,7 @@ footer {
     position: fixed;
     left: 0px;
     bottom: 0px;
-    background-color: #eeeeee;
+    background-image: linear-gradient(#eeeeee, #ffffff);
     height: 50px;
     width: 100%;
     border-top: 1px solid white;

@@ -1,8 +1,8 @@
 import * as React from 'react';
-import {Category, Transaction} from '../shared/types';
+import {Category, Transaction, Friend} from '../shared/types';
 import { index } from '../shared/frames';
 import TxEntry from './txentry';
-import { Redirect, RouteComponentProps } from 'react-router';
+import { Redirect } from 'react-router';
 import * as util from './util';
 import { History, Location } from 'history';
 
@@ -12,31 +12,22 @@ interface Props {
 }
 
 interface State {
-    categories: Category[];
+    initialized: boolean;
+    categories?: Category[];
+    friends?: Friend[];
     redirectTo?: string;
 }
 
 export default class AddTransaction extends React.Component<Props, State> {
 
     state: State = {
-        categories: [],
+        initialized: false,
     }
-
-    private date = new Date();
 
     componentDidMount() {
-        this.initialize();
-    }
-
-    initialize(): Promise<void> {
-        const frame = index(this.date.getMonth(), this.date.getFullYear());
-        return util.apiGet({
-            path: '/api/categories?frame=' + frame,
-            location: this.props.location,
-            history: this.props.history,
-        }).then(response => {
-            this.setState({categories: response.categories});
-        });
+        const date = new Date();
+        const frame = index(date.getMonth(), date.getFullYear());
+        util.initializeState(this, frame, 'categories', 'friends')
     }
 
     onAddTransaction(tx: Transaction) {
@@ -53,6 +44,7 @@ export default class AddTransaction extends React.Component<Props, State> {
             <h1>Add Transaction</h1>
             <TxEntry onAddTransaction={this.onAddTransaction.bind(this)}
             defaultDate={new Date()}
-            categories={this.state.categories} /></div>;
+            friends={this.state.friends || []}
+            categories={this.state.categories || []} /></div>;
     }
 }

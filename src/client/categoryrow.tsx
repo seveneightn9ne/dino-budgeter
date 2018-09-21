@@ -72,19 +72,23 @@ class CategoryRow extends React.Component<Props, CategoryRowState> {
         const that = this.props.categories.filter(c => c.id == fromId)[0];
         const thatNew = {...that};
         // This balance ought to be negative
+        thatNew.budget = thatNew.budget.plus(this.props.category.balance);
         thatNew.balance = thatNew.balance.plus(this.props.category.balance);
         this.props.onChangeCategory(thatNew);
     
         const thisNew = {...this.props.category};
-        thisNew.balance = Money.Zero;
+        thisNew.budget = thisNew.budget.minus(thisNew.balance);
+        thisNew.balance = Money.Zero;        
+
         this.props.onChangeCategory(thisNew);
 
         this.closePoplet();
     }
 
     closePoplet() {
-        //this.poplet.current.close2.bind(this.poplet.current)();
-        this.poplet.current.close();
+        if (this.poplet.current) {
+            this.poplet.current.close();
+        }
     }
 
     previewCover(from: CategoryId) {
@@ -130,7 +134,6 @@ class CategoryRow extends React.Component<Props, CategoryRowState> {
                         amount: this.props.category.balance.negate(),
                         frame: this.props.category.frame,
                     }} />
-                <span className="clickable" onClick={() => this.closePoplet()}>Close</span>
             </Poplet> : this.props.category.balance.formatted();
 
         return <tr key={this.props.category.id} className="hoverable">

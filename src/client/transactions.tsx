@@ -1,12 +1,14 @@
 import * as React from 'react';
 import {ClickToEditDate, ClickToEditMoney, ClickToEditText, ClickToEditDropdown} from './components/clicktoedit';
-import { Frame, Transaction, TransactionId, Category, GroupId, CategoryId } from '../shared/types';
+import { Frame, Transaction, TransactionId, Category, GroupId, CategoryId, Friend, Share } from '../shared/types';
 import TxEntry from './txentry';
 import * as util from './util';
 import { getTransactionAIs } from '../shared/ai';
 import AIComponent from './ai';
 import { Location, History } from 'history';
 import { MobileQuery, DesktopOnly } from './components/media';
+import Poplet from './components/poplet';
+import {distributeTotal, shareFromAmounts} from '../shared/transactions';
 
 interface Props {
     month: number;
@@ -14,6 +16,7 @@ interface Props {
     frame: Frame;
     transactions: Transaction[];
     categories: Category[];
+    friends: Friend[];
     newTxDate: Date;
     gid: GroupId;
     onUpdateTransaction: (txn: Transaction) => void;
@@ -95,18 +98,30 @@ export default class Transactions extends React.Component<Props, State> {
                     postTo="/api/transaction/amount"
                     postKey="amount"
                     postData={{id: tx.id}}
-            />} /></td></tr>);
+            />} /></td>
+            <td className="split">
+                {tx.split ? <Poplet text="shared">
+                    <p>Split with {tx.split.with.email}</p>
+                    <form onSubmit={() => {}}>
+                    <p>Total <input /></p>
+                    <p>Your share: <input /></p>
+                    <p>Their share: <input /></p>
+                    <p>You owe {"$10.00"}</p>
+                    <input type="submit" value="Save" />
+                    </form>
+                </Poplet> : null}
+            </td></tr>);
         const rows = <MobileQuery mobile={rowsList.reverse()} desktop={rowsList} />;
         return <div className="transactions">
             <DesktopOnly>
                 <TxEntry onAddTransaction={this.props.onAddTransaction}
                     defaultDate={this.props.newTxDate} gid={this.props.gid}
-                    categories={this.props.categories} />
+                    categories={this.props.categories} friends={this.props.friends} />
             </DesktopOnly>
             {ais}
             {this.props.transactions.length > 0 ?
                 <table><tbody>
-                    <tr><th></th><th>Date</th><th>Description</th><th>Category</th><th>Amount</th></tr>
+                    <tr><th></th><th>Date</th><th>Description</th><th>Category</th><th>Amount</th><th></th></tr>
                     {rows}
                 </tbody></table> : null}
         </div>;

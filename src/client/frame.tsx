@@ -1,30 +1,34 @@
 import * as React from 'react';
 import {RouteComponentProps, Switch, Route, Redirect } from 'react-router';
 import { Link, NavLink } from 'react-router-dom';
-import {Frame as FrameType, Category, CategoryId, Transaction, TransactionId, FrameIndex} from '../shared/types';
+import {Frame as FrameType, Category, CategoryId, Transaction, TransactionId, FrameIndex, Friend} from '../shared/types';
 import * as frames from '../shared/frames';
 import * as util from './util';
 import { AI, getAIs } from '../shared/ai';
 import Categories from './categories';
 import Transactions from './transactions';
-import * as transactions from '../shared/transactions';
 import { MobileOnly, DesktopOnly } from './components/media';
 import Money from '../shared/Money';
 
 type FrameProps = RouteComponentProps<{month: string, year: string}>;
 interface FrameState {
+    initialized: boolean;
     frame?: FrameType;
     budgeted?: Money;
     setIncome: string;
     setIncomeErr?: boolean;
     transactions?: Transaction[];
-    invites?: string[];
+    invites?: Friend[];
+    friends?: Friend[];
 }
 
 /** /app/:month/:year */
 export default class Frame extends React.Component<FrameProps & RouteComponentProps<FrameProps>, FrameState> {
 
-    state: FrameState = {setIncome: ''};
+    state: FrameState = {
+        initialized: false,
+        setIncome: '',
+    };
 
     month = (props = this.props) => Number(props.match.params.month) - 1;
     year = (props = this.props) =>  Number(props.match.params.year);
@@ -74,18 +78,10 @@ export default class Frame extends React.Component<FrameProps & RouteComponentPr
 
     // TODO update the frame in the background.
 
-    initializeFrame(props = this.props): Promise<FrameType> {
-        return util.apiGet({
-            path: '/api/frame/' + this.month(props) + '/' + this.year(props),
-            location: props.location,
-            history: props.history,
-        }).then(response => {
-            const frame = frames.fromSerialized(response.frame);
-            const budgeted = this.calculateBudgeted(frame.categories);
-            const txns = response.transactions.map(transactions.fromSerialized);
-            const invites = response.invites;
-            this.setState({frame, budgeted, transactions: txns, invites});
-            return frame;
+    initializeFrame(props = this.props): Promise<void> {
+        const index = this.index(props);
+        return util.initializeState(this, index, 'frame', 'transactions', 'invites', 'friends').then(() => {
+            this.setState({budgeted: this.calculateBudgeted(this.state.frame.categories)});
         });
     }
 
@@ -217,7 +213,7 @@ export default class Frame extends React.Component<FrameProps & RouteComponentPr
     }
 
     render() {
-        if (!this.state.frame) {
+        if (!this.state.initialized) {
             return null;
         }
 
@@ -251,6 +247,7 @@ export default class Frame extends React.Component<FrameProps & RouteComponentPr
                 month={this.month()} year={this.year()} frame={this.state.frame}
                 newTxDate={this.newTxDate()} gid={this.state.frame.gid}
                 categories={this.state.frame.categories}
+                friends={this.state.friends}
                 location={this.props.location} history={this.props.history} />;
 
         const prevButton = <Link to={`/app/${this.prevMonth()+1}/${this.prevYear()}`} className="fa-chevron-left fas framenav" />;
