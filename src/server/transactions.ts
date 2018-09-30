@@ -1,4 +1,4 @@
-import {TransactionId, Transaction, FrameIndex, SplitId, GroupId} from '../shared/types';
+import {TransactionId, Transaction, FrameIndex, SplitId, GroupId, Share, UserId} from '../shared/types';
 import Money from '../shared/Money';
 import pgPromise from 'pg-promise';
 export * from '../shared/transactions';
@@ -9,6 +9,8 @@ async function getTransactionsInner(where: {id: TransactionId} | {frame: FrameIn
     const rows = await t.any(`select 
             T.*,
             TS.sid,
+            TS.share,
+            TS2.share as other_share,
             S.payer,
             S.settled,
             T2.gid as other_gid,
@@ -30,9 +32,11 @@ async function getTransactionsInner(where: {id: TransactionId} | {frame: FrameIn
                 gid: row.other_gid,
                 email: row.other_email,
             },
-            otherAmount: new Money(row.other_amount),
+            myShare: new Share(row.share),
+            theirShare: new Share(row.other_share),
             settled: row.settled,
             payer: row.payer,
+            otherAmount: new Money(row.other_amount),
         } : undefined;
         return {
             id: row.id,
@@ -59,4 +63,27 @@ export async function getTransactions(frame: FrameIndex, gid: GroupId, t: pgProm
 export async function getOtherTid(tid: TransactionId, sid: SplitId, t: pgPromise.ITask<{}>): Promise<Transaction> {
     const row = await t.one("select tid from transaction_splits where sid = $1 and tid != $2", [sid, tid]);
     return row.tid;
+}
+
+export async function canUserEdit(tid: TransactionId, uid: UserId, t: pgPromise.ITask<{}>): Promise<boolean> {
+    const row = await t.one(`select count(*) > 0 as exists
+        from membership left join transactions
+            on membership.gid = transactions.gid
+        where transactions.id = $1 and membership.uid = $2`, [tid, uid]);
+    return row.exists;
+}
+
+export async function deleteTransaction(tid: TransactionId, t: pgPromise.ITask<{}>): Promise<void> {
+    const linkedTxnRow = await t.oneOrNone(`select TS2.tid from transactions T
+        left join transaction_splits TS
+            on T.id = TS.tid
+        left join transaction_splits TS2
+            on TS2.sid = TS.sid
+            and TS2.tid != TS.tid
+        where T.id = $1`, [tid]);
+    const deleteQuery = "update transactions set alive = false where id = $1";
+    if (linkedTxnRow) {
+        await t.none(deleteQuery, [linkedTxnRow.tid]);
+    }
+    await t.none(deleteQuery, [tid]);
 }

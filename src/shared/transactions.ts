@@ -12,6 +12,12 @@ export function fromSerialized(row: any): Transaction {
         transaction.date = new Date(row.date);
     }
     if (row.split) {
+        if (row.split.myShare) {
+            transaction.split.myShare = new Share(row.split.myShare);
+        }
+        if (row.split.theirShare) {
+            transaction.split.theirShare = new Share(row.split.theirShare);
+        }
         if (row.split.otherAmount) {
             transaction.split.otherAmount = new Money(row.split.otherAmount);
         }
@@ -19,17 +25,12 @@ export function fromSerialized(row: any): Transaction {
     return transaction;
 }
 
-export function sharesFromAmounts(a1: Money, a2: Money): NormalizedShare[] {
-    return Share.normalize(a1.asShare(), a2.asShare());
+export function distributeTotal(total: Money, s1: Share, s2: Share): [Money, Money] {
+    const [newS1, _] = Share.normalize(s1, s2);
+    const a1 = newS1.of(total)
+    const a2 = total.minus(a1);
+    return [a1, a2];
 }
 
-export function distributeTotal(newTotal: Money, a1: Money, a2: Money): [Money, Money] {
-    const ratio = newTotal.dividedBy(a1.plus(a2));
-    const newA1 = a1.times(ratio);
-    const newA2 = newTotal.minus(newA1);
-    return [newA1, newA2];
-}
-
-export function shareFromAmounts(myAmount: Money, otherAmount: Money): NormalizedShare {
-    return sharesFromAmounts(myAmount, otherAmount)[0];
-}
+/* Never calculate an amount using shares if you don't have the total. */
+/* Never calculate the total if you don't have both amounts. */

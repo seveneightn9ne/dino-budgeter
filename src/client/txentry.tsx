@@ -4,7 +4,7 @@ import Money from '../shared/Money';
 import * as util from './util';
 import { index } from '../shared/frames';
 import { withRouter, RouteComponentProps } from 'react-router';
-import { fromSerialized } from '../shared/transactions';
+import { fromSerialized, distributeTotal } from '../shared/transactions';
 
 
 interface TxEntryProps {
@@ -60,20 +60,19 @@ class TxEntry extends React.Component<TxEntryProps & RouteComponentProps<TxEntry
         const frame = index(date.getMonth(), date.getFullYear());
         let split = undefined;
         if (this.state.splitting) {
-            const _myShare = new Share(this.state.yourShare);
-            const _theirShare = new Share(this.state.theirShare);
-            if (!_myShare.isValid(false) || !_theirShare.isValid(false)) {
+            const myShare = new Share(this.state.yourShare);
+            const theirShare = new Share(this.state.theirShare);
+            if (!myShare.isValid(false) || !theirShare.isValid(false)) {
                 this.setState({error: true});
                 event.preventDefault();
                 return;
             }
-            const [myShare, theirShare] = Share.normalize(_myShare, _theirShare);
-            const theirAmount = theirShare.of(amount);
-            amount = myShare.of(amount);
+            let otherAmount;
+            [amount, otherAmount] = distributeTotal(amount, myShare, theirShare);
             split = {
                 with: this.state.splitWith,
-                otherAmount: theirAmount,
-            }
+                myShare, theirShare, otherAmount,
+            };
         }
         util.apiPost({
             path: '/api/transaction',
@@ -97,6 +96,7 @@ class TxEntry extends React.Component<TxEntryProps & RouteComponentProps<TxEntry
     }
 
     render(): JSX.Element {
+        console.log('newer code');
         const options = this.props.categories.map(c => {
             return <option key={c.id} value={c.id}>{c.name}</option>;
         });

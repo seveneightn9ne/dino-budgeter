@@ -1,6 +1,5 @@
 import BigNumber from 'bignumber.js';
 
-
 export default class Money {
     public num: BigNumber; // really it's private. Don't touch.
     constructor(value: BigNumber.Value) {
@@ -41,10 +40,10 @@ export default class Money {
         return new Money(this.num.times(-1));
     }
 
-    times(s: Share): Money {
+    times(s: Money): Money {
         return new Money(this.num.times(s.num));
     }
-    dividedBy(s: Share): Money {
+    dividedBy(s: Money): Money {
         return new Money(this.num.dividedBy(s.num));
     }
 
@@ -57,10 +56,4 @@ export default class Money {
         }
         return true;
     }
-
-    asShare(): Share {
-        return new Share(this.num);
-    }
 }
-
-declare class Share extends Money {}

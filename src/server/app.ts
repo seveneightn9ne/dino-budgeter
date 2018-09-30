@@ -70,6 +70,7 @@ app.post('/api/transaction/description', ensureLogin.ensureLoggedIn('/api/auth-r
 app.post('/api/transaction/amount',ensureLogin.ensureLoggedIn('/api/auth-redirect'), transactions.handle_transaction_amount_post);
 app.post('/api/transaction/date',  ensureLogin.ensureLoggedIn('/api/auth-redirect'), transactions.handle_transaction_date_post);
 app.post('/api/transaction/category', ensureLogin.ensureLoggedIn('/api/auth-redirect'), transactions.handle_transaction_category_post);
+app.post('/api/transaction/split', ensureLogin.ensureLoggedIn('/api/auth-redirect'), transactions.handle_transaction_split_post);
 
 app.post('/api/category',          ensureLogin.ensureLoggedIn('/api/auth-redirect'), categories.handle_category_post);
 app.delete('/api/category',        ensureLogin.ensureLoggedIn('/api/auth-redirect'), categories.handle_category_delete);

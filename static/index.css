@@ -311,7 +311,7 @@ footer .link {
 .poplet {
     width: 500px;
     position: absolute;
-    top: 50%;
+    top: 100px;
     left: 50%;
     transform: translateX(-250px);
     padding: 40px;

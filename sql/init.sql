@@ -81,7 +81,8 @@ create table shared_transactions (
 
 create table transaction_splits (
   tid char(32) primary key references transactions,
-  sid char(32) references shared_transactions
+  sid char(32) references shared_transactions,
+  share text not null
 );
 create index split_sid on transaction_splits(sid);
 

@@ -7,8 +7,7 @@ import { getTransactionAIs } from '../shared/ai';
 import AIComponent from './ai';
 import { Location, History } from 'history';
 import { MobileQuery, DesktopOnly } from './components/media';
-import Poplet from './components/poplet';
-import {distributeTotal, shareFromAmounts} from '../shared/transactions';
+import SplitPoplet from './splitpoplet';
 
 interface Props {
     month: number;
@@ -31,6 +30,7 @@ type State = {};
 export default class Transactions extends React.Component<Props, State> {
     delete(id: TransactionId): boolean {
         util.apiPost({
+            method: 'DELETE',
             path: '/api/transaction',
             body: {id},
             location: this.props.location,
@@ -100,16 +100,7 @@ export default class Transactions extends React.Component<Props, State> {
                     postData={{id: tx.id}}
             />} /></td>
             <td className="split">
-                {tx.split ? <Poplet text="shared">
-                    <p>Split with {tx.split.with.email}</p>
-                    <form onSubmit={() => {}}>
-                    <p>Total <input /></p>
-                    <p>Your share: <input /></p>
-                    <p>Their share: <input /></p>
-                    <p>You owe {"$10.00"}</p>
-                    <input type="submit" value="Save" />
-                    </form>
-                </Poplet> : null}
+                {tx.split ? <SplitPoplet transaction={tx} onUpdateTransaction={this.props.onUpdateTransaction} /> : null}
             </td></tr>);
         const rows = <MobileQuery mobile={rowsList.reverse()} desktop={rowsList} />;
         return <div className="transactions">

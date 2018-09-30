@@ -44,6 +44,14 @@ create index split_sid on transaction_splits(sid);
 end if;
 end $$;
 
--- migration 4:
+-- migration 4: add transaction_splits.share column
+do $$ begin
+if not exists(select * from information_schema.columns where table_name = 'transaction_splits' and column_name = 'share')
+then
+alter table transaction_splits add share text not null default '';
+end if;
+end $$;
+
+-- migration 5:
 
 commit;

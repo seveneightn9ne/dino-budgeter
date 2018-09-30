@@ -52,6 +52,8 @@ export interface Transaction {
         with: Friend;
         payer: UserId;
         settled: boolean;
+        myShare: Share;
+        theirShare: Share;
         otherAmount: Money;
     }
 }
@@ -82,6 +84,9 @@ export class Share extends Money {
     }
     asNumber(): Number {
         return this.num.toNumber();
+    }
+    static fromMoney(m: Money) {
+        return new Share(m.num);
     }
 }
 export class NormalizedShare extends Share {
