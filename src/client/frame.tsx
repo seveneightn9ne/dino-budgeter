@@ -9,6 +9,7 @@ import Categories from './categories';
 import Transactions from './transactions';
 import { MobileOnly, DesktopOnly } from './components/media';
 import Money from '../shared/Money';
+import Debts from './debts';
 
 type FrameProps = RouteComponentProps<{month: string, year: string}>;
 interface FrameState {
@@ -20,6 +21,7 @@ interface FrameState {
     transactions?: Transaction[];
     invites?: Friend[];
     friends?: Friend[];
+    debts?: Transaction[];
 }
 
 /** /app/:month/:year */
@@ -80,7 +82,7 @@ export default class Frame extends React.Component<FrameProps & RouteComponentPr
 
     initializeFrame(props = this.props): Promise<void> {
         const index = this.index(props);
-        return util.initializeState(this, index, 'frame', 'transactions', 'invites', 'friends').then(() => {
+        return util.initializeState(this, index, 'frame', 'transactions', 'invites', 'friends', 'debts').then(() => {
             this.setState({budgeted: this.calculateBudgeted(this.state.frame.categories)});
         });
     }
@@ -250,12 +252,18 @@ export default class Frame extends React.Component<FrameProps & RouteComponentPr
                 friends={this.state.friends}
                 location={this.props.location} history={this.props.history} />;
 
+        const debts = <Debts transactions={this.state.debts}
+            location={this.props.location} history={this.props.history} />;
+
         const prevButton = <Link to={`/app/${this.prevMonth()+1}/${this.prevYear()}`} className="fa-chevron-left fas framenav" />;
         const nextButton = <Link to={`/app/${this.nextMonth()+1}/${this.nextYear()}`} className="fa-chevron-right fas framenav" />;
         const inviteBadge = this.state.invites.length > 0 ? <span title="Friend Requests" className="badge">{this.state.invites.length}</span> : null;
         const nav = <DesktopOnly><nav>
             <NavLink to={`${appPrefix}/categories`} activeClassName="active">Categories</NavLink>
             <NavLink to={`${appPrefix}/transactions`} activeClassName="active">Transactions</NavLink>
+            {this.state.debts.length > 0 ? 
+                <NavLink to={`${appPrefix}/debts`} activeClassName="active">Debts</NavLink>
+            : null}
             <NavLink className="right" to={`/app/account`} activeClassName="active">Account{inviteBadge}</NavLink>
         </nav></DesktopOnly>;
         return <div>
@@ -268,6 +276,7 @@ export default class Frame extends React.Component<FrameProps & RouteComponentPr
                 <Redirect exact from="/app/:month/:year" to="/app/:month/:year/categories" />
                 <Route path={"/app/:month/:year/categories"} render={() => categories} />
                 <Route path={"/app/:month/:year/transactions"} render={() => transactions} />
+                <Route path={"/app/:month/:year/debts"} render={() => debts} />
                 <Route path={"/app/add-transaction"} render={() => null} />
             </Switch>
             </main>

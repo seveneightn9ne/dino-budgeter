@@ -72,6 +72,7 @@ export interface InitState {
     invites?: Friend[],
     transactions?: Transaction[],
     email?: string,
+    debts?: Transaction[],
 }
 
 export class Share extends Money {

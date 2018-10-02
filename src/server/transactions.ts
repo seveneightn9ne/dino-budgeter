@@ -3,9 +3,29 @@ import Money from '../shared/Money';
 import pgPromise from 'pg-promise';
 export * from '../shared/transactions';
 
-async function getTransactionsInner(where: {id: TransactionId} | {frame: FrameIndex, gid: GroupId}, t: pgPromise.ITask<{}>): Promise<Transaction[]> {
-    const whereClause = 'id' in where ? "T.id = $1" : "T.gid = $1 and T.frame = $2";
-    const vars = 'id' in where ? [where.id] : [where.gid, where.frame];
+type IDQuery = {id: TransactionId};
+type FrameQuery = {
+    frame: FrameIndex,
+    gid: GroupId,
+    alive: boolean,
+};
+type SettledQuery = {
+    uid: UserId,
+    settled: boolean,
+    alive: boolean,
+};
+type Query = IDQuery | FrameQuery | SettledQuery;
+function whereClause(query: Query) {
+    return 'id' in query ? "T.id = $1" :
+        'frame' in query ? "T.gid = $1 and T.frame = $2 and T.alive = $3" :
+        /* settled */ "U.uid = $1 and S.settled = $2 and T.alive = $3";
+}
+function vars(where: Query) {
+    return 'id' in where ? [where.id] :
+        'frame' in where ? [where.gid, where.frame, where.alive] :
+        /* settled */ [where.uid, where.settled, where.alive];
+}
+async function getTransactionsInner(where: Query, t: pgPromise.ITask<{}>): Promise<Transaction[]> {
     const rows = await t.any(`select 
             T.*,
             TS.sid,
@@ -17,13 +37,15 @@ async function getTransactionsInner(where: {id: TransactionId} | {frame: FrameIn
             T2.amount as other_amount,
             U2.uid as other_uid,
             U2.email as other_email from transactions T
+        left join membership M on M.gid = T.gid
+        left join users U on U.uid = M.uid
         left join transaction_splits TS on T.id = TS.tid
         left join shared_transactions S on TS.sid = S.id
         left join transaction_splits TS2 on TS2.sid = TS.sid and TS2.tid != TS.tid
         left join transactions T2 on T2.id = TS2.tid and T2.id != T.id
         left join membership M2 on M2.gid = T2.gid
         left join users U2 on U2.uid = M2.uid
-        where ${whereClause};`, vars);
+        where ${whereClause(where)};`, vars(where));
     return rows.map(row => {
         const split = row.sid ? {
             id: row.sid,
@@ -57,7 +79,11 @@ export async function getTransaction(id: TransactionId, t: pgPromise.ITask<{}>):
 }
 
 export async function getTransactions(frame: FrameIndex, gid: GroupId, t: pgPromise.ITask<{}>): Promise<Transaction[]> {
-    return getTransactionsInner({frame, gid}, t);
+    return getTransactionsInner({frame, gid, alive: true}, t);
+}
+
+export async function getUnsettledTransactions(uid: UserId, t: pgPromise.ITask<{}>): Promise<Transaction[]> {
+    return getTransactionsInner({uid, settled: false, alive: true}, t);
 }
 
 export async function getOtherTid(tid: TransactionId, sid: SplitId, t: pgPromise.ITask<{}>): Promise<TransactionId> {

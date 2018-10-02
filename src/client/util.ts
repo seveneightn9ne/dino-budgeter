@@ -116,15 +116,13 @@ export function initializeState<S extends {initialized: boolean}, W extends (key
         if (response.transactions) {
             response.transactions = response.transactions.map(transactions.fromSerialized);
         }
+        if (response.debts) {
+            response.debts = response.debts.map(transactions.fromSerialized);
+        }
         return new Promise((resolve, reject) => {
             self.setState({...response, initialized: true}, () => {
                 resolve();
             })
         })
     });
-}
-
-type hasDate = {date: Date}
-export function dateCompare(a: hasDate, b: hasDate): -1 | 0 | 1 {
-    return a > b ? -1 : a < b ? 1 : 0;
 }

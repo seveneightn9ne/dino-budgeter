@@ -55,6 +55,10 @@ export const handle_init_get = wrap(async function(req: Request, res: Response):
             console.log("pending friends")
             resData.pendingFriends = await user.getPendingFriends(req.user.uid, t);
         }
+        if (req.query.debts) {
+            console.log("debts");
+            resData.debts = await transactions.getUnsettledTransactions(req.user.uid, t);
+        }
         if (req.query.email) {
             resData.email = req.user.email;
         }
