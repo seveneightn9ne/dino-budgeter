@@ -219,6 +219,13 @@ td.date {
 td.category {
     width: 300px;
 }
+td.split {
+    width: 60px;
+}
+td.split > span > .clickable {
+    font-size: 14px;
+    font-style: italic;
+}
 form {
     margin: 0;
 }
@@ -235,11 +242,25 @@ form {
 }
 
 /* mobile page */
-.fullpage .txentry label, .fullpage .txentry .section {
+.txentry label, .txentry .section {
     display: block;
     background-color: white;
     border-bottom: solid 1px #eeeeee;
     padding: 20px;
+}
+
+.txentry label.nostyle {
+    padding: 0;
+    border-width: 0;
+}
+
+.txentry label.half {
+    width: 50%;
+    box-sizing: border-box;
+    float: left;
+}
+.txentry label.first.half {
+    border-right: 1px solid #eeeeee;
 }
 
 .fullpage h1 {
@@ -252,9 +273,6 @@ form {
 @media (max-width: 599px) {
     nav a {
         padding: 20px;
-    }
-    .transactions .txentry {
-        display: none;
     }
 }
 
@@ -301,21 +319,31 @@ footer .link {
 
 /* poplet */
 .poplet-background {
-    position: absolute;
+    position: fixed;
     top: 0;
     left: 0;
-    background-color: rgba(255, 255, 255, 0.8);
-    width: 100%;
-    height: 100%;
+    bottom: 0;
+    right: 0;
+    background-color: rgba(0, 0, 0, 0.8);
 }
 .poplet {
     width: 500px;
-    position: absolute;
-    top: 100px;
-    left: 50%;
-    transform: translateX(-250px);
-    padding: 40px;
+    margin: 70px auto;
+    padding: 20px 24px;
     background-color: #ffffff;
     border: 1px solid #eeeeee;
-    border-radius: 20px;
+    position: relative;
+}
+.poplet .close {
+    position: absolute;
+    top: 24px;
+    right: 24px;
+    font-size: 24px;
+}
+.poplet .close:hover {
+    text-decoration: none;
+    color: #000;
+}
+.poplet h2 {
+    margin: 0;
 }

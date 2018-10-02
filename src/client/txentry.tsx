@@ -25,6 +25,7 @@ interface TxEntryState {
     splitWith: string;
     yourShare: string;
     theirShare: string;
+    youPaid: boolean;
 }
 
 class TxEntry extends React.Component<TxEntryProps & RouteComponentProps<TxEntryProps>, TxEntryState> {
@@ -41,6 +42,7 @@ class TxEntry extends React.Component<TxEntryProps & RouteComponentProps<TxEntry
             splitWith: this.defaultSplitWith(),
             yourShare: '1',
             theirShare: '1',
+            youPaid: true,
         };
     }
 
@@ -72,6 +74,7 @@ class TxEntry extends React.Component<TxEntryProps & RouteComponentProps<TxEntry
             split = {
                 with: this.state.splitWith,
                 myShare, theirShare, otherAmount,
+                iPaid: this.state.youPaid,
             };
         }
         util.apiPost({
@@ -89,7 +92,8 @@ class TxEntry extends React.Component<TxEntryProps & RouteComponentProps<TxEntry
         }).then((response) => {
             const transaction = fromSerialized(response.transaction);
             // Not clearing date & category
-            this.setState({amount: '', description: '', splitting: false, splitWith: this.defaultSplitWith(), yourShare: '1', theirShare: '1'});
+            this.setState({amount: '', description: '', splitting: false, splitWith: this.defaultSplitWith(),
+                yourShare: '1', theirShare: '1', youPaid: true});
             this.props.onAddTransaction(transaction);
         });
         event.preventDefault();
@@ -105,9 +109,17 @@ class TxEntry extends React.Component<TxEntryProps & RouteComponentProps<TxEntry
             <div><label>Split with: <select onChange={util.cc(this, 'splitWith')} value={this.state.splitWith}>
                     {this.props.friends.map(f => <option key={f.uid}>{f.email}</option>)}
                 </select></label>
-                <label>Shares: 
-                    You: <input type="number" value={this.state.yourShare} onChange={util.cc(this, 'yourShare')} /> 
-                    Them: <input type="number" value={this.state.theirShare} onChange={util.cc(this, 'theirShare')} /></label></div>
+                <label className="first half">
+                    Your share: <input type="number" value={this.state.yourShare} onChange={util.cc(this, 'yourShare')} /> 
+                </label><label className="half">
+                    Their share: <input type="number" value={this.state.theirShare} onChange={util.cc(this, 'theirShare')} /></label>
+                <div className="section" style={{clear: 'both'}}>
+                    <label className="nostyle"><input type="radio" name="payer" value="0" checked={this.state.youPaid}
+                        onChange={(e) => this.setState({youPaid: e.target.checked})} /> You paid</label>
+                    <label className="nostyle"><input type="radio" name="payer" value="1" checked={!this.state.youPaid} 
+                        onChange={(e) => this.setState({youPaid: !e.target.checked})} /> They paid</label>
+                </div>
+            </div>
             : <span className="section clickable" onClick={() => this.setState({splitting: true})}>Split transaction...</span>)
             : null;
         return <div className="txentry">

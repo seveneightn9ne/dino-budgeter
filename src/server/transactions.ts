@@ -60,9 +60,14 @@ export async function getTransactions(frame: FrameIndex, gid: GroupId, t: pgProm
     return getTransactionsInner({frame, gid}, t);
 }
 
-export async function getOtherTid(tid: TransactionId, sid: SplitId, t: pgPromise.ITask<{}>): Promise<Transaction> {
+export async function getOtherTid(tid: TransactionId, sid: SplitId, t: pgPromise.ITask<{}>): Promise<TransactionId> {
     const row = await t.one("select tid from transaction_splits where sid = $1 and tid != $2", [sid, tid]);
     return row.tid;
+}
+
+export async function getUser(tid: TransactionId, t: pgPromise.ITask<{}>): Promise<UserId> {
+    const row = await t.one("select M.uid from transactions T left join membership M on T.gid = M.gid limit 1");
+    return row.uid;
 }
 
 export async function canUserEdit(tid: TransactionId, uid: UserId, t: pgPromise.ITask<{}>): Promise<boolean> {

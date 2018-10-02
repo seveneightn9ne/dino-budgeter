@@ -123,3 +123,8 @@ export function initializeState<S extends {initialized: boolean}, W extends (key
         })
     });
 }
+
+type hasDate = {date: Date}
+export function dateCompare(a: hasDate, b: hasDate): -1 | 0 | 1 {
+    return a > b ? -1 : a < b ? 1 : 0;
+}

@@ -19,6 +19,7 @@ export const handle_transaction_post = wrap(async function(req: Request, res: Re
     let theirShare: Share;
     let other: UserId;
     let otherAmount: Money;
+    let payer: UserId;
     if (!result.isEmpty() || !amount.isValid(false /** allowNegative */)) {
         console.log("Validation failed");
         res.sendStatus(400);
@@ -29,6 +30,7 @@ export const handle_transaction_post = wrap(async function(req: Request, res: Re
         theirShare = new Share(req.body.split.theirShare);
         otherAmount = new Money(req.body.split.otherAmount);
         other = req.body.split.with as string;
+        payer = req.body.split.iPaid ? req.user.uid : other;
         if (!otherAmount.isValid(false) ||
             !myShare.isValid(false) ||
             !theirShare.isValid(false)) {
@@ -67,17 +69,16 @@ export const handle_transaction_post = wrap(async function(req: Request, res: Re
             const sid = util.randomId();
             await t.batch([
                 t.none(query, [other_id, other_gid, frame, otherAmount.string(), req.body.description, other_cat, date]),
-                t.none(`insert into shared_transactions (id, payer) values ($1, $2)`, [sid, req.user.uid]),
+                t.none(`insert into shared_transactions (id, payer) values ($1, $2)`, [sid, payer]),
                 t.none(`insert into transaction_splits (tid, sid, share) values ($1, $2, $3)`, [tx_id, sid, myShare.string()]),
                 t.none(`insert into transaction_splits (tid, sid, share) values ($1, $2, $3)`, [other_id, sid, theirShare.string()]),
             ]);
             split = {
                 id: sid,
                 with: other_friend,
-                payer: req.user.uid,
                 settled: false,
                 myShare, theirShare,
-                otherAmount,
+                otherAmount, payer,
             }
         }
         const transaction: Transaction = {
@@ -194,11 +195,13 @@ export async function handle_transaction_split_post(req: Request, res: Response)
     const [myAmount, otherAmount] = distributeTotal(total, myShare, theirShare);
     await db.tx(async t => {
         const otherTid = await transactions.getOtherTid(tid, sid, t);
+        const payer = req.body.iPaid ? req.user.uid : await transactions.getUser(otherTid, t);
         const work = [
             t.none('update transactions set amount = $1 where id = $2', [myAmount.string(), tid]),
             t.none('update transactions set amount = $1 where id = $2', [otherAmount.string(), otherTid]),
             t.none('update transaction_splits set share = $1 where tid = $2', [myShare.string(), tid]),
             t.none('update transaction_splits set share = $1 where tid = $2', [theirShare.string(), otherTid]),
+            t.none('update shared_transactions set payer = $1 where id = $2', [payer, sid]),
         ]
         await t.batch(work);
         res.sendStatus(200);
