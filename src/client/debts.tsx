@@ -3,7 +3,7 @@ import {ClickToEditDate, ClickToEditMoney, ClickToEditText, ClickToEditDropdown}
 import { Frame, Transaction, TransactionId, Category, GroupId, CategoryId, Friend, Share } from '../shared/types';
 import TxEntry from './txentry';
 import * as util from './util';
-import { getTransactionAIs } from '../shared/ai';
+import { getTransactionAIs, DebtAI } from '../shared/ai';
 import AIComponent from './ai';
 import { Location, History } from 'history';
 import { MobileQuery, DesktopOnly } from './components/media';
@@ -26,24 +26,31 @@ export default class Debts extends React.Component<Props, State> {
         const groups = _.map(_.groupBy(this.props.transactions, 'split.with.email'), (transactions: Transaction[], email: string) => {
             let totalYouOwe = Money.Zero;
             let totalTheyOwe = Money.Zero;
+            const rows = _.orderBy(transactions, 'date').map(t => {
+                const youPaid = t.split.payer != t.split.with.uid;
+                const youAmount = t.amount;
+                const theyAmount = t.split.otherAmount;
+                const youOwe = youPaid ? '' : youAmount.formatted();
+                const theyOwe = youPaid ? theyAmount.formatted() : '';
+                totalYouOwe = youPaid ? totalYouOwe : totalYouOwe.plus(youAmount);
+                totalTheyOwe = youPaid ? totalTheyOwe.plus(theyAmount) : totalTheyOwe;
+                return <tr key={t.id}><td>{util.yyyymmdd(t.date)}</td><td>{t.description}</td><td>{youOwe}</td><td>{theyOwe}</td></tr>
+            });
+            const net = totalYouOwe.minus(totalTheyOwe);
+            let ai = null;
+            if (net.cmp(Money.Zero) != 0) {
+                ai = <AIComponent ai={new DebtAI(email, net)} />
+            }
             return <section key={email}>
                 <h2>{email}</h2>
+                {ai}
                 <table>
                     <tbody>
                         <tr><th className="date">Date</th>
                             <th className="description">Description</th>
                             <th className="amount">You Owe</th>
                             <th className="amount">They Owe</th></tr>
-                        {_.orderBy(transactions, 'date').map(t => {
-                            const youPaid = t.split.payer != t.split.with.uid;
-                            const youAmount = t.amount;
-                            const theyAmount = t.split.otherAmount;
-                            const youOwe = youPaid ? '' : youAmount.formatted();
-                            const theyOwe = youPaid ? theyAmount.formatted() : '';
-                            totalYouOwe = youPaid ? totalYouOwe : totalYouOwe.plus(youAmount);
-                            totalTheyOwe = youPaid ? totalTheyOwe.plus(theyAmount) : totalTheyOwe;
-                            return <tr key={t.id}><td>{util.yyyymmdd(t.date)}</td><td>{t.description}</td><td>{youOwe}</td><td>{theyOwe}</td></tr>
-                        })}
+                        {rows}
                     </tbody>
                 </table>
                 {totalYouOwe.cmp(totalTheyOwe) > 0 ? 

@@ -119,19 +119,18 @@ export default class Transactions extends React.Component<Props, State> {
         const rows = <MobileQuery mobile={rowsList.reverse()} desktop={rowsList} />;
         return <div className="transactions">
             {ais}
-            {this.props.transactions.length > 0 ?
-                <table><tbody>
-                    <tr><th></th><th>Date</th><th>Description</th><th>Category</th><th>Amount</th><th></th></tr>
-                    <DesktopOnly>
-                        <tr><td></td><td colSpan={5}>
-                        <Poplet ref={this.poplet} text={<span><span className="fa-plus-circle fas"></span> Transaction</span>}>
-                            <TxEntry onAddTransaction={this.onAddTransaction.bind(this)}
-                                defaultDate={this.props.newTxDate} gid={this.props.gid}
-                                categories={this.props.categories} friends={this.props.friends} />
-                        </Poplet></td></tr>
-                    </DesktopOnly>
-                    {rows}
-                </tbody></table> : null}
+            <table><tbody>
+                <tr><th></th><th>Date</th><th>Description</th><th>Category</th><th>Amount</th><th></th></tr>
+                <DesktopOnly>
+                    <tr><td></td><td colSpan={5}>
+                    <Poplet ref={this.poplet} text={<span><span className="fa-plus-circle fas"></span> Transaction</span>}>
+                        <TxEntry onAddTransaction={this.onAddTransaction.bind(this)}
+                            defaultDate={this.props.newTxDate} gid={this.props.gid}
+                            categories={this.props.categories} friends={this.props.friends} />
+                    </Poplet></td></tr>
+                </DesktopOnly>
+                {rows}
+            </tbody></table>
         </div>;
     }
 }

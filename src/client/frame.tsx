@@ -27,6 +27,9 @@ interface FrameState {
 /** /app/:month/:year */
 export default class Frame extends React.Component<FrameProps & RouteComponentProps<FrameProps>, FrameState> {
 
+    // While debts is in development
+    private showDebts = false;
+
     state: FrameState = {
         initialized: false,
         setIncome: '',
@@ -175,8 +178,16 @@ export default class Frame extends React.Component<FrameProps & RouteComponentPr
     }
 
     onDeleteTransaction(id: TransactionId) {
+        const transaction = this.state.transactions.filter(otherT => otherT.id == id)[0];
         const transactions = this.state.transactions.filter(t => t.id != id);
-        this.setState({transactions});
+        const frame = {...this.state.frame, categories:
+            this.state.frame.categories.map(category => {
+                if (transaction.category == category.id) {
+                    return {...category, balance: category.balance.plus(transaction.amount)}
+                }
+                return category;
+            })}
+        this.setState({transactions, frame});
     }
 
     onChangeIncome(event: React.ChangeEvent<HTMLInputElement>): void {
@@ -261,7 +272,7 @@ export default class Frame extends React.Component<FrameProps & RouteComponentPr
         const nav = <DesktopOnly><nav>
             <NavLink to={`${appPrefix}/categories`} activeClassName="active">Categories</NavLink>
             <NavLink to={`${appPrefix}/transactions`} activeClassName="active">Transactions</NavLink>
-            {this.state.debts.length > 0 ? 
+            {this.showDebts && this.state.debts.length > 0 ? 
                 <NavLink to={`${appPrefix}/debts`} activeClassName="active">Debts</NavLink>
             : null}
             <NavLink className="right" to={`/app/account`} activeClassName="active">Account{inviteBadge}</NavLink>

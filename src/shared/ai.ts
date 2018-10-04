@@ -1,9 +1,23 @@
 import { FrameIndex, Frame, TransactionId, Transaction } from "./types";
 import Money from './Money';
 export interface AI {
-    frame: FrameIndex;
+    frame?: FrameIndex;
     message(): string;
+    cta?: string;
+    action?: Action;
 }
+type Popup = {
+    type: 'popup';
+    title: string;
+    body: string;
+    confirm?: string;
+    cancel?: string;
+}
+type Redirect = {
+    type: 'redirect';
+    to: string;
+}
+type Action = Popup | Redirect;
 
 export class OverspentCategory implements AI {
     constructor(
@@ -65,6 +79,28 @@ export class UncategorizedMulti implements AI {
     }
 }
 
+export class DebtAI implements AI {
+    constructor(
+        public email: string,
+        public iOwe: Money,
+    ) {}
+
+    message(): string {
+        return this.iOwe.cmp(Money.Zero) > 0 ? `You owe ${this.email} ${this.iOwe.formatted()}.` :
+            `${this.email} owes you ${this.iOwe.negate().formatted()}`;
+    }
+
+    public cta = "Settle";
+    public action: Popup = {
+        type: 'popup',
+        title: 'Mark as settled',
+        body: this.iOwe.cmp(Money.Zero) > 0 ?
+            `Do this after you've paid ${this.email} ${this.iOwe.formatted()}.` :
+            `Do this after ${this.email} has paid you ${this.iOwe.negate().formatted()}.`,
+    }
+
+}
+
 export function getAIs(frame: Frame): AI[] {
     const ais: AI[] = [];
     const overspends: AI[] = [];
@@ -103,3 +139,4 @@ export function getTransactionAIs(frame: Frame, transactions: Transaction[]): AI
     }
     return ais;
 }
+

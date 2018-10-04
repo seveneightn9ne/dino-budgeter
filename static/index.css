@@ -166,6 +166,11 @@ a.spent:hover {
     padding: 0 10px;
 }
 
+.ai > .right {
+    float: right;
+    padding-right: 10px;
+}
+
 table {
     /*background-color: white;*/
     border-radius: 20px;
