@@ -52,6 +52,16 @@ alter table transaction_splits add share text not null default '';
 end if;
 end $$;
 
--- migration 5:
+-- migration 5: add balance & alive to friendship
+do $$ begin
+if not exists(select * from information_schema.columns where table_name = 'friendship' and column_name = 'balance')
+then
+alter table friendship add balance text not null default '0';
+alter table friendship add alive bool not null default true;
+end if;
+end $$;
+
+-- migration 6:
+
 
 commit;

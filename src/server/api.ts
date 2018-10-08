@@ -57,10 +57,16 @@ export const handle_init_get = wrap(async function(req: Request, res: Response):
         }
         if (req.query.debts) {
             console.log("debts");
-            resData.debts = await transactions.getUnsettledTransactions(req.user.uid, t);
+            resData.debts = await user.getDebts(req.user.uid, t);
+            console.log(resData.debts);
         }
-        if (req.query.email) {
-            resData.email = req.user.email;
+        if (req.query.me) {
+            console.log("me")
+            resData.me = {
+                email: req.user.email,
+                uid: req.user.uid,
+                gid: await gid(),
+            }
         }
         res.send(resData);
     });

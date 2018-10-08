@@ -46,6 +46,14 @@ class TxEntry extends React.Component<TxEntryProps & RouteComponentProps<TxEntry
         };
     }
 
+    componentDidUpdate(prevProps: TxEntryProps) {
+        if (prevProps.friends != this.props.friends && this.state.splitWith == '') {
+            this.setState({
+                splitWith: this.defaultSplitWith(),
+            });
+        }
+    }
+
     defaultSplitWith() {
         return this.props.friends.length > 0 ? this.props.friends[0].uid : ''
     }
@@ -110,9 +118,9 @@ class TxEntry extends React.Component<TxEntryProps & RouteComponentProps<TxEntry
                     {this.props.friends.map(f => <option key={f.uid}>{f.email}</option>)}
                 </select></label>
                 <label className="first half">
-                    Your share: <input type="number" value={this.state.yourShare} onChange={util.cc(this, 'yourShare')} /> 
+                    Your share: <input type="text" value={this.state.yourShare} onChange={util.cc(this, 'yourShare')} /> 
                 </label><label className="half">
-                    Their share: <input type="number" value={this.state.theirShare} onChange={util.cc(this, 'theirShare')} /></label>
+                    Their share: <input type="text" value={this.state.theirShare} onChange={util.cc(this, 'theirShare')} /></label>
                 <div className="section" style={{clear: 'both'}}>
                     <label className="nostyle"><input type="radio" name="payer" value="0" checked={this.state.youPaid}
                         onChange={(e) => this.setState({youPaid: e.target.checked})} /> You paid</label>

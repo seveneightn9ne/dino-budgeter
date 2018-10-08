@@ -12,6 +12,7 @@ type Popup = {
     body: string;
     confirm?: string;
     cancel?: string;
+    do: () => Promise<void>;
 }
 type Redirect = {
     type: 'redirect';
@@ -83,6 +84,7 @@ export class DebtAI implements AI {
     constructor(
         public email: string,
         public iOwe: Money,
+        public doAction: () => Promise<void>,
     ) {}
 
     message(): string {
@@ -97,6 +99,7 @@ export class DebtAI implements AI {
         body: this.iOwe.cmp(Money.Zero) > 0 ?
             `Do this after you've paid ${this.email} ${this.iOwe.formatted()}.` :
             `Do this after ${this.email} has paid you ${this.iOwe.negate().formatted()}.`,
+        do: this.doAction,
     }
 
 }

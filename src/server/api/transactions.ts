@@ -7,6 +7,7 @@ import * as transactions from '../transactions';
 import {wrap} from '../api';
 import {UserId, CategoryId, Transaction, Share, TransactionId, SplitId} from '../../shared/types';
 import { distributeTotal } from '../../shared/transactions';
+import * as _ from 'lodash';
 
 export const handle_transaction_post = wrap(async function(req: Request, res: Response) {
     req.checkBody("frame").notEmpty().isNumeric();
@@ -67,12 +68,6 @@ export const handle_transaction_post = wrap(async function(req: Request, res: Re
             const other_gid = other_friend.gid;
             const other_cat: CategoryId = null;
             const sid = util.randomId();
-            await t.batch([
-                t.none(query, [other_id, other_gid, frame, otherAmount.string(), req.body.description, other_cat, date]),
-                t.none(`insert into shared_transactions (id, payer) values ($1, $2)`, [sid, payer]),
-                t.none(`insert into transaction_splits (tid, sid, share) values ($1, $2, $3)`, [tx_id, sid, myShare.string()]),
-                t.none(`insert into transaction_splits (tid, sid, share) values ($1, $2, $3)`, [other_id, sid, theirShare.string()]),
-            ]);
             split = {
                 id: sid,
                 with: other_friend,
@@ -80,6 +75,18 @@ export const handle_transaction_post = wrap(async function(req: Request, res: Re
                 myShare, theirShare,
                 otherAmount, payer,
             }
+            const balance = transactions.getBalance({
+                user: req.user.uid,
+                otherUser: other,
+                amount, otherAmount, payer,
+            })
+            await t.batch([
+                user.addToBalance(req.user.uid, other, balance, t),
+                t.none(query, [other_id, other_gid, frame, otherAmount.string(), req.body.description, other_cat, date]),
+                t.none(`insert into shared_transactions (id, payer, settled) values ($1, $2, true)`, [sid, payer]),
+                t.none(`insert into transaction_splits (tid, sid, share) values ($1, $2, $3)`, [tx_id, sid, myShare.string()]),
+                t.none(`insert into transaction_splits (tid, sid, share) values ($1, $2, $3)`, [other_id, sid, theirShare.string()]),
+            ]);
         }
         const transaction: Transaction = {
             id: tx_id, gid, frame, category, amount, description, alive: true, date, split
@@ -151,11 +158,6 @@ function handle_transaction_update_post(
             return;
         }
         const updateLinked = isSharedField(field);
-        if (field == 'amount' && updateLinked == true) {
-            console.log("Cannot edit amount on a shared transaction.");
-            res.sendStatus(400);
-            return;
-        }
         const id = req.body.id;
         await db.tx(async t => {
             const existing = await transactions.getTransaction(id, t);
@@ -179,7 +181,7 @@ function handle_transaction_update_post(
     }
 }
 
-export async function handle_transaction_split_post(req: Request, res: Response) {
+export const handle_transaction_split_post = wrap(async function(req: Request, res: Response) {
     const tid: TransactionId = req.body.tid;
     const sid: SplitId = req.body.sid;
     const total = new Money(req.body.total);
@@ -195,8 +197,26 @@ export async function handle_transaction_split_post(req: Request, res: Response)
     const [myAmount, otherAmount] = distributeTotal(total, myShare, theirShare);
     await db.tx(async t => {
         const otherTid = await transactions.getOtherTid(tid, sid, t);
-        const payer = req.body.iPaid ? req.user.uid : await transactions.getUser(otherTid, t);
+        const otherUid = await transactions.getUser(otherTid, t);
+        const payer = req.body.iPaid ? req.user.uid : otherUid;
+        console.log("I am", req.user.uid);
+        console.log("my tid is", tid);
+        console.log("other tid is", otherTid);
+        console.log("other uid is", otherUid);
+
+        // Update the friendship balance
+        const prevBalance = await transactions.getBalanceFromDb(tid, t);
+        const newBalance = transactions.getBalance({
+            user: req.user.uid,
+            otherUser: otherUid,
+            amount: myAmount,
+            otherAmount: otherAmount,
+            payer: payer,
+        });
+        const balanceDelta = newBalance.minus(prevBalance);
+        
         const work = [
+            user.addToBalance(req.user.uid, otherUid, balanceDelta, t),
             t.none('update transactions set amount = $1 where id = $2', [myAmount.string(), tid]),
             t.none('update transactions set amount = $1 where id = $2', [otherAmount.string(), otherTid]),
             t.none('update transaction_splits set share = $1 where tid = $2', [myShare.string(), tid]),
@@ -206,4 +226,19 @@ export async function handle_transaction_split_post(req: Request, res: Response)
         await t.batch(work);
         res.sendStatus(200);
     });
-}
+});
+
+export const handle_transactions_settle_post = wrap(async function(req: Request, res: Response) {
+    const tids = req.body.transactions;
+    if (!tids || !_.isArray(tids)) {
+        res.sendStatus(400);
+        return;
+    }
+    await db.tx(async t => {
+        await t.batch(tids.map(async tid => {
+            const sid = await transactions.getSid(tid, t);
+            return await transactions.settle(sid, t);
+        }));        
+        res.sendStatus(200);
+    });
+});

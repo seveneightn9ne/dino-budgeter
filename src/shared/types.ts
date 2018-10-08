@@ -71,14 +71,11 @@ export interface InitState {
     pendingFriends?: Friend[],
     invites?: Friend[],
     transactions?: Transaction[],
-    email?: string,
-    debts?: Transaction[],
+    debts?: {[email: string]: Money},
+    me?: Friend;
 }
 
 export class Share extends Money {
-    formatted() {
-        return this.string();
-    }
     static normalize(...shares: Share[]): NormalizedShare[] {
         const total = shares.reduce((a,b) => a.plus(b), Share.Zero);
         return shares.map(s => new NormalizedShare(s.dividedBy(total).num));
@@ -88,6 +85,15 @@ export class Share extends Money {
     }
     static fromMoney(m: Money) {
         return new Share(m.num);
+    }
+    string(): string {
+        return this.num.toString();
+    }
+    toJSON(): string {
+        return this.string();
+    }
+    formatted() {
+        return this.string();
     }
 }
 export class NormalizedShare extends Share {

@@ -36,6 +36,8 @@ create table friendship (
   u2 char(32) not null references users,
   u1_accepted bool not null,
   u2_accepted bool not null,
+  balance text not null, -- u1 owes u2
+  alive bool not null,
   primary key (u1, u2)
 );
 create index friendship_u2 on friendship(u2);

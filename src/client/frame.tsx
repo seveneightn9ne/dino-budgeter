@@ -9,11 +9,15 @@ import Categories from './categories';
 import Transactions from './transactions';
 import { MobileOnly, DesktopOnly } from './components/media';
 import Money from '../shared/Money';
-import Debts from './debts';
+import Debts from './friends';
+import * as _ from 'lodash';
+import Friends from './friends';
+import { getBalanceDelta } from '../shared/transactions';
 
 type FrameProps = RouteComponentProps<{month: string, year: string}>;
 interface FrameState {
     initialized: boolean;
+    me?: Friend;
     frame?: FrameType;
     budgeted?: Money;
     setIncome: string;
@@ -21,14 +25,15 @@ interface FrameState {
     transactions?: Transaction[];
     invites?: Friend[];
     friends?: Friend[];
-    debts?: Transaction[];
+    pendingFriends?: Friend[];
+    debts?: {[email: string]: Money};
 }
 
 /** /app/:month/:year */
 export default class Frame extends React.Component<FrameProps & RouteComponentProps<FrameProps>, FrameState> {
 
     // While debts is in development
-    private showDebts = false;
+    private showDebts = true;
 
     state: FrameState = {
         initialized: false,
@@ -85,7 +90,7 @@ export default class Frame extends React.Component<FrameProps & RouteComponentPr
 
     initializeFrame(props = this.props): Promise<void> {
         const index = this.index(props);
-        return util.initializeState(this, index, 'frame', 'transactions', 'invites', 'friends', 'debts').then(() => {
+        return util.initializeState(this, index, 'frame', 'transactions', 'invites', 'friends', 'debts', 'pendingFriends', 'me').then(() => {
             this.setState({budgeted: this.calculateBudgeted(this.state.frame.categories)});
         });
     }
@@ -136,9 +141,14 @@ export default class Frame extends React.Component<FrameProps & RouteComponentPr
             newFrame.balance = this.state.frame.balance.minus(t.amount);
         }
         const transactions = [...this.state.transactions, t];
+        const debts = {...this.state.debts};
+        if (t.split) {
+            const prevBalance = debts[t.split.with.email] || Money.Zero;
+            debts[t.split.with.email] = prevBalance.plus(getBalanceDelta(this.state.me.uid, null, t));
+        }
         this.setState({
             frame: newFrame,
-            transactions,
+            transactions, debts
         });
     }
 
@@ -174,7 +184,12 @@ export default class Frame extends React.Component<FrameProps & RouteComponentPr
             }
             return otherT;
         });
-        this.setState({transactions, frame: newFrame});
+        const debts = {...this.state.debts};
+        if (t.split) {
+            const prevBalance = debts[t.split.with.email] || Money.Zero;
+            debts[t.split.with.email] = prevBalance.plus(getBalanceDelta(this.state.me.uid, oldTransaction, t));
+        }
+        this.setState({transactions, frame: newFrame, debts});
     }
 
     onDeleteTransaction(id: TransactionId) {
@@ -186,8 +201,14 @@ export default class Frame extends React.Component<FrameProps & RouteComponentPr
                     return {...category, balance: category.balance.plus(transaction.amount)}
                 }
                 return category;
-            })}
-        this.setState({transactions, frame});
+            })};
+        const debts = {...this.state.debts};
+        if (transaction.split) {
+            const prevBalance = debts[transaction.split.with.email] || Money.Zero;
+            debts[transaction.split.with.email] = prevBalance.plus(getBalanceDelta(this.state.me.uid, transaction, null));
+            this.setState({debts});
+        }
+        this.setState({transactions, frame, debts});
     }
 
     onChangeIncome(event: React.ChangeEvent<HTMLInputElement>): void {
@@ -223,6 +244,11 @@ export default class Frame extends React.Component<FrameProps & RouteComponentPr
         newFrame.balance = frames.updateBalanceWithIncome(newFrame.balance, newFrame.income, setIncome);
         newFrame.income = setIncome;
         this.setState({frame: newFrame});
+    }
+
+    onSettle(email: string) {
+        const debts = {...this.state.debts, [email]: Money.Zero};
+        this.setState({debts});
     }
 
     render() {
@@ -263,7 +289,8 @@ export default class Frame extends React.Component<FrameProps & RouteComponentPr
                 friends={this.state.friends}
                 location={this.props.location} history={this.props.history} />;
 
-        const debts = <Debts transactions={this.state.debts}
+        const debts = <Friends debts={this.state.debts} friends={this.state.friends}
+            pendingFriends={this.state.pendingFriends} invites={this.state.invites} onSettle={this.onSettle.bind(this)}
             location={this.props.location} history={this.props.history} />;
 
         const prevButton = <Link to={`/app/${this.prevMonth()+1}/${this.prevYear()}`} className="fa-chevron-left fas framenav" />;
@@ -272,8 +299,8 @@ export default class Frame extends React.Component<FrameProps & RouteComponentPr
         const nav = <DesktopOnly><nav>
             <NavLink to={`${appPrefix}/categories`} activeClassName="active">Categories</NavLink>
             <NavLink to={`${appPrefix}/transactions`} activeClassName="active">Transactions</NavLink>
-            {this.showDebts && this.state.debts.length > 0 ? 
-                <NavLink to={`${appPrefix}/debts`} activeClassName="active">Debts</NavLink>
+            {this.state.friends.length > 0 || _.size(this.state.debts) > 0 ? 
+                <NavLink to={`${appPrefix}/debts`} activeClassName="active">Friends</NavLink>
             : null}
             <NavLink className="right" to={`/app/account`} activeClassName="active">Account{inviteBadge}</NavLink>
         </nav></DesktopOnly>;

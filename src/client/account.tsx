@@ -12,7 +12,7 @@ interface Props {
 }
 
 interface InitializedState {
-    email: string;
+    me: Friend;
     friends: Friend[];
     pendingFriends: Friend[];
     invites: Friend[];
@@ -34,7 +34,7 @@ export default class Account extends React.Component<Props, State> {
     }
 
     componentDidMount() {
-        util.initializeState(this, 0, 'friends', 'pendingFriends', 'email', 'invites');
+        util.initializeState(this, 0, 'friends', 'pendingFriends', 'me', 'invites');
     }
 
     onAddFriend(e: React.FormEvent) {
@@ -97,12 +97,31 @@ export default class Account extends React.Component<Props, State> {
         });
     }
 
+    deleteFriend(email: string) {
+        util.apiPost({
+            method: 'DELETE',
+            path: "/api/friend",
+            body: {email},
+            location: this.props.location,
+            history: this.props.history,
+        }).then(() => {
+            const newInvites = this.state.invites.filter(i => i.email != email);
+            const newFriends = this.state.friends.filter(f => f.email != email);
+            const newPending = this.state.pendingFriends.filter(p => p.email != email);
+            this.setState({
+                friends: newFriends,
+                invites: newInvites,
+                pendingFriends: newPending,
+            });
+        });
+    }
+
     render(): JSX.Element {
         if (!this.state.initialized) {
             return null;
         }
         const friends = this.state.friends.map(friend => <li key={friend.uid}>{friend.email}{' '}
-            <span className="clickable" onClick={() => this.rejectFriend(friend.email)}>Remove</span></li>);
+            <span className="clickable" onClick={() => this.deleteFriend(friend.email)}>Remove</span></li>);
 
         friends.push(...this.state.pendingFriends.map(friend => <li key={friend.uid}>{friend.email}{' '}
                 <span className="pending">(Pending)</span>{' '}
@@ -133,7 +152,7 @@ export default class Account extends React.Component<Props, State> {
                 <h1>Account Settings</h1>
             </div></header>
             <main>
-            <p>{this.state.email}</p>
+            <p>{this.state.me.email}</p>
             {invites}
             <h2>Friends</h2>
             <ul>

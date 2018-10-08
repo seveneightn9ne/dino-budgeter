@@ -17,7 +17,6 @@ interface State {
     yourErr: boolean;
     theirShare: string;
     theirErr: boolean;
-    settled: boolean;
     youPaid: boolean;
 }
 export default class SplitPoplet extends React.Component<Props, State> {
@@ -27,13 +26,6 @@ export default class SplitPoplet extends React.Component<Props, State> {
         this.state = initialState(props.transaction);
         this.poplet = React.createRef();
     }
-
-    /*componentDidUpdate(prevProps: Props) {
-        if (prevProps.transaction.amount != this.props.transaction.amount ||
-            prevProps.transaction.split.otherAmount != this.props.transaction.split.otherAmount) {
-            this.setState(initialState(this.props))
-        }
-    }*/
     
     handleSubmit(event: React.FormEvent): void {
         event.preventDefault();
@@ -74,13 +66,13 @@ export default class SplitPoplet extends React.Component<Props, State> {
         return <Poplet className="txentry" text="shared" ref={this.poplet}>
             <h2>Split with {this.props.transaction.split.with.email}</h2>
             <form onSubmit={this.handleSubmit.bind(this)}>
-            <label>Total: <input className={cls(this.state.totalErr)} type="text"
+            <label>Total: <input className={cls(this.state.totalErr)} type="text" size={4}
                 value={this.state.total} onChange={cc(this, 'total')} /></label>
             <label className="first half">
-                Your share: <input className={cls(this.state.yourErr)} type="number"
+                Your share: <input className={cls(this.state.yourErr)} type="text" size={4}
                     value={this.state.yourShare} onChange={cc(this, 'yourShare')} /> 
             </label><label className="half">
-                Their share: <input className={cls(this.state.theirErr)} type="number"
+                Their share: <input className={cls(this.state.theirErr)} type="text" size={4}
                     value={this.state.theirShare} onChange={cc(this, 'theirShare')} /></label>
             <div className="section" style={{clear: 'both'}}>
                 <label className="nostyle"><input type="radio" name="payer" value="0" checked={this.state.youPaid}
@@ -88,7 +80,7 @@ export default class SplitPoplet extends React.Component<Props, State> {
                 <label className="nostyle"><input type="radio" name="payer" value="1" checked={!this.state.youPaid} 
                     onChange={(e) => this.setState({youPaid: !e.target.checked})} /> They paid</label>
             </div>
-            <div className="section">You spent {youPay(this.state).string()}.</div>
+            <div className="section">You spent {youPay(this.state).formatted()}.</div>
             <input className="button" type="submit" value="Save" />
             </form>
         </Poplet>;
@@ -107,7 +99,6 @@ function initialState(transaction: Transaction): State {
         yourErr: false,
         theirShare: theirShare.string(),
         theirErr: false,
-        settled: false,
         youPaid: transaction.split.payer != transaction.split.with.uid,
     }
 }

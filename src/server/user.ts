@@ -1,7 +1,8 @@
-import {Request, Response} from 'express';
 import {User, GroupId, UserId, Friend} from '../shared/types';
+import Money from '../shared/Money';
 import db from './db';
 import pgPromise from 'pg-promise';
+import _ from 'lodash';
 
 export function getGroups(user: User | UserId, t?: pgPromise.ITask<{}>): Promise<GroupId[]> {
     return t ? getGroupsInner(user, t) : db.task(t => getGroupsInner(user, t));
@@ -63,13 +64,17 @@ export async function addFriend(actor: UserId, friend: UserId, t: pgPromise.ITas
     } else {
         const u1_accepted = u1 == actor;
         const u2_accepted = u2 == actor;
-        await t.none("insert into friendship (u1, u2, u1_accepted, u2_accepted) values ($1, $2, $3, $4)",
+        await t.none("insert into friendship (u1, u2, u1_accepted, u2_accepted, alive) values ($1, $2, $3, $4, true)",
             [u1, u2, u1_accepted, u2_accepted]);
     }
 }
 
 export async function deleteFriendship(u1: UserId, u2: UserId, t: pgPromise.ITask<{}>): Promise<void> {
     return t.none("delete from friendship where u1 = $1 and u2 = $2", [u1, u2].sort());
+}
+
+export async function softDeleteFriendship(u1: UserId, u2: UserId, t: pgPromise.ITask<{}>): Promise<void> {
+    return t.none("update friendship set alive = false where u1 = $1 and u2 = $2", [u1, u2].sort());
 }
 
 // Only gets friendships that have been accepted both ways.
@@ -79,7 +84,7 @@ export async function getFriends(user: UserId, t: pgPromise.ITask<{}>): Promise<
             (F.u1 = U.uid and F.u2 = $1)
          or (F.u2 = U.uid and F.u1 = $1))
         left join membership G on U.uid = G.uid
-        where (u1 = $1 or u2 = $1) and u1_accepted and u2_accepted`, [user]);
+        where (u1 = $1 or u2 = $1) and u1_accepted and u2_accepted and F.alive`, [user]);
     return rows || [];
 }
 
@@ -89,8 +94,9 @@ export async function getPendingFriends(user: UserId, t: pgPromise.ITask<{}>): P
             (F.u1 = U.uid and F.u2 = $1)
          or (F.u2 = U.uid and F.u1 = $1))
         left join membership G on U.uid = G.uid
-        where (u1 = $1 and not u2_accepted)
-           or (u2 = $1 and not u1_accepted)`, [user]);
+        where ((u1 = $1 and not u2_accepted)
+           or (u2 = $1 and not u1_accepted))
+           and F.alive`, [user]);
     return rows || [];
 }
 
@@ -100,13 +106,51 @@ export async function getFriendInvites(user: UserId, t: pgPromise.ITask<{}>): Pr
             (F.u1 = U.uid and F.u2 = $1)
          or (F.u2 = U.uid and F.u1 = $1))
         left join membership G on U.uid = G.uid
-        where (u1 = $1 and not u1_accepted)
-           or (u2 = $1 and not u2_accepted)`, [user]);
+        where ((u1 = $1 and not u1_accepted)
+           or (u2 = $1 and not u2_accepted))
+           and F.alive`, [user]);
     return rows || [];
 }
 
 export async function isFriend(u1: UserId, u2: UserId, t: pgPromise.ITask<{}>): Promise<boolean> {
     const row = await t.one(`select count(*) > 0 as exists from friendship where
-        u1 = $1 and u2 = $2 and u1_accepted and u2_accepted`, [u1, u2].sort());
+        u1 = $1 and u2 = $2 and u1_accepted and u2_accepted and alive`, [u1, u2].sort());
     return row.exists;
+}
+
+export async function addToBalance(u1: UserId, u2: UserId, amount: Money, t: pgPromise.ITask<{}>): Promise<void> {
+    [u1, u2] = [u1, u2].sort();
+    const row = await t.one(`select balance from friendship where u1 = $1 and u2 = $2`, [u1, u2]);
+    const balance = new Money(row.balance).plus(amount);
+    await t.none(`update friendship set balance = $1 where u1 = $2 and u2 = $3`, [balance.string(), u1, u2]);
+}
+
+async function getBalances(user: UserId, t: pgPromise.ITask<{}>): Promise<{[uid: string]: Money}> {
+    const rows = await t.manyOrNone(`select * from friendship where u1 = $1 or u2 = $1`, [user]);
+    const ret: {[uid: string]: Money} = {};
+    rows.forEach(row => {
+        const balance = new Money(row.balance);
+        if (!row.alive && balance.cmp(Money.Zero) == 0) {
+            // Deleted friendship with no balance - ignore.
+            return;
+        }
+        const otherUser = row.u1 == user ? row.u2 : row.u1;
+        ret[otherUser] = balance;
+    });
+    return ret;
+}
+
+/** Amounts that user owes each friend. Negative means the friend owes the user. */
+export async function getDebts(user: UserId, t: pgPromise.ITask<{}>): Promise<{[email: string]: Money}> {
+    const uidToDebts =_.mapValues(await getBalances(user, t), (amount, u2) => {
+        const u1 = [user, u2].sort()[0];
+        return u1 == user ? amount : amount.negate();
+    });
+    const uids = _.keys(uidToDebts);
+    const emails = await getEmails(uids, t);
+    const ret: {[email: string]: Money} = {};
+    for (let i=0; i < uids.length; i++) {
+        ret[emails[i]] = uidToDebts[uids[i]];
+    }
+    return ret;
 }

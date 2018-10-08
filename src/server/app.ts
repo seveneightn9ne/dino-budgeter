@@ -8,7 +8,6 @@ import session from 'express-session';
 import * as auth from './auth';
 import morgan from 'morgan';
 import * as cookieParser from 'cookie-parser';
-import * as playground from './playground';
 import validator from 'express-validator';
 import * as ensureLogin from 'connect-ensure-login';
 import * as api from './api';
@@ -49,15 +48,13 @@ app.set("port", process.env.PORT || 3000);
 app.post('/login', auth.handle_login_post);
 app.post('/signup', auth.handle_signup_post);
 
-app.get("/playground", playground.handle_playground_get);
-app.post("/playground", playground.handle_playground_post);
-
 /**
  * API Routes. They require login.
  */
 app.get('/api/auth-redirect',      user.handle_auth_redirect_get);
 app.post('/api/friend',            ensureLogin.ensureLoggedIn('/api/auth-redirect'), user.handle_add_friend_post);
 app.post('/api/friend/reject',     ensureLogin.ensureLoggedIn('/api/auth-redirect'), user.handle_reject_friend_post);
+app.delete('/api/friend',          ensureLogin.ensureLoggedIn('/api/auth-redirect'), user.handle_friend_delete);
 
 app.get('/api/init',               ensureLogin.ensureLoggedIn('/api/auth-redirect'), api.handle_init_get);
 
@@ -71,6 +68,7 @@ app.post('/api/transaction/amount',ensureLogin.ensureLoggedIn('/api/auth-redirec
 app.post('/api/transaction/date',  ensureLogin.ensureLoggedIn('/api/auth-redirect'), transactions.handle_transaction_date_post);
 app.post('/api/transaction/category', ensureLogin.ensureLoggedIn('/api/auth-redirect'), transactions.handle_transaction_category_post);
 app.post('/api/transaction/split', ensureLogin.ensureLoggedIn('/api/auth-redirect'), transactions.handle_transaction_split_post);
+app.post('/api/transactions/settle', ensureLogin.ensureLoggedIn('/api/auth-redirect'), transactions.handle_transactions_settle_post);
 
 app.post('/api/category',          ensureLogin.ensureLoggedIn('/api/auth-redirect'), categories.handle_category_post);
 app.delete('/api/category',        ensureLogin.ensureLoggedIn('/api/auth-redirect'), categories.handle_category_delete);

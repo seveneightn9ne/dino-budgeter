@@ -1,4 +1,4 @@
-import {Transaction, Share, NormalizedShare} from '../shared/types';
+import {Transaction, Share, UserId} from '../shared/types';
 import Money from '../shared/Money';
 export function fromSerialized(row: any): Transaction {
     if (!row) {
@@ -34,3 +34,30 @@ export function distributeTotal(total: Money, s1: Share, s2: Share): [Money, Mon
 
 /* Never calculate an amount using shares if you don't have the total. */
 /* Never calculate the total if you don't have both amounts. */
+
+
+/** 
+ * Gets the balance that u1 owes u2.
+*/
+export function getBalance(args: {
+    user: UserId,
+    otherUser: UserId,
+    payer: UserId,
+    amount: Money,
+    otherAmount: Money,
+}): Money {
+    const [u1, u2] = [args.user, args.otherUser].sort();
+    const balance = args.payer == args.user ? args.otherAmount : args.amount;
+    return u2 == args.payer ? balance : balance.negate();
+}
+
+export function getBalanceDelta(user: UserId, oldT: Transaction | null, newT: Transaction): Money {
+    const otherUser = oldT.split.with.uid;
+    const oldBalance = (!oldT || !oldT.alive) ? Money.Zero : getBalance({
+        user, otherUser, payer: oldT.split.payer, amount: oldT.amount, otherAmount: oldT.split.otherAmount,
+    });
+    const newBalance = (!newT.alive) ? Money.Zero : getBalance({
+        user, otherUser, payer: newT.split.payer, amount: newT.amount, otherAmount: newT.split.otherAmount,
+    });
+    return newBalance.minus(oldBalance);
+}

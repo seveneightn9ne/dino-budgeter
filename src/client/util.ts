@@ -5,6 +5,7 @@ import * as frames from '../shared/frames';
 import * as categories from '../shared/categories';
 import * as transactions from '../shared/transactions';
 import Money from '../shared/Money';
+import * as _ from 'lodash';
 
 export const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
@@ -117,7 +118,7 @@ export function initializeState<S extends {initialized: boolean}, W extends (key
             response.transactions = response.transactions.map(transactions.fromSerialized);
         }
         if (response.debts) {
-            response.debts = response.debts.map(transactions.fromSerialized);
+            response.debts = _.mapValues(response.debts, v => new Money(v));
         }
         return new Promise((resolve, reject) => {
             self.setState({...response, initialized: true}, () => {

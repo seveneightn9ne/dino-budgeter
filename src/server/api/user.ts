@@ -41,3 +41,19 @@ export const handle_reject_friend_post = wrap(async function(req: Request, res: 
         res.sendStatus(200);
     });
 });
+
+export const handle_friend_delete = wrap(async function(req: Request, res: Response) {
+    if (!req.body.email || (req.body.email == req.user.email)) {
+        res.sendStatus(400);
+        return;
+    }
+    await db.tx(async t => {
+        const uid = await user.getUserByEmail(req.body.email, t);
+        if (!uid) {
+            res.sendStatus(404);
+            return;
+        }
+        await user.softDeleteFriendship(req.user.uid, uid, t);
+        res.sendStatus(200);
+    });
+});

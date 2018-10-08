@@ -1,7 +1,9 @@
 import {TransactionId, Transaction, FrameIndex, SplitId, GroupId, Share, UserId} from '../shared/types';
 import Money from '../shared/Money';
 import pgPromise from 'pg-promise';
+import { addToBalance } from './user';
 export * from '../shared/transactions';
+import { getBalance } from '../shared/transactions';
 
 type IDQuery = {id: TransactionId};
 type FrameQuery = {
@@ -92,7 +94,7 @@ export async function getOtherTid(tid: TransactionId, sid: SplitId, t: pgPromise
 }
 
 export async function getUser(tid: TransactionId, t: pgPromise.ITask<{}>): Promise<UserId> {
-    const row = await t.one("select M.uid from transactions T left join membership M on T.gid = M.gid limit 1");
+    const row = await t.one("select M.uid from transactions T left join membership M on T.gid = M.gid where T.id = $1", [tid]);
     return row.uid;
 }
 
@@ -105,16 +107,52 @@ export async function canUserEdit(tid: TransactionId, uid: UserId, t: pgPromise.
 }
 
 export async function deleteTransaction(tid: TransactionId, t: pgPromise.ITask<{}>): Promise<void> {
-    const linkedTxnRow = await t.oneOrNone(`select TS2.tid from transactions T
+    const linkedTxnRow = await t.oneOrNone(`select TS2.tid, M.uid, M2.uid as other_uid from transactions T
         left join transaction_splits TS
             on T.id = TS.tid
         left join transaction_splits TS2
             on TS2.sid = TS.sid
             and TS2.tid != TS.tid
+        left join membership M
+            on T.gid = M.gid
+        left join transactions T2
+            on T2.id = TS2.tid
+        left join membership M2
+            on M2.gid = T2.gid
         where T.id = $1`, [tid]);
     const deleteQuery = "update transactions set alive = false where id = $1";
     if (linkedTxnRow) {
+        const balance = await getBalanceFromDb(tid, t);
+        await addToBalance(linkedTxnRow.uid, linkedTxnRow.other_uid, balance.negate(), t);
         await t.none(deleteQuery, [linkedTxnRow.tid]);
     }
     await t.none(deleteQuery, [tid]);
+}
+
+export async function getSid(tid: TransactionId, t: pgPromise.ITask<{}>): Promise<SplitId> {
+    const row = await t.oneOrNone('select sid from transaction_splits where tid = $1', [tid]);
+    return row ? row.sid : null;
+}
+
+export async function settle(sid: SplitId, t: pgPromise.ITask<{}>): Promise<void> {
+    return await t.none('update shared_transactions set settled = true where id = $1', [sid]);
+}
+
+export async function getBalanceFromDb(tid: TransactionId, t: pgPromise.ITask<{}>): Promise<Money> {
+    const row = await t.one(`select T.amount, M.uid, T2.amount as other_amount, M2.uid as other_uid, S.payer
+        from transactions T
+        left join membership M on M.gid = T.gid
+        left join transaction_splits TS on T.id = TS.tid
+        left join shared_transactions S on TS.sid = S.id
+        left join transaction_splits TS2 on TS2.sid = TS.sid and TS2.tid != TS.tid
+        left join transactions T2 on T2.id = TS2.tid and T2.id != T.id
+        left join membership M2 on M2.gid = T2.gid
+        where T.id = $1`, [tid]);
+    return getBalance({
+        user: row.uid,
+        otherUser: row.other_uid,
+        payer: row.payer,
+        amount: new Money(row.amount),
+        otherAmount: new Money(row.other_amount),
+    });
 }
