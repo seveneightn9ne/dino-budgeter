@@ -32,6 +32,12 @@ export function distributeTotal(total: Money, s1: Share, s2: Share): [Money, Mon
     return [a1, a2];
 }
 
+
+export function youPay(yourShare: Share, theirShare: Share, total: Money): Money {
+    const [yourShareNorm, _] = Share.normalize(yourShare, theirShare);
+    return yourShareNorm.of(total);
+}
+
 /* Never calculate an amount using shares if you don't have the total. */
 /* Never calculate the total if you don't have both amounts. */
 
@@ -51,12 +57,12 @@ export function getBalance(args: {
     return u2 == args.payer ? balance : balance.negate();
 }
 
-export function getBalanceDelta(user: UserId, oldT: Transaction | null, newT: Transaction): Money {
+export function getBalanceDelta(user: UserId, oldT: Transaction | null, newT: Transaction | null): Money {
     const otherUser = oldT.split.with.uid;
     const oldBalance = (!oldT || !oldT.alive) ? Money.Zero : getBalance({
         user, otherUser, payer: oldT.split.payer, amount: oldT.amount, otherAmount: oldT.split.otherAmount,
     });
-    const newBalance = (!newT.alive) ? Money.Zero : getBalance({
+    const newBalance = (!newT || !newT.alive) ? Money.Zero : getBalance({
         user, otherUser, payer: newT.split.payer, amount: newT.amount, otherAmount: newT.split.otherAmount,
     });
     return newBalance.minus(oldBalance);

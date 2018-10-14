@@ -121,14 +121,16 @@ tr:hover .deleteCr {
 .blobs {
     display: flex;
     align-items: stretch;
+    flex-wrap: wrap;
 }
 
 .blob {
     background-color: #dddddd;
     border-radius: 4px;
     padding: 8px;
-    margin: 0 10px;
+    margin: 0 10px 10px;
     text-align: center;
+    flex-grow: 1;
 }
 .blob .title {
     color: #555555;
@@ -268,11 +270,15 @@ form {
     border-right: 1px solid #eeeeee;
 }
 
-.fullpage h1 {
+.fullpage h1, .transactions.editing h1 {
     background-color: #7c4dff;
     color: white;
     font-weight: normal;
     padding: 20px;
+}
+h1 .close {
+    float: right;
+    color: rgba(255, 255, 255, 0.5);
 }
 
 @media (max-width: 599px) {
@@ -300,14 +306,14 @@ footer {
     text-decoration: none;
     color: #7c4dff;
     text-align: center;
-    margin-left: 30px;
+    margin-left: 10px;
 }
 .add-transaction-button .icon {
     font-size: 48px;
     height: 48px;
     width: 48px;
     display: block;
-    margin-top: -28px;
+    margin: -28px auto 0;
     background-color: #ffffff;
     border-radius: 28px;
     padding: 4px;
@@ -320,6 +326,8 @@ footer .link {
     text-decoration: none;
     color: #7c4dff;
     margin-left: 20px;
+    display: inline-block;
+    margin-top: -30px;
 }
 
 /* poplet */

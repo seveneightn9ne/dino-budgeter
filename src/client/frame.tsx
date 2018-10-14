@@ -13,6 +13,7 @@ import Debts from './friends';
 import * as _ from 'lodash';
 import Friends from './friends';
 import { getBalanceDelta } from '../shared/transactions';
+import TxEntry from './txentry';
 
 type FrameProps = RouteComponentProps<{month: string, year: string}>;
 interface FrameState {
@@ -27,6 +28,7 @@ interface FrameState {
     friends?: Friend[];
     pendingFriends?: Friend[];
     debts?: {[email: string]: Money};
+    modal?: Transaction;
 }
 
 /** /app/:month/:year */
@@ -189,7 +191,7 @@ export default class Frame extends React.Component<FrameProps & RouteComponentPr
             const prevBalance = debts[t.split.with.email] || Money.Zero;
             debts[t.split.with.email] = prevBalance.plus(getBalanceDelta(this.state.me.uid, oldTransaction, t));
         }
-        this.setState({transactions, frame: newFrame, debts});
+        this.setState({transactions, frame: newFrame, debts, modal: undefined});
     }
 
     onDeleteTransaction(id: TransactionId) {
@@ -208,7 +210,7 @@ export default class Frame extends React.Component<FrameProps & RouteComponentPr
             debts[transaction.split.with.email] = prevBalance.plus(getBalanceDelta(this.state.me.uid, transaction, null));
             this.setState({debts});
         }
-        this.setState({transactions, frame, debts});
+        this.setState({transactions, frame, debts, modal: undefined});
     }
 
     onChangeIncome(event: React.ChangeEvent<HTMLInputElement>): void {
@@ -256,6 +258,16 @@ export default class Frame extends React.Component<FrameProps & RouteComponentPr
             return null;
         }
 
+        if (this.state.modal) {
+            return <div className="transactions editing">
+                <h1>Edit Transaction <span className="close clickable fa-times fas" onClick={() => this.setState({modal: undefined})} /></h1>
+                <TxEntry categories={this.state.frame.categories} friends={this.state.friends}
+                    location={this.props.location} history={this.props.history}
+                    transaction={this.state.modal} onUpdateTransaction={this.onUpdateTransaction.bind(this)}
+                    onDeleteTransaction={(t: Transaction) => this.onDeleteTransaction(t.id)} />
+            </div>;
+        }
+
         if (this.state.frame.income.cmp(Money.Zero) == 0 && this.state.frame.index >= this.todayFrame()) {
             const className = this.state.setIncomeErr ? "error" : "";
             return <div className="splash">
@@ -283,6 +295,7 @@ export default class Frame extends React.Component<FrameProps & RouteComponentPr
                 onUpdateTransaction={this.onUpdateTransaction.bind(this)}
                 onDeleteTransaction={this.onDeleteTransaction.bind(this)}
                 onAddTransaction={this.onAddTransaction.bind(this)}
+                onEditTransaction={(t) => this.setState({modal: t})}
                 month={this.month()} year={this.year()} frame={this.state.frame}
                 newTxDate={this.newTxDate()} gid={this.state.frame.gid}
                 categories={this.state.frame.categories}
@@ -324,8 +337,11 @@ export default class Frame extends React.Component<FrameProps & RouteComponentPr
                         <span className="fa-plus-circle fas icon" />
                         <span className="text">Transaction</span>
                     </Link>
-                    <Link to={`${appPrefix}/categories`} className="link">Categories</Link>
+                    <Link to={`${appPrefix}/categories`} className="link">Home</Link>
                     <Link to={`${appPrefix}/transactions`} className="link">Transactions</Link>
+                    {this.state.friends.length > 0 || _.size(this.state.debts) > 0 ? 
+                        <Link to={`${appPrefix}/debts`} className="link">Friends</Link>
+                    : null}
                 </footer>
             </MobileOnly>
         </div>;

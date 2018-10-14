@@ -58,7 +58,6 @@ export const handle_init_get = wrap(async function(req: Request, res: Response):
         if (req.query.debts) {
             console.log("debts");
             resData.debts = await user.getDebts(req.user.uid, t);
-            console.log(resData.debts);
         }
         if (req.query.me) {
             console.log("me")

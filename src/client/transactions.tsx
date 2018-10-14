@@ -23,6 +23,7 @@ interface Props {
     onUpdateTransaction: (txn: Transaction) => void;
     onDeleteTransaction: (id: TransactionId) => void;
     onAddTransaction: (txn: Transaction) => void;
+    onEditTransaction: (txn: Transaction) => void;
     location: Location;
     history: History;
 }
@@ -72,30 +73,25 @@ export default class Transactions extends React.Component<Props, State> {
         const ais = getTransactionAIs(
             this.props.frame, this.props.transactions).map(ai =>
             <AIComponent ai={ai} key={ai.message()} />);
-        const rowsList = _.sortBy(this.props.transactions, ['date']).map((tx) => <tr key={tx.id}>
+
+        const rowsDesktop = _.sortBy(this.props.transactions, ['date']).map((tx) => <tr key={tx.id}>
             <td className="del">
-                <DesktopOnly>
-                    <span className="deleteCr clickable fa-times fas" onClick={() => this.delete(tx.id)}></span>
-                </DesktopOnly>
+                <span className="deleteCr clickable fa-times fas" onClick={() => this.delete(tx.id)}></span>
             </td>
-            <td className="date"><MobileQuery
-                mobile={util.yyyymmdd(tx.date)}
-                desktop={<ClickToEditDate value={tx.date}
-                    onChange={date =>
-                        this.props.onUpdateTransaction({...tx, date})}
-                    postTo="/api/transaction/date"
-                    postKey="date"
-                    postData={{id: tx.id}}
-            />} /></td>
-            <td className="stretch"><MobileQuery
-                mobile={tx.description}
-                desktop={<ClickToEditText value={tx.description} size={20}
-                    onChange={description =>
-                        this.props.onUpdateTransaction({...tx, description})}
-                    postTo="/api/transaction/description"
-                    postKey="description"
-                    postData={{id: tx.id}}
-            />} /></td>
+            <td className="date"><ClickToEditDate value={tx.date}
+                onChange={date =>
+                    this.props.onUpdateTransaction({...tx, date})}
+                postTo="/api/transaction/date"
+                postKey="date"
+                postData={{id: tx.id}}
+            /></td>
+            <td className="stretch"><ClickToEditText value={tx.description} size={20}
+                onChange={description =>
+                    this.props.onUpdateTransaction({...tx, description})}
+                postTo="/api/transaction/description"
+                postKey="description"
+                postData={{id: tx.id}}
+            /></td>
             <td className={tx.category ? "category" : "category highlighted"}>
             <ClickToEditDropdown value={tx.category || ""}
                 values={this.categoryMap()}
@@ -104,19 +100,28 @@ export default class Transactions extends React.Component<Props, State> {
                 postKey="category"
                 postData={{id: tx.id}}
             /></td>
-            <td className="amount"><MobileQuery
-                mobile={tx.amount.formatted()}
-                desktop={tx.split ? tx.amount.formatted() : <ClickToEditMoney value={tx.amount}
+            <td className="amount">{tx.split ? tx.amount.formatted() :
+                <ClickToEditMoney value={tx.amount}
                     onChange={amount =>
                         this.props.onUpdateTransaction({...tx, amount})}
                     postTo="/api/transaction/amount"
                     postKey="amount"
                     postData={{id: tx.id}}
-            />} /></td>
+            />}</td>
             <td className="split">
                 {tx.split ? <SplitPoplet transaction={tx} onUpdateTransaction={this.props.onUpdateTransaction} /> : null}
             </td></tr>);
-        const rows = <MobileQuery mobile={rowsList.reverse()} desktop={rowsList} />;
+
+        const rowsMobile = _.sortBy(this.props.transactions, ['date']).reverse().map((tx) => <tr key={tx.id}
+            onClick={() => this.props.onEditTransaction(tx)}>
+            <td className="del"></td>
+            <td className="date">{`${tx.date.getMonth()+1}/${tx.date.getDate()}`}</td>
+            <td className="stretch">{tx.description}</td>
+            <td className={tx.category ? "category" : "category highlighted"}>
+                <span className="formatted">{this.categoryName(tx.category) || "Uncategorized"}</span></td>
+            <td className="amount">{tx.amount.formatted()}</td>
+            <td className="split">{tx.split ? "shared" : null}</td></tr>);
+        const rows = <MobileQuery mobile={rowsMobile} desktop={rowsDesktop} />;
         return <div className="transactions">
             {ais}
             <table><tbody>
@@ -124,9 +129,9 @@ export default class Transactions extends React.Component<Props, State> {
                 <DesktopOnly>
                     <tr><td></td><td colSpan={5}>
                     <Poplet ref={this.poplet} text={<span><span className="fa-plus-circle fas"></span> Transaction</span>}>
-                        <TxEntry onAddTransaction={this.onAddTransaction.bind(this)}
-                            defaultDate={this.props.newTxDate} gid={this.props.gid}
-                            categories={this.props.categories} friends={this.props.friends} />
+                        <TxEntry onAddTransaction={this.onAddTransaction.bind(this)} defaultDate={this.props.newTxDate}
+                            categories={this.props.categories} friends={this.props.friends}
+                            location={this.props.location} history={this.props.history} />
                     </Poplet></td></tr>
                 </DesktopOnly>
                 {rows}

@@ -40,11 +40,15 @@ export default class AddTransaction extends React.Component<Props, State> {
         if (this.state.redirectTo) {
             return <Redirect to={this.state.redirectTo} />;
         }
+        const today = new Date();
         return <div className="fullpage">
-            <h1>Add Transaction</h1>
+            <h1>Add Transaction <span className="close clickable fa-times fas" onClick={() => this.setState({
+                redirectTo: `/app/${today.getMonth()+1}/${today.getFullYear()}/categories`})} /></h1>
             <TxEntry onAddTransaction={this.onAddTransaction.bind(this)}
             defaultDate={new Date()}
             friends={this.state.friends || []}
-            categories={this.state.categories || []} /></div>;
+            categories={this.state.categories || []} 
+            location={this.props.location} 
+            history={this.props.history} /></div>;
     }
 }

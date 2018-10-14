@@ -4,6 +4,7 @@ import Poplet from './components/poplet';
 import {Transaction, UserId, Share} from '../shared/types';
 import { cc, apiPost } from './util';
 import Money from '../shared/Money';
+import * as transactions from '../shared/transactions';
 
 interface Props {
     //me: UserId;
@@ -108,6 +109,5 @@ function cls(isError: boolean): string {
 }
 
 function youPay(state: State): Money {
-    const [yourShare, _] = Share.normalize(new Share(state.yourShare), new Share(state.theirShare));
-    return yourShare.of(new Money(state.total));
+    return transactions.youPay(new Share(state.yourShare), new Share(state.theirShare), new Money(state.total));
 }
