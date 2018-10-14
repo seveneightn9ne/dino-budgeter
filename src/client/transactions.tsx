@@ -74,7 +74,7 @@ export default class Transactions extends React.Component<Props, State> {
             this.props.frame, this.props.transactions).map(ai =>
             <AIComponent ai={ai} key={ai.message()} />);
 
-        const rowsDesktop = _.sortBy(this.props.transactions, ['date']).map((tx) => <tr key={tx.id}>
+        const rowsDesktop = _.sortBy(this.props.transactions, ['date']).reverse().map((tx) => <tr className="hoverable" key={tx.id}>
             <td className="del">
                 <span className="deleteCr clickable fa-times fas" onClick={() => this.delete(tx.id)}></span>
             </td>
@@ -113,7 +113,7 @@ export default class Transactions extends React.Component<Props, State> {
             </td></tr>);
 
         const rowsMobile = _.sortBy(this.props.transactions, ['date']).reverse().map((tx) => <tr key={tx.id}
-            onClick={() => this.props.onEditTransaction(tx)}>
+            onClick={() => this.props.onEditTransaction(tx)} className="hoverable">
             <td className="del"></td>
             <td className="date">{`${tx.date.getMonth()+1}/${tx.date.getDate()}`}</td>
             <td className="stretch">{tx.description}</td>
