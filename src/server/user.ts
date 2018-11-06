@@ -125,6 +125,15 @@ export async function addToBalance(u1: UserId, u2: UserId, amount: Money, t: pgP
     await t.none(`update friendship set balance = $1 where u1 = $2 and u2 = $3`, [balance.string(), u1, u2]);
 }
 
+export async function getBalance(u1: UserId, u2: UserId, t: pgPromise.ITask<{}>): Promise<Money> {
+    [u1, u2] = [u1, u2].sort();
+    const row = await t.oneOrNone(`select balance, alive from friendship where u1 = $1 and u2 = $2`, [u1, u2]);
+    if (row && row.balance && row.alive) {
+        return new Money(row.balance);
+    }
+    return Money.Zero;
+}
+
 async function getBalances(user: UserId, t: pgPromise.ITask<{}>): Promise<{[uid: string]: Money}> {
     const rows = await t.manyOrNone(`select * from friendship where u1 = $1 or u2 = $1`, [user]);
     const ret: {[uid: string]: Money} = {};

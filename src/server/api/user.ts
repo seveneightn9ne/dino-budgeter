@@ -4,7 +4,7 @@ import {User} from '../../shared/types';
 import * as user from '../user';
 import {wrap} from '../api';
 import db from '../db';
-
+import Money from '../../shared/Money';
 
 export const handle_auth_redirect_get = function(req: Request, res: Response) {
     res.send({error: 'reauth', redirectTo: req.query.redirectTo});
@@ -54,6 +54,29 @@ export const handle_friend_delete = wrap(async function(req: Request, res: Respo
             return;
         }
         await user.softDeleteFriendship(req.user.uid, uid, t);
+        res.sendStatus(200);
+    });
+});
+
+export const handle_friend_settle_post = wrap(async function(req: Request, res: Response) {
+    const amount = new Money(req.body.amount);
+    if (!amount.isValid() || !req.body.email) {
+        res.sendStatus(400);
+        return;
+    }
+    await db.tx(async t => {
+        const friend = await user.getFriendByEmail(req.body.email, t);
+        if (!friend) {
+            res.sendStatus(400);
+            return;
+        }
+        const balance = await user.getBalance(req.user.uid, friend.uid, t);
+        if (amount.cmp(balance) != 0 && amount.negate().cmp(balance) != 0) {
+            res.sendStatus(400);
+            console.log("Balance is incorrect, this is retryable");
+            return;
+        }
+        await user.addToBalance(req.user.uid, friend.uid, balance.negate(), t);
         res.sendStatus(200);
     });
 });

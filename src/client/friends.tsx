@@ -30,6 +30,7 @@ export default class Friends extends React.Component<Props, State> {
             path: '/api/friend/settle',
             body: {
                 amount: this.props.debts[email],
+                email,
             },
             location: this.props.location,
             history: this.props.history,

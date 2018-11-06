@@ -227,18 +227,3 @@ export const handle_transaction_split_post = wrap(async function(req: Request, r
         res.sendStatus(200);
     });
 });
-
-export const handle_transactions_settle_post = wrap(async function(req: Request, res: Response) {
-    const tids = req.body.transactions;
-    if (!tids || !_.isArray(tids)) {
-        res.sendStatus(400);
-        return;
-    }
-    await db.tx(async t => {
-        await t.batch(tids.map(async tid => {
-            const sid = await transactions.getSid(tid, t);
-            return await transactions.settle(sid, t);
-        }));        
-        res.sendStatus(200);
-    });
-});

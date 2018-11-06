@@ -55,6 +55,7 @@ app.get('/api/auth-redirect',      user.handle_auth_redirect_get);
 app.post('/api/friend',            ensureLogin.ensureLoggedIn('/api/auth-redirect'), user.handle_add_friend_post);
 app.post('/api/friend/reject',     ensureLogin.ensureLoggedIn('/api/auth-redirect'), user.handle_reject_friend_post);
 app.delete('/api/friend',          ensureLogin.ensureLoggedIn('/api/auth-redirect'), user.handle_friend_delete);
+app.post('/api/friend/settle',     ensureLogin.ensureLoggedIn('/api/auth-redirect'), user.handle_friend_settle_post);
 
 app.get('/api/init',               ensureLogin.ensureLoggedIn('/api/auth-redirect'), api.handle_init_get);
 
@@ -68,7 +69,6 @@ app.post('/api/transaction/amount',ensureLogin.ensureLoggedIn('/api/auth-redirec
 app.post('/api/transaction/date',  ensureLogin.ensureLoggedIn('/api/auth-redirect'), transactions.handle_transaction_date_post);
 app.post('/api/transaction/category', ensureLogin.ensureLoggedIn('/api/auth-redirect'), transactions.handle_transaction_category_post);
 app.post('/api/transaction/split', ensureLogin.ensureLoggedIn('/api/auth-redirect'), transactions.handle_transaction_split_post);
-app.post('/api/transactions/settle', ensureLogin.ensureLoggedIn('/api/auth-redirect'), transactions.handle_transactions_settle_post);
 
 app.post('/api/category',          ensureLogin.ensureLoggedIn('/api/auth-redirect'), categories.handle_category_post);
 app.delete('/api/category',        ensureLogin.ensureLoggedIn('/api/auth-redirect'), categories.handle_category_delete);
