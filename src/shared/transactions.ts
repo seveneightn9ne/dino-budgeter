@@ -58,7 +58,7 @@ export function getBalance(args: {
 }
 
 export function getBalanceDelta(user: UserId, oldT: Transaction | null, newT: Transaction | null): Money {
-    const otherUser = oldT.split.with.uid;
+    const otherUser = oldT ? oldT.split.with.uid : newT.split.with.uid;
     const oldBalance = (!oldT || !oldT.alive) ? Money.Zero : getBalance({
         user, otherUser, payer: oldT.split.payer, amount: oldT.amount, otherAmount: oldT.split.otherAmount,
     });
