@@ -137,7 +137,7 @@ class CategoryRow extends React.Component<Props, CategoryRowState> {
             </Poplet> : this.props.category.balance.formatted();
 
         return <tr key={this.props.category.id} className="hoverable">
-            <td className="del"><span className="deleteCr clickable fa-times fas" onClick={() => this.delete()}></span></td>
+            <td className="del"><span className="deleteCr clickable fa-times fas" onClick={() => this.delete()} /></td>
             <td className="stretch">{name}</td>
             <td className={"amount " + budgetCls}>{budget}</td>
             <td className={"amount " + spendingCls}>{spending.formatted()}</td>

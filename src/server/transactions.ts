@@ -121,7 +121,7 @@ export async function deleteTransaction(tid: TransactionId, t: pgPromise.ITask<{
             on M2.gid = T2.gid
         where T.id = $1`, [tid]);
     const deleteQuery = "update transactions set alive = false where id = $1";
-    if (linkedTxnRow) {
+    if (linkedTxnRow && linkedTxnRow.tid) {
         const balance = await getBalanceFromDb(tid, t);
         await addToBalance(linkedTxnRow.uid, linkedTxnRow.other_uid, balance.negate(), t);
         await t.none(deleteQuery, [linkedTxnRow.tid]);
