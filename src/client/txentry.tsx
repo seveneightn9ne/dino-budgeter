@@ -292,9 +292,9 @@ export default class TxEntry extends React.Component<Props, TxEntryState> {
                     {options}
                 </select></label>
                 {splitting}
-                <input className="button" type="submit" value="Save" />
+                <label><input className="button nomargin" type="submit" value="Save" />
                 {isUpdate(this.props) ? <button className="button"
-                    onClick={() => isUpdate(this.props) && this.delete(this.props.transaction)}>Delete</button> : null}
+                    onClick={() => isUpdate(this.props) && this.delete(this.props.transaction)}>Delete</button> : null}</label>
             </form>
         </div>;
     }

@@ -1,8 +1,37 @@
+/**
+Colors
+Purple: #7c4dff;
+DarkPurple: #512da8;
+DarkerPurple: #2f156b;
+LightPurple: #e9e3f9;
+Text: #444444;
+
+**/
+@font-face {
+    font-family: 'RobotoMono'; 
+    src: url('/RobotoMono-Regular.ttf'); 
+}
+@font-face {
+    font-family: 'RobotoMono'; 
+    src: url('/RobotoMono-Bold.ttf'); 
+    font-weight: bold;
+}
+@font-face {
+    font-family: 'RobotoMono'; 
+    src: url('/RobotoMono-Italic.ttf'); 
+    font-style: italic;
+}
+@font-face {
+    font-family: 'RobotoMono'; 
+    src: url('/RobotoMono-BoldItalic.ttf');
+    font-weight: bold;
+    font-style: italic; 
+}
 body {
-    background-color: #eeeeee;
-    color: #333333;
+    background-color: white;
+    color: #444444;
     font-size: 16px;
-    font-family: sans-serif;
+    font-family: RobotoMono;
     margin: 0;
 }
 main {
@@ -12,9 +41,8 @@ main {
 }
 
 header {
-    background-color: #7c4dff;
-    color: white;
     padding-top: 20px;
+    border-bottom: 1px solid #e9e3f9;
 }
 
 header .inner {
@@ -30,39 +58,41 @@ h1 {
 .framenav {
     font-size: 22px;
     text-decoration: none;
-    color: rgba(255, 255, 255, 0.5);
+    color: #7c4dff;
     vertical-align: middle;
     padding: 0 20px;
 }
 .framenav:hover {
-    color: #ffffff;
+    color: #512da8;
 }
 
 nav a {
     padding: 5px 20px;
-    color: #fff;
+    color: #2f156b;
     display: inline-block;
-    background-color: #512da8;
+    background-color: #e9e3f9;
+    margin-bottom: -1px;
     text-decoration: none;
     font-size: 14px;
     position: relative;
+    border: 1px solid #e9e3f9;
 }
 
 nav a.active {
-    background-color: #eeeeee;
-    color: #333333;
+    background-color: #ffffff;
+    color: #444444;
+    border-bottom-color:white;
 }
 
 nav a:hover {
-    background-color: rgba(81, 45, 168, 0.5);
-}
-nav a.active:hover {
-    background-color: #eeeeee;
+    background-color: white;
+    /*background-color: rgba(81, 45, 168, 0.5);*/
 }
 
 nav a.right {
     float: right;
     background-color: transparent;
+    border: none;
 }
 .badge {
     background-color: #FFEB3B;
@@ -104,13 +134,16 @@ tr:hover .deleteCr {
 }
 
 .button {
-    background-color: #7c4dff;
+    background-image: linear-gradient(#7c4dff, #512da8);
     color: white;
-    padding: 10px;
+    padding: 10px 20px;
     border-radius: 4px;
     margin: 4px 8px;
     text-decoration: none;
     border-style: none;
+}
+.button.nomargin {
+    margin: 0;
 }
 
 .home {
@@ -125,7 +158,8 @@ tr:hover .deleteCr {
 }
 
 .blob {
-    background-color: #dddddd;
+    background-color: #e9e3f9;
+    color: #2f156b;
     border-radius: 4px;
     padding: 8px;
     margin: 0 10px 10px;
@@ -133,7 +167,6 @@ tr:hover .deleteCr {
     flex-grow: 1;
 }
 .blob .title {
-    color: #555555;
     font-size: 14px;
 }
 
@@ -158,8 +191,9 @@ a.spent:hover {
 
 .ai {
     background-color: #FFEB3B;
+    color: #333333;
     padding: 10px;
-    margin: 10px 0;
+    margin: 10px;
     border-radius: 20px;
 }
 
@@ -183,7 +217,7 @@ table {
 }
 tr {
     background-color: white;
-    border-bottom: 1px solid #eeeeee;
+    border-bottom: 1px solid #e9e3f9;
 }
 th {
     text-align: left;
@@ -271,14 +305,12 @@ form {
 }
 
 .fullpage h1, .transactions.editing h1 {
-    background-color: #7c4dff;
-    color: white;
-    font-weight: normal;
     padding: 20px;
+    border-bottom: 1px solid #e9e3f9;
 }
 h1 .close {
     float: right;
-    color: rgba(255, 255, 255, 0.5);
+    color: #7c4dff;
 }
 
 @media (max-width: 599px) {
@@ -296,15 +328,16 @@ footer {
     position: fixed;
     left: 0px;
     bottom: 0px;
-    background-image: linear-gradient(#eeeeee, #ffffff);
+    /*background-image: linear-gradient(#eeeeee, #ffffff);*/
+    background-color: white;
     height: 50px;
     width: 100%;
-    border-top: 1px solid white;
+    border-top: 1px solid #e9e3f9;
 }
 .add-transaction-button {
     display: inline-block;
     text-decoration: none;
-    color: #7c4dff;
+    color: white;
     text-align: center;
     margin-left: 10px;
 }
@@ -314,17 +347,18 @@ footer {
     width: 48px;
     display: block;
     margin: -28px auto 0;
-    background-color: #ffffff;
+    background-color: #7c4dff;
     border-radius: 28px;
     padding: 4px;
-    border-top: 1px solid #eeeeee;
+    border-top: 1px solid #e9e3f9;
 }
 .add-transaction-button .text {
     font-size: 12px;
+    color: #512da8
 }
 footer .link {
     text-decoration: none;
-    color: #7c4dff;
+    color: #512da8;
     margin-left: 20px;
     display: inline-block;
     margin-top: -30px;
