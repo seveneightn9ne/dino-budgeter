@@ -335,7 +335,6 @@ export default class Frame extends React.Component<FrameProps & RouteComponentPr
                 <footer>
                     <Link to="/app/add-transaction" className="add-transaction-button">
                         <span className="fa-plus-circle fas icon" />
-                        <span className="text">Transaction</span>
                     </Link>
                     <Link to={`${appPrefix}/categories`} className="link">Home</Link>
                     <Link to={`${appPrefix}/transactions`} className="link">Transactions</Link>

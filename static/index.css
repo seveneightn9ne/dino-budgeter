@@ -282,6 +282,27 @@ form {
     width: 70px;
 }
 
+/* mobile transactions list */
+.tx-mobile-row {
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    border-bottom: 1px solid #e9e3f9;
+}
+.tx-mobile-stretch {
+    flex-grow: 1;
+}
+.tx-mobile-date {
+    padding-right: 10px;
+}
+.tx-mobile-day {
+    font-size: 24px;
+    text-align: center;
+}
+.tx-mobile-row .fa-user-friends {
+    padding-right: 10px;
+}
+
 /* mobile page */
 .txentry label, .txentry .section {
     display: block;
@@ -319,7 +340,7 @@ h1 .close {
     }
 }
 
-.highlighted .formatted {
+.highlighted .formatted, .tx-mobile-category .highlighted {
     background-color: #FFEB3B;
 }
 
@@ -346,22 +367,18 @@ footer {
     height: 48px;
     width: 48px;
     display: block;
-    margin: -28px auto 0;
+    margin: -16px auto 0;
     background-color: #7c4dff;
     border-radius: 28px;
     padding: 4px;
     border-top: 1px solid #e9e3f9;
-}
-.add-transaction-button .text {
-    font-size: 12px;
-    color: #512da8
 }
 footer .link {
     text-decoration: none;
     color: #512da8;
     margin-left: 20px;
     display: inline-block;
-    margin-top: -30px;
+    margin-top: -24px;
 }
 
 /* poplet */

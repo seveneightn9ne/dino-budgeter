@@ -112,30 +112,50 @@ export default class Transactions extends React.Component<Props, State> {
                 {tx.split ? <SplitPoplet transaction={tx} onUpdateTransaction={this.props.onUpdateTransaction} /> : null}
             </td></tr>);
 
-        const rowsMobile = _.sortBy(this.props.transactions, ['date']).reverse().map((tx) => <tr key={tx.id}
-            onClick={() => this.props.onEditTransaction(tx)} className="hoverable">
-            <td className="del"></td>
-            <td className="date">{`${tx.date.getMonth()+1}/${tx.date.getDate()}`}</td>
-            <td className="stretch">{tx.description}</td>
-            <td className={tx.category ? "category" : "category highlighted"}>
-                <span className="formatted">{this.categoryName(tx.category) || "Uncategorized"}</span></td>
-            <td className="amount">{tx.amount.formatted()}</td>
-            <td className="split">{tx.split ? "shared" : null}</td></tr>);
-        const rows = <MobileQuery mobile={rowsMobile} desktop={rowsDesktop} />;
+        const rowsMobile = _.sortBy(this.props.transactions, ['date']).reverse().map((tx) => 
+            <MobileTransactionRow tx={tx} onEditTransaction={this.props.onEditTransaction}
+                categoryName={this.categoryName.bind(this)} />);
+
         return <div className="transactions">
             {ais}
-            <table><tbody>
-                <tr><th></th><th>Date</th><th>Description</th><th>Category</th><th>Amount</th><th></th></tr>
-                <DesktopOnly>
+            <MobileQuery desktop={
+                <table><tbody>
+                    <tr><th></th><th>Date</th><th>Description</th><th>Category</th><th>Amount</th><th></th></tr>
                     <tr><td></td><td colSpan={5}>
                     <Poplet ref={this.poplet} text={<span><span className="fa-plus-circle fas"></span> Transaction</span>}>
                         <TxEntry onAddTransaction={this.onAddTransaction.bind(this)} defaultDate={this.props.newTxDate}
                             categories={this.props.categories} friends={this.props.friends}
                             location={this.props.location} history={this.props.history} />
                     </Poplet></td></tr>
-                </DesktopOnly>
-                {rows}
-            </tbody></table>
+                    {rowsDesktop}
+                </tbody></table>
+            } mobile={rowsMobile} />
+        </div>;
+    }
+}
+
+interface MobileRowProps {
+    tx: Transaction;
+    onEditTransaction: (tx: Transaction) => void;
+    categoryName: (cid: CategoryId) => string;
+}
+class MobileTransactionRow extends React.PureComponent<MobileRowProps, {}> {
+    render() {
+        const tx = this.props.tx;
+        const monthName = util.MONTHS[tx.date.getMonth()].substr(0,3);
+        return <div key={tx.id} onClick={() => this.props.onEditTransaction(tx)} className="hoverable tx-mobile-row">
+            <div className="tx-mobile-date">
+                <div className="tx-mobile-month">{monthName}</div>
+                <div className="tx-mobile-day">{tx.date.getDate()}</div>
+            </div>
+            <div className="tx-mobile-stretch">
+                <div className="tx-mobile-desc">{tx.description}</div>
+                <div className="tx-mobile-category">{this.props.categoryName(tx.category) || <span className="highlighted">Uncategorized</span>}</div>
+            </div>
+            <div className="tx-mobile-right">
+                {tx.split ? <span className="fas fa-user-friends" /> : null}
+                <span className="tx-mobile-amount">{tx.amount.formatted()}</span>
+            </div>
         </div>;
     }
 }
