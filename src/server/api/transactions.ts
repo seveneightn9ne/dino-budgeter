@@ -121,7 +121,7 @@ export const handle_transaction_delete = wrap(async function(req: Request, res: 
 });
 
 export const handle_transaction_description_post = wrap(async function(req: Request, res: Response) {
-    await handle_transaction_update_post('description')(req, res);
+    await handle_transaction_update_post('description', d => !!d)(req, res);
 });
 
 export const handle_transaction_amount_post = wrap(async function(req: Request, res: Response) {
@@ -138,7 +138,7 @@ export const handle_transaction_date_post = wrap(async function(req: Request, re
 
 export const handle_transaction_category_post = wrap(async function(req: Request, res: Response) {
     // TODO: validate that the category exists, is alive, is owned by the user, etc.
-    await handle_transaction_update_post('category')(req, res);
+    await handle_transaction_update_post('category', undefined, c => c || null)(req, res);
 });
 
 function handle_transaction_update_post(
@@ -150,7 +150,6 @@ function handle_transaction_update_post(
         if (!isValid) isValid = (s) => true;
         if (!transform) transform = (s) => s;
         req.checkBody("id").notEmpty().isString();
-        req.checkBody(field).notEmpty();
         const result = await req.getValidationResult();
         const value = req.body[field];
         if (!result.isEmpty() || !isValid(value)) {
