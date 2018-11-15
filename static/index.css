@@ -287,7 +287,7 @@ form {
     display: flex;
     align-items: center;
     padding: 10px;
-    border-bottom: 1px solid #e9e3f9;
+    border-top: 1px solid #e9e3f9;
 }
 .tx-mobile-stretch {
     flex-grow: 1;
@@ -296,6 +296,10 @@ form {
     flex-direction: column;
     justify-content: space-between;
     font-size: 14px;
+}
+.tx-mobile-category {
+    font-style: italic;
+    font-size: 12px;
 }
 .tx-mobile-date {
     padding-right: 20px;
