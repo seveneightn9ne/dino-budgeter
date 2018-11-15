@@ -291,9 +291,15 @@ form {
 }
 .tx-mobile-stretch {
     flex-grow: 1;
+    align-self: stretch;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    font-size: 14px;
 }
 .tx-mobile-date {
-    padding-right: 10px;
+    padding-right: 20px;
+    font-size: 14px;
 }
 .tx-mobile-day {
     font-size: 24px;
@@ -335,8 +341,11 @@ h1 .close {
 }
 
 @media (max-width: 599px) {
-    nav a {
-        padding: 20px;
+    th {
+        font-size: 12px;
+    }
+    td, .ai {
+        font-size: 14px;
     }
 }
 
