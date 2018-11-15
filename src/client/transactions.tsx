@@ -113,7 +113,7 @@ export default class Transactions extends React.Component<Props, State> {
             </td></tr>);
 
         const rowsMobile = _.sortBy(this.props.transactions, ['date']).reverse().map((tx) => 
-            <MobileTransactionRow tx={tx} onEditTransaction={this.props.onEditTransaction}
+            <MobileTransactionRow key={tx.id} tx={tx} onEditTransaction={this.props.onEditTransaction}
                 categoryName={this.categoryName.bind(this)} />);
 
         return <div className="transactions">
