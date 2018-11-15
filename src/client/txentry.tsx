@@ -283,7 +283,7 @@ export default class TxEntry extends React.Component<Props, TxEntryState> {
         return <div className="txentry">
             <form onSubmit={this.handleSubmit.bind(this)}>
                 <label>{isUpdate(this.props) && this.props.transaction.split ? 'Total' : 'Amount'}:
-                <input autoFocus className={className} value={this.state.amount} onChange={util.cc(this, 'amount')} size={4} /></label>
+                <input autoFocus className={className} value={this.state.amount} onChange={util.cc(this, 'amount')} size={6} /></label>
                 <label>Description:
                 <input value={this.state.description} onChange={util.cc(this, 'description')} /></label>
                 <label><input type="date" value={this.state.date} onChange={util.cc(this, 'date')} /></label>
