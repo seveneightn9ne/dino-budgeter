@@ -84,6 +84,12 @@ app.use(serveStatic(path.join(__dirname, '../../node_modules/react-dom/umd')));
 app.use(serveStatic(path.join(__dirname, '../../static/RobotoMono')));
 app.get('/index.css', serveStatic(path.join(__dirname, '../../static/')));
 
+const reactMode = app.get("env") == "development" ? "development" : "production.min";
+app.get('/react.js', (_, res) =>
+  res.sendFile(path.join(__dirname, `../../node_modules/react/umd/react.${reactMode}.js`)));
+app.get('/react-dom.js', (_, res) =>
+  res.sendFile(path.join(__dirname, `../../node_modules/react-dom/umd/react-dom.${reactMode}.js`)));
+
 
 const index = (req: Request, res: Response) =>
   res.sendFile(path.join(__dirname + '../../../static/index.html'));
