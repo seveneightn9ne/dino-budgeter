@@ -292,14 +292,12 @@ form {
 .tx-mobile-stretch {
     flex-grow: 1;
     align-self: stretch;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
     font-size: 14px;
 }
 .tx-mobile-category {
     font-style: italic;
     font-size: 12px;
+    padding-bottom: 5px;
 }
 .tx-mobile-date {
     padding-right: 20px;

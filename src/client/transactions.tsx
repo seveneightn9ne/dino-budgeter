@@ -149,8 +149,8 @@ class MobileTransactionRow extends React.PureComponent<MobileRowProps, {}> {
                 <div className="tx-mobile-day">{tx.date.getDate()}</div>
             </div>
             <div className="tx-mobile-stretch">
-                <div className="tx-mobile-desc">{tx.description}</div>
                 <div className="tx-mobile-category">{this.props.categoryName(tx.category) || <span className="highlighted">Uncategorized</span>}</div>
+                <div className="tx-mobile-desc">{tx.description}</div>
             </div>
             <div className="tx-mobile-right">
                 {tx.split ? <span className="fas fa-user-friends" /> : null}
