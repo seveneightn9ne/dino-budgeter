@@ -1,11 +1,11 @@
-import {Request, Response} from 'express';
-import {Category} from '../../shared/types';
-import Money from '../../shared/Money';
-import db from '../db';
-import * as user from '../user';
-import * as categories from '../categories';
-import * as util from '../../shared/util';
-import {wrap} from '../api';
+import { Request, Response } from "express";
+import Money from "../../shared/Money";
+import { Category } from "../../shared/types";
+import * as util from "../../shared/util";
+import { wrap } from "../api";
+import * as categories from "../categories";
+import db from "../db";
+import * as user from "../user";
 
 export const handle_category_post = wrap(async function(req: Request, res: Response) {
     req.checkBody("frame").notEmpty().isNumeric();
@@ -23,14 +23,14 @@ export const handle_category_post = wrap(async function(req: Request, res: Respo
         alive: true,
         budget: Money.Zero,
         balance: Money.Zero,
-    }
+    };
     await db.tx(async t => {
         c.gid = await user.getDefaultGroup(req.user, t);
         c.ordering = await categories.getNextOrdinal(c.gid, c.frame, t);
         await t.none("insert into categories (id, gid, frame, alive, name, ordering, " +
             "budget) values ($1, $2, $3, $4, $5, $6, $7)", [
                 c.id, c.gid, c.frame, c.alive, c.name, c.ordering, c.budget.string()]);
-    })
+    });
     res.send({category: c});
 });
 
@@ -99,7 +99,7 @@ export const handle_category_name_post = wrap(async function(req: Request, res: 
     }
     const id = req.body.id;
     const frame = req.body.frame;
-    const name =req.body.name;
+    const name = req.body.name;
     await db.tx(async t => {
         const gid = await user.getDefaultGroup(req.user, t);
         // gid included to make sure user has permission to edit this category

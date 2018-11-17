@@ -1,19 +1,18 @@
-import * as React from 'react';
-import {RouteComponentProps, Switch, Route, Redirect } from 'react-router';
-import { Link, NavLink } from 'react-router-dom';
-import {Frame as FrameType, Category, CategoryId, Transaction, TransactionId, FrameIndex, Friend} from '../shared/types';
-import * as frames from '../shared/frames';
-import * as util from './util';
-import { AI, getAIs } from '../shared/ai';
-import Categories from './categories';
-import Transactions from './transactions';
-import { MobileOnly, DesktopOnly } from './components/media';
-import Money from '../shared/Money';
-import Debts from './friends';
-import * as _ from 'lodash';
-import Friends from './friends';
-import { getBalanceDelta } from '../shared/transactions';
-import TxEntry from './txentry';
+import * as _ from "lodash";
+import * as React from "react";
+import { Redirect, Route, RouteComponentProps, Switch } from "react-router";
+import { Link, NavLink } from "react-router-dom";
+import { AI, getAIs } from "../shared/ai";
+import * as frames from "../shared/frames";
+import Money from "../shared/Money";
+import { getBalanceDelta } from "../shared/transactions";
+import { Category, CategoryId, Frame as FrameType, FrameIndex, Friend, Transaction, TransactionId } from "../shared/types";
+import Categories from "./categories";
+import { DesktopOnly, MobileOnly } from "./components/media";
+import Friends from "./friends";
+import Transactions from "./transactions";
+import TxEntry from "./txentry";
+import * as util from "./util";
 
 type FrameProps = RouteComponentProps<{month: string, year: string}>;
 interface FrameState {
@@ -34,12 +33,9 @@ interface FrameState {
 /** /app/:month/:year */
 export default class Frame extends React.Component<FrameProps & RouteComponentProps<FrameProps>, FrameState> {
 
-    // While debts is in development
-    private showDebts = true;
-
     state: FrameState = {
         initialized: false,
-        setIncome: '',
+        setIncome: "",
     };
 
     month = (props = this.props) => Number(props.match.params.month) - 1;
@@ -92,7 +88,7 @@ export default class Frame extends React.Component<FrameProps & RouteComponentPr
 
     initializeFrame(props = this.props): Promise<void> {
         const index = this.index(props);
-        return util.initializeState(this, index, 'frame', 'transactions', 'invites', 'friends', 'debts', 'pendingFriends', 'me').then(() => {
+        return util.initializeState(this, index, "frame", "transactions", "invites", "friends", "debts", "pendingFriends", "me").then(() => {
             this.setState({budgeted: this.calculateBudgeted(this.state.frame.categories)});
         });
     }
@@ -200,7 +196,7 @@ export default class Frame extends React.Component<FrameProps & RouteComponentPr
         const frame = {...this.state.frame, categories:
             this.state.frame.categories.map(category => {
                 if (transaction.category == category.id) {
-                    return {...category, balance: category.balance.plus(transaction.amount)}
+                    return {...category, balance: category.balance.plus(transaction.amount)};
                 }
                 return category;
             })};
@@ -219,13 +215,13 @@ export default class Frame extends React.Component<FrameProps & RouteComponentPr
 
     onSetIncome(event: React.FormEvent) {
         const setIncome = new Money(this.state.setIncome);
-        if (!setIncome.isValid(false /** allowNegative **/)) {
+        if (!setIncome.isValid(false /* allowNegative */)) {
             this.setState({setIncomeErr: true});
             event.preventDefault();
             return;
         }
         util.apiPost({
-            path: '/api/income',
+            path: "/api/income",
             body: {
                 frame: this.state.frame.index,
                 income: setIncome,
@@ -286,9 +282,9 @@ export default class Frame extends React.Component<FrameProps & RouteComponentPr
             onAddCategory={this.onAddCategory.bind(this)}
             onChangeCategory={this.onChangeCategory.bind(this)}
             onDeleteCategory={this.onDeleteCategory.bind(this)}
-            onNewIncome={this.onNewIncome.bind(this)} />
+            onNewIncome={this.onNewIncome.bind(this)} />;
 
-        const appPrefix = `/app/${this.month()+1}/${this.year()}`;
+        const appPrefix = `/app/${this.month() + 1}/${this.year()}`;
 
         const transactions = (this.state.transactions == undefined) ? null :
             <Transactions transactions={this.state.transactions}
@@ -306,20 +302,20 @@ export default class Frame extends React.Component<FrameProps & RouteComponentPr
             pendingFriends={this.state.pendingFriends} invites={this.state.invites} onSettle={this.onSettle.bind(this)}
             location={this.props.location} history={this.props.history} />;
 
-        const prevButton = <Link to={`/app/${this.prevMonth()+1}/${this.prevYear()}`} className="fa-chevron-left fas framenav" />;
-        const nextButton = <Link to={`/app/${this.nextMonth()+1}/${this.nextYear()}`} className="fa-chevron-right fas framenav" />;
+        const prevButton = <Link to={`/app/${this.prevMonth() + 1}/${this.prevYear()}`} className="fa-chevron-left fas framenav" />;
+        const nextButton = <Link to={`/app/${this.nextMonth() + 1}/${this.nextYear()}`} className="fa-chevron-right fas framenav" />;
         const inviteBadge = this.state.invites.length > 0 ? <span title="Friend Requests" className="badge">{this.state.invites.length}</span> : null;
         const nav = <DesktopOnly><nav>
             <NavLink to={`${appPrefix}/categories`} activeClassName="active">Categories</NavLink>
             <NavLink to={`${appPrefix}/transactions`} activeClassName="active">Transactions</NavLink>
-            {this.state.friends.length > 0 || _.size(this.state.debts) > 0 ? 
+            {this.state.friends.length > 0 || _.size(this.state.debts) > 0 ?
                 <NavLink to={`${appPrefix}/debts`} activeClassName="active">Friends</NavLink>
             : null}
             <NavLink className="right" to={`/app/account`} activeClassName="active">Account{inviteBadge}</NavLink>
         </nav></DesktopOnly>;
         return <div>
             <header><div className="inner">
-                <h1>{prevButton}{this.monthName() + ' ' + this.year()}{nextButton}</h1>
+                <h1>{prevButton}{this.monthName() + " " + this.year()}{nextButton}</h1>
                 {nav}
             </div></header>
             <main>
@@ -338,7 +334,7 @@ export default class Frame extends React.Component<FrameProps & RouteComponentPr
                     </Link>
                     <Link to={`${appPrefix}/categories`} className="link">Home</Link>
                     <Link to={`${appPrefix}/transactions`} className="link">Transactions</Link>
-                    {this.state.friends.length > 0 || _.size(this.state.debts) > 0 ? 
+                    {this.state.friends.length > 0 || _.size(this.state.debts) > 0 ?
                         <Link to={`${appPrefix}/debts`} className="link">Friends</Link>
                     : null}
                 </footer>

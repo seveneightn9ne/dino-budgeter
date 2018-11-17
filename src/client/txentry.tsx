@@ -1,11 +1,10 @@
-import * as React from 'react';
-import {Category, Transaction, TransactionId, Friend, Share} from '../shared/types';
-import Money from '../shared/Money';
-import * as util from './util';
-import { index } from '../shared/frames';
-import { withRouter, RouteComponentProps } from 'react-router';
-import { fromSerialized, distributeTotal, youPay } from '../shared/transactions';
-import { Location, History } from 'history';
+import { History, Location } from "history";
+import * as React from "react";
+import { index } from "../shared/frames";
+import Money from "../shared/Money";
+import { distributeTotal, fromSerialized } from "../shared/transactions";
+import { Category, Friend, Share, Transaction } from "../shared/types";
+import * as util from "./util";
 
 interface NewTxProps {
     onAddTransaction: (transaction: Transaction) => void;
@@ -42,7 +41,7 @@ interface TxEntryState {
 }
 
 function isUpdate(props: Props): props is UpdateTxProps {
-    return 'transaction' in props;
+    return "transaction" in props;
 }
 
 export default class TxEntry extends React.Component<Props, TxEntryState> {
@@ -60,26 +59,26 @@ export default class TxEntry extends React.Component<Props, TxEntryState> {
             return {
                 amount: amount,
                 description: props.transaction.description,
-                category: props.transaction.category || '',
+                category: props.transaction.category || "",
                 error: false,
                 date: util.yyyymmdd(props.transaction.date),
                 splitting: !!props.transaction.split,
                 splitWith: props.transaction.split ? props.transaction.split.with.uid : this.defaultSplitWith(),
-                yourShare: props.transaction.split ? props.transaction.split.myShare.string() : '1',
-                theirShare: props.transaction.split ? props.transaction.split.theirShare.string() : '1',
+                yourShare: props.transaction.split ? props.transaction.split.myShare.string() : "1",
+                theirShare: props.transaction.split ? props.transaction.split.theirShare.string() : "1",
                 youPaid: props.transaction.split ? props.transaction.split.payer != props.transaction.split.with.uid : true,
             };
         } else {
             return {
-                amount: '',
-                description: '',
-                category: '',
+                amount: "",
+                description: "",
+                category: "",
                 error: false,
                 date: util.yyyymmdd(props.defaultDate),
                 splitting: false,
                 splitWith: this.defaultSplitWith(),
-                yourShare: '1',
-                theirShare: '1',
+                yourShare: "1",
+                theirShare: "1",
                 youPaid: true,
             };
         }
@@ -89,7 +88,7 @@ export default class TxEntry extends React.Component<Props, TxEntryState> {
         if (isUpdate(prevProps) && isUpdate(this.props) && prevProps.transaction != this.props.transaction) {
             // New transaction - recompute all state
             this.setState(this.initializeState(this.props));
-        } else if (prevProps.friends != this.props.friends && this.state.splitWith == '') {
+        } else if (prevProps.friends != this.props.friends && this.state.splitWith == "") {
             // Friends have loaded - recompute default split now that we have friends
             this.setState({
                 splitWith: this.defaultSplitWith(),
@@ -98,13 +97,13 @@ export default class TxEntry extends React.Component<Props, TxEntryState> {
     }
 
     defaultSplitWith() {
-        return this.props.friends.length > 0 ? this.props.friends[0].uid : ''
+        return this.props.friends.length > 0 ? this.props.friends[0].uid : "";
     }
 
     delete(t: Transaction): boolean {
         util.apiPost({
-            method: 'DELETE',
-            path: '/api/transaction',
+            method: "DELETE",
+            path: "/api/transaction",
             body: {id: t.id},
             location: this.props.location,
             history: this.props.history,
@@ -118,7 +117,7 @@ export default class TxEntry extends React.Component<Props, TxEntryState> {
         event.preventDefault();
         let amount = new Money(this.state.amount);
         const total = new Money(this.state.amount);
-        if (!amount.isValid(false /** allowNegative **/)) {
+        if (!amount.isValid(false /* allowNegative */)) {
             this.setState({error: true});
             return;
         }
@@ -143,12 +142,12 @@ export default class TxEntry extends React.Component<Props, TxEntryState> {
             const initialState = this.initializeState(this.props);
             const work = [];
             // 1. Update the split
-            if (this.props.transaction.split && 
+            if (this.props.transaction.split &&
                 (this.state.amount != initialState.amount
                 || this.state.theirShare != initialState.theirShare
                 || this.state.yourShare != initialState.yourShare
                 || this.state.youPaid != initialState.youPaid)) {
-                
+
                 // Update newTransaction
                 newTransaction.split = {...newTransaction.split,
                     myShare, theirShare, otherAmount,
@@ -156,10 +155,10 @@ export default class TxEntry extends React.Component<Props, TxEntryState> {
                     payer: this.state.youPaid ? "0" : newTransaction.split.with.uid,
                 };
                 newTransaction.amount = amount;
-                
+
                 // Post the data
                 work.push(util.apiPost({
-                    path: '/api/transaction/split',
+                    path: "/api/transaction/split",
                     body: {
                         tid: this.props.transaction.id,
                         sid: this.props.transaction.split.id,
@@ -214,7 +213,7 @@ export default class TxEntry extends React.Component<Props, TxEntryState> {
             if (this.state.amount != initialState.amount && !this.props.transaction.split) {
                 newTransaction.amount = amount;
                 work.push(util.apiPost({
-                    path: '/api/transaction/amount',
+                    path: "/api/transaction/amount",
                     body: {
                         amount, id: newTransaction.id,
                     },
@@ -226,7 +225,7 @@ export default class TxEntry extends React.Component<Props, TxEntryState> {
             Promise.all(work).then(() => {
                 isUpdate(this.props) && this.props.onUpdateTransaction(newTransaction);
             });
-            
+
         } else {
             const onAddTransaction = this.props.onAddTransaction;
             const split = this.state.splitting ? {
@@ -236,7 +235,7 @@ export default class TxEntry extends React.Component<Props, TxEntryState> {
             } : undefined;
             // Saving a new transaction...
             util.apiPost({
-                path: '/api/transaction',
+                path: "/api/transaction",
                 body: {
                     frame: frame,
                     amount: amount,
@@ -250,8 +249,8 @@ export default class TxEntry extends React.Component<Props, TxEntryState> {
             }).then((response) => {
                 const transaction = fromSerialized(response.transaction);
                 // Not clearing date & category
-                this.setState({amount: '', description: '', splitting: false, splitWith: this.defaultSplitWith(),
-                    yourShare: '1', theirShare: '1', youPaid: true});
+                this.setState({amount: "", description: "", splitting: false, splitWith: this.defaultSplitWith(),
+                    yourShare: "1", theirShare: "1", youPaid: true});
                 onAddTransaction(transaction);
             });
         }
@@ -263,18 +262,18 @@ export default class TxEntry extends React.Component<Props, TxEntryState> {
         });
         const className = this.state.error ? "error" : "";
         // Show the splitting option if you're adding and have friends, or if you're updating a split transaction.
-        const splitting = (isUpdate(this.props) ? this.props.transaction.split : this.props.friends.length > 0) ? (this.state.splitting ? 
-            <div><label>Split with: <select onChange={util.cc(this, 'splitWith')} value={this.state.splitWith}>
+        const splitting = (isUpdate(this.props) ? this.props.transaction.split : this.props.friends.length > 0) ? (this.state.splitting ?
+            <div><label>Split with: <select onChange={util.cc(this, "splitWith")} value={this.state.splitWith}>
                     {this.props.friends.map(f => <option key={f.uid}>{f.email}</option>)}
                 </select></label>
                 <label className="first half">
-                    Your share: <input type="text" value={this.state.yourShare} onChange={util.cc(this, 'yourShare')} size={1} /> 
+                    Your share: <input type="text" value={this.state.yourShare} onChange={util.cc(this, "yourShare")} size={1} />
                 </label><label className="half">
-                    Their share: <input type="text" value={this.state.theirShare} onChange={util.cc(this, 'theirShare')} size={1} /></label>
-                <div className="section" style={{clear: 'both'}}>
+                    Their share: <input type="text" value={this.state.theirShare} onChange={util.cc(this, "theirShare")} size={1} /></label>
+                <div className="section" style={{clear: "both"}}>
                     <label className="nostyle"><input type="radio" name="payer" value="0" checked={this.state.youPaid}
                         onChange={(e) => this.setState({youPaid: e.target.checked})} /> You paid</label>
-                    <label className="nostyle"><input type="radio" name="payer" value="1" checked={!this.state.youPaid} 
+                    <label className="nostyle"><input type="radio" name="payer" value="1" checked={!this.state.youPaid}
                         onChange={(e) => this.setState({youPaid: !e.target.checked})} /> They paid</label>
                 </div>
             </div>
@@ -282,12 +281,12 @@ export default class TxEntry extends React.Component<Props, TxEntryState> {
             : null;
         return <div className="txentry">
             <form onSubmit={this.handleSubmit.bind(this)}>
-                <label>{isUpdate(this.props) && this.props.transaction.split ? 'Total' : 'Amount'}:
-                <input autoFocus className={className} value={this.state.amount} onChange={util.cc(this, 'amount')} size={6} /></label>
+                <label>{isUpdate(this.props) && this.props.transaction.split ? "Total" : "Amount"}:
+                <input autoFocus className={className} value={this.state.amount} onChange={util.cc(this, "amount")} size={6} /></label>
                 <label>Description:
-                <input value={this.state.description} onChange={util.cc(this, 'description')} /></label>
-                <label><input type="date" value={this.state.date} onChange={util.cc(this, 'date')} /></label>
-                <label><select onChange={util.cc(this, 'category')} value={this.state.category}>
+                <input value={this.state.description} onChange={util.cc(this, "description")} /></label>
+                <label><input type="date" value={this.state.date} onChange={util.cc(this, "date")} /></label>
+                <label><select onChange={util.cc(this, "category")} value={this.state.category}>
                     <option value="">Uncategorized</option>
                     {options}
                 </select></label>
@@ -300,4 +299,4 @@ export default class TxEntry extends React.Component<Props, TxEntryState> {
     }
 }
 
-//export default withRouter(TxEntry);
+// export default withRouter(TxEntry);

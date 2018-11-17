@@ -1,16 +1,10 @@
-import * as React from 'react';
-import {ClickToEditDate, ClickToEditMoney, ClickToEditText, ClickToEditDropdown} from './components/clicktoedit';
-import { Frame, Transaction, TransactionId, Category, GroupId, CategoryId, Friend, Share } from '../shared/types';
-import TxEntry from './txentry';
-import * as util from './util';
-import { getTransactionAIs, DebtAI } from '../shared/ai';
-import AIComponent from './ai';
-import { Location, History } from 'history';
-import { MobileQuery, DesktopOnly } from './components/media';
-import SplitPoplet from './splitpoplet';
-import Poplet from './components/poplet';
-import * as _ from 'lodash';
-import Money from '../shared/Money';
+import { History, Location } from "history";
+import * as _ from "lodash";
+import * as React from "react";
+import Money from "../shared/Money";
+import { Friend } from "../shared/types";
+import Poplet from "./components/poplet";
+import * as util from "./util";
 
 interface Props {
     friends: Friend[];
@@ -27,7 +21,7 @@ type State = {};
 export default class Friends extends React.Component<Props, State> {
     settle(email: string): Promise<void> {
         return util.apiPost({
-            path: '/api/friend/settle',
+            path: "/api/friend/settle",
             body: {
                 amount: this.props.debts[email],
                 email,
@@ -44,7 +38,7 @@ export default class Friends extends React.Component<Props, State> {
             debt?: Money,
             pending?: true,
             invite?: true,
-        }} = _.mapValues(this.props.debts, (amount, email) => ({
+        }} = _.mapValues(this.props.debts, amount => ({
             debt: amount,
         }));
         this.props.friends.forEach(f => {
@@ -82,7 +76,7 @@ export default class Friends extends React.Component<Props, State> {
                     {rows}
                 </tbody>
             </table>
-            
+
         </div>;
     }
 }

@@ -1,5 +1,4 @@
-import Money from './Money';
-import BigNumber from 'bignumber.js';
+import Money from "./Money";
 
 export type UserId = string;
 export type GroupId = string;
@@ -55,7 +54,7 @@ export interface Transaction {
         myShare: Share;
         theirShare: Share;
         otherAmount: Money;
-    }
+    };
 }
 
 export interface Friend {
@@ -65,19 +64,19 @@ export interface Friend {
 }
 
 export interface InitState {
-    frame?: Frame,
-    categories?: Category[],
-    friends?: Friend[],
-    pendingFriends?: Friend[],
-    invites?: Friend[],
-    transactions?: Transaction[],
-    debts?: {[email: string]: Money},
+    frame?: Frame;
+    categories?: Category[];
+    friends?: Friend[];
+    pendingFriends?: Friend[];
+    invites?: Friend[];
+    transactions?: Transaction[];
+    debts?: {[email: string]: Money};
     me?: Friend;
 }
 
 export class Share extends Money {
     static normalize(...shares: Share[]): NormalizedShare[] {
-        const total = shares.reduce((a,b) => a.plus(b), Share.Zero);
+        const total = shares.reduce((a, b) => a.plus(b), Share.Zero);
         return shares.map(s => new NormalizedShare(s.dividedBy(total).num));
     }
     asNumber(): Number {

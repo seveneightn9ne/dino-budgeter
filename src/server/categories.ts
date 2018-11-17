@@ -1,8 +1,8 @@
-import {GroupId, FrameIndex, Category, CategoryId} from '../shared/types';
-import Money from '../shared/Money';
-import pgPromise from 'pg-promise';
-export * from '../shared/categories';
-import {fromSerialized} from '../shared/categories';
+import pgPromise from "pg-promise";
+import Money from "../shared/Money";
+import { Category, CategoryId, FrameIndex, GroupId } from "../shared/types";
+export * from "../shared/categories";
+import { fromSerialized } from "../shared/categories";
 
 export const DEFAULT_CATEGORIES = [
     "Rent",

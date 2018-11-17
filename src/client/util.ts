@@ -1,26 +1,26 @@
-import { FrameIndex, InitState, Share } from '../shared/types';
-import { Location, History } from 'history';
-export * from '../shared/util';
-import * as frames from '../shared/frames';
-import * as categories from '../shared/categories';
-import * as transactions from '../shared/transactions';
-import Money from '../shared/Money';
-import * as _ from 'lodash';
+import { History, Location } from "history";
+import { FrameIndex, InitState } from "../shared/types";
+export * from "../shared/util";
+import * as _ from "lodash";
+import * as categories from "../shared/categories";
+import * as frames from "../shared/frames";
+import Money from "../shared/Money";
+import * as transactions from "../shared/transactions";
 
 export const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
 export function yyyymmdd(date: Date): string {
-    let y = '' + date.getFullYear(),
-        m = '' + (date.getMonth() + 1),
-        d = '' + date.getDate();
+    const y = "" + date.getFullYear();
+    let m = "" + (date.getMonth() + 1),
+        d = "" + date.getDate();
     if (m.length == 1) m = "0" + m;
     if (d.length == 1) d = "0" + d;
     return y + "-" + m + "-" + d;
 }
 
 export function fromYyyymmdd(datestring: string): Date {
-    let [y,m,d] = datestring.split("-").map(Number);
-    m -= 1;
+    const [y, m_, d] = datestring.split("-").map(Number);
+    const m = m_ - 1;
     return new Date(y, m, d);
 }
 
@@ -46,13 +46,13 @@ function apiFetch(options: {
     body?: {[key: string]: any},
     location?: Location,
     history?: History,
-    method: 'GET' | 'POST' | 'PUT' | 'DELETE',
+    method: "GET" | "POST" | "PUT" | "DELETE",
 }): Promise<any> {
     return fetch(options.path, {
         method: options.method,
         headers: {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json'
+            "Accept": "application/json",
+            "Content-Type": "application/json"
           },
         body: options.body ? JSON.stringify(options.body) : undefined,
     }).then(result => {
@@ -60,9 +60,9 @@ function apiFetch(options: {
             throw result.status;
         }
         return result.json().then(json => {
-            if (json.error == 'reauth') {
+            if (json.error == "reauth") {
                 // Note, discarding non-path bits of the location
-                const redir = options.location ? options.location.pathname : '';
+                const redir = options.location ? options.location.pathname : "";
                 const path = `/login?redirectTo=${redir}`;
                 if (options.history) {
                     options.history.push(path);
@@ -84,9 +84,9 @@ export function apiPost(options: {
     body: {[key: string]: any},
     location?: Location,
     history?: History,
-    method?: 'POST' | 'PUT' | 'DELETE',
+    method?: "POST" | "PUT" | "DELETE",
 }): Promise<any> {
-    return apiFetch({...options, method: options.method || 'POST'});
+    return apiFetch({...options, method: options.method || "POST"});
 }
 
 export function apiGet(options: {
@@ -94,17 +94,17 @@ export function apiGet(options: {
     location?: Location,
     history?: History,
 }): Promise<any> {
-    return apiFetch({...options, method: 'GET'});
+    return apiFetch({...options, method: "GET"});
 }
 
 export function initializeState<S extends {initialized: boolean}, W extends (keyof (InitState & S))[]>
         (self: React.Component<any, S>, index: FrameIndex, ...wants: W) {
-    let params = wants.map(w => w + "=true").join('&');
+    let params = wants.map(w => w + "=true").join("&");
     if (index) {
         params += "&index=" + index;
     }
     return apiGet({
-        path: '/api/init?' + params,
+        path: "/api/init?" + params,
         location: self.props.location,
         history: self.props.history,
     }).then(response => {
@@ -120,10 +120,10 @@ export function initializeState<S extends {initialized: boolean}, W extends (key
         if (response.debts) {
             response.debts = _.mapValues(response.debts, v => new Money(v));
         }
-        return new Promise((resolve, reject) => {
+        return new Promise((resolve) => {
             self.setState({...response, initialized: true}, () => {
                 resolve();
-            })
-        })
+            });
+        });
     });
 }

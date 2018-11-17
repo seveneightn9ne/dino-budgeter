@@ -1,13 +1,13 @@
 
-import * as React from 'react';
-import Poplet from './components/poplet';
-import {Transaction, UserId, Share} from '../shared/types';
-import { cc, apiPost } from './util';
-import Money from '../shared/Money';
-import * as transactions from '../shared/transactions';
+import * as React from "react";
+import Money from "../shared/Money";
+import * as transactions from "../shared/transactions";
+import { Share, Transaction } from "../shared/types";
+import Poplet from "./components/poplet";
+import { apiPost, cc } from "./util";
 
 interface Props {
-    //me: UserId;
+    // me: UserId;
     transaction: Transaction;
     onUpdateTransaction: (t: Transaction) => void;
 }
@@ -27,7 +27,7 @@ export default class SplitPoplet extends React.Component<Props, State> {
         this.state = initialState(props.transaction);
         this.poplet = React.createRef();
     }
-    
+
     handleSubmit(event: React.FormEvent): void {
         event.preventDefault();
         const total = new Money(this.state.total);
@@ -43,7 +43,7 @@ export default class SplitPoplet extends React.Component<Props, State> {
         }
         const yourAmount = youPay(this.state);
         apiPost({
-            path: '/api/transaction/split',
+            path: "/api/transaction/split",
             body: {
                 tid: this.props.transaction.id,
                 sid: this.props.transaction.split.id,
@@ -68,17 +68,17 @@ export default class SplitPoplet extends React.Component<Props, State> {
             <h2>Split with {this.props.transaction.split.with.email}</h2>
             <form onSubmit={this.handleSubmit.bind(this)}>
             <label>Total: <input className={cls(this.state.totalErr)} type="text" size={4}
-                value={this.state.total} onChange={cc(this, 'total')} /></label>
+                value={this.state.total} onChange={cc(this, "total")} /></label>
             <label className="first half">
                 Your share: <input className={cls(this.state.yourErr)} type="text" size={4}
-                    value={this.state.yourShare} onChange={cc(this, 'yourShare')} /> 
+                    value={this.state.yourShare} onChange={cc(this, "yourShare")} />
             </label><label className="half">
                 Their share: <input className={cls(this.state.theirErr)} type="text" size={4}
-                    value={this.state.theirShare} onChange={cc(this, 'theirShare')} /></label>
-            <div className="section" style={{clear: 'both'}}>
+                    value={this.state.theirShare} onChange={cc(this, "theirShare")} /></label>
+            <div className="section" style={{clear: "both"}}>
                 <label className="nostyle"><input type="radio" name="payer" value="0" checked={this.state.youPaid}
                     onChange={(e) => this.setState({youPaid: e.target.checked})} /> You paid</label>
-                <label className="nostyle"><input type="radio" name="payer" value="1" checked={!this.state.youPaid} 
+                <label className="nostyle"><input type="radio" name="payer" value="1" checked={!this.state.youPaid}
                     onChange={(e) => this.setState({youPaid: !e.target.checked})} /> They paid</label>
             </div>
             <div className="section">You spent {youPay(this.state).formatted()}.</div>
@@ -101,11 +101,11 @@ function initialState(transaction: Transaction): State {
         theirShare: theirShare.string(),
         theirErr: false,
         youPaid: transaction.split.payer != transaction.split.with.uid,
-    }
+    };
 }
 
 function cls(isError: boolean): string {
-    return isError ? 'error' : '';
+    return isError ? "error" : "";
 }
 
 function youPay(state: State): Money {

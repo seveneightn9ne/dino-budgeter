@@ -1,5 +1,5 @@
-import {Category} from '../shared/types';
-import Money from '../shared/Money';
+import Money from "../shared/Money";
+import { Category } from "../shared/types";
 
 export function updateBalanceWithBudget(category: {
         balance?: Money,

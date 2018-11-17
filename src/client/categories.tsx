@@ -1,21 +1,21 @@
-import * as React from 'react';
-import { Link } from 'react-router-dom'
-import {Frame as FrameType, Category, CategoryId} from '../shared/types';
-import Money from '../shared/Money';
-import NewCategory from './newcategory';
-import CategoryRow from './categoryrow';
-import { AI, getAIs } from '../shared/ai';
-import AIComponent from './ai';
-import {ClickToEditMoney} from './components/clicktoedit';
+import * as React from "react";
+import { Link } from "react-router-dom";
+import { AI, getAIs } from "../shared/ai";
+import Money from "../shared/Money";
+import { Category, CategoryId, Frame as FrameType } from "../shared/types";
+import AIComponent from "./ai";
+import CategoryRow from "./categoryrow";
+import { ClickToEditMoney } from "./components/clicktoedit";
+import NewCategory from "./newcategory";
 
 interface Props {
     month: number;
     year: number;
     frame: FrameType;
-    onAddCategory: (c: Category) => void,
-    onChangeCategory: (c: Category) => void,
-    onDeleteCategory: (c: CategoryId) => void,
-    onNewIncome: (newIncome: Money) => void,
+    onAddCategory: (c: Category) => void;
+    onChangeCategory: (c: Category) => void;
+    onDeleteCategory: (c: CategoryId) => void;
+    onNewIncome: (newIncome: Money) => void;
 }
 interface State {
     budgeted?: Money;
@@ -29,26 +29,26 @@ export default class Categories extends React.Component<Props, State> {
     constructor(props: Props) {
       super(props);
       this.state = {
-          setIncome: '',
-      }
+          setIncome: "",
+      };
     }
 
     getAIs(): AI[] {
         return getAIs(this.props.frame);
     }
 
-    blob(title: string, amount: JSX.Element | string, bold = false){
-        return <div key={title} className={'blob' + (bold ? ' bold' : '')}>
+    blob(title: string, amount: JSX.Element | string, bold = false) {
+        return <div key={title} className={"blob" + (bold ? " bold" : "")}>
             <div className="title">{title}</div>
             <div className="amount">{amount}</div>
             </div>;
     }
     blobOp(operator: string) {
-        return <div key={operator} className="blob-op">{operator}</div>
+        return <div key={operator} className="blob-op">{operator}</div>;
     }
 
     render() {
-        const cs = this.props.frame.categories.map(c => 
+        const cs = this.props.frame.categories.map(c =>
             <CategoryRow key={c.id} category={c} categories={this.props.frame.categories}
                 onDeleteCategory={this.props.onDeleteCategory}
                 onChangeCategory={this.props.onChangeCategory} />
@@ -66,23 +66,23 @@ export default class Categories extends React.Component<Props, State> {
         let rollover = null;
         const rolloverAmt = this.props.frame.balance.minus(this.props.frame.income).plus(this.props.frame.spending);
         switch (rolloverAmt.cmp(Money.Zero)) {
-            case 1: 
-                rollover = [this.blobOp('+'),this.blob("last month", rolloverAmt.formatted())];
+            case 1:
+                rollover = [this.blobOp("+"), this.blob("last month", rolloverAmt.formatted())];
                 break;
             case -1:
-                rollover = [this.blobOp('-'),this.blob("last month", rolloverAmt.negate().formatted())];
+                rollover = [this.blobOp("-"), this.blob("last month", rolloverAmt.negate().formatted())];
                 break;
         }
 
-        const transactionLink = <Link className="spent" to={`/app/${this.props.month+1}/${this.props.year}/transactions`}>
+        const transactionLink = <Link className="spent" to={`/app/${this.props.month + 1}/${this.props.year}/transactions`}>
             {this.props.frame.spending.formatted()}</Link>;
-        
+
         return <div><div className="blobs">{this.blob("Income", income)}
                 {rollover}
-                {this.blobOp('-')}
-                {this.blob('Spent', transactionLink)}
-                {this.blobOp('=')}
-                {this.blob('Balance', this.props.frame.balance.formatted(), true/**bold**/)}
+                {this.blobOp("-")}
+                {this.blob("Spent", transactionLink)}
+                {this.blobOp("=")}
+                {this.blob("Balance", this.props.frame.balance.formatted(), true /* bold */)}
                 </div>
             {ais}
             <table className="categories" cellPadding={0} cellSpacing={0} ><tbody>

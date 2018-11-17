@@ -1,4 +1,4 @@
-import * as React from 'react';
+import * as React from "react";
 
 interface Props {
     text: React.ReactNode;
@@ -33,13 +33,13 @@ export default class Poplet extends React.Component<Props, State> {
 
     render(): JSX.Element {
         let className = "poplet";
-        if (this.props.className) className += ' ' + this.props.className;
+        if (this.props.className) className += " " + this.props.className;
         const pop = <div className="poplet-background" onClick={() => this.clickOuter()}>
             <div className={className} onClick={(e) => this.clickInner(e)}>
                 <span className="close clickable fa-times fas" onClick={() => this.close()} />
                 {this.props.children}
             </div>
-        </div>
+        </div>;
         return <span className={this.props.className}><span title={this.props.title} className="clickable" onClick={this.open.bind(this)}>
             {this.props.text}</span>
             {this.state.open ? pop : null}

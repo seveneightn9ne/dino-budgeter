@@ -1,5 +1,5 @@
-import {Transaction, Share, UserId} from '../shared/types';
-import Money from '../shared/Money';
+import Money from "../shared/Money";
+import { Share, Transaction, UserId } from "../shared/types";
 export function fromSerialized(row: any): Transaction {
     if (!row) {
         return null;
@@ -26,25 +26,24 @@ export function fromSerialized(row: any): Transaction {
 }
 
 export function distributeTotal(total: Money, s1: Share, s2: Share): [Money, Money] {
-    const [newS1, _] = Share.normalize(s1, s2);
-    const a1 = newS1.of(total)
+    const [newS1, ] = Share.normalize(s1, s2);
+    const a1 = newS1.of(total);
     const a2 = total.minus(a1);
     return [a1, a2];
 }
 
 
 export function youPay(yourShare: Share, theirShare: Share, total: Money): Money {
-    const [yourShareNorm, _] = Share.normalize(yourShare, theirShare);
+    const [yourShareNorm, ] = Share.normalize(yourShare, theirShare);
     return yourShareNorm.of(total);
 }
 
-/* Never calculate an amount using shares if you don't have the total. */
-/* Never calculate the total if you don't have both amounts. */
+// Never calculate an amount using shares if you don't have the total.
+// Never calculate the total if you don't have both amounts.
 
-
-/** 
+/**
  * Gets the balance that u1 owes u2.
-*/
+ */
 export function getBalance(args: {
     user: UserId,
     otherUser: UserId,
@@ -52,7 +51,7 @@ export function getBalance(args: {
     amount: Money,
     otherAmount: Money,
 }): Money {
-    const [u1, u2] = [args.user, args.otherUser].sort();
+    const [, u2] = [args.user, args.otherUser].sort();
     const balance = args.payer == args.user ? args.otherAmount : args.amount;
     return u2 == args.payer ? balance : balance.negate();
 }

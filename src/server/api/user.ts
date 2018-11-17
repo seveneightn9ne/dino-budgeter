@@ -1,14 +1,13 @@
 
-import {Request, Response} from 'express';
-import {User} from '../../shared/types';
-import * as user from '../user';
-import {wrap} from '../api';
-import db from '../db';
-import Money from '../../shared/Money';
+import { Request, Response } from "express";
+import Money from "../../shared/Money";
+import { wrap } from "../api";
+import db from "../db";
+import * as user from "../user";
 
 export const handle_auth_redirect_get = function(req: Request, res: Response) {
-    res.send({error: 'reauth', redirectTo: req.query.redirectTo});
-}
+    res.send({error: "reauth", redirectTo: req.query.redirectTo});
+};
 
 export const handle_add_friend_post = wrap(async function(req: Request, res: Response) {
     if (!req.body.email) {

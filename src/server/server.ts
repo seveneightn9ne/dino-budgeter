@@ -1,11 +1,11 @@
-import app from "./app";
-import db from './db';
+import * as _ from "lodash";
 import Money from "../shared/Money";
-import * as _ from 'lodash';
+import app from "./app";
+import db from "./db";
 
 /**
  * Run DB migrations
- * 
+ *
  */
 async function migrateAddFriendshipBalance() {
   await db.tx(async t => {
@@ -23,19 +23,19 @@ async function migrateAddFriendshipBalance() {
     const balances: {[uid: string]: {[uid: string]: Money}} = {};
     const work: Promise<any>[] = [];
     rows.forEach(row => {
-      // balance: u1 owes u2. 
+      // balance: u1 owes u2.
       const owed = new Money(row.other_amount);
       const payer = row.uid;
-      const [u1, u2] = [row.uid, row.other_uid].sort()
+      const [u1, u2] = [row.uid, row.other_uid].sort();
       const u1_owes_u2 = payer == u1 ? owed.negate() : owed;
       if (balances[u1] == undefined) {
         balances[u1] = {};
-      } 
+      }
       if (balances[u1][u2] == undefined) {
         balances[u1][u2] = Money.Zero;
       }
       balances[u1][u2] = balances[u1][u2].plus(u1_owes_u2);
-      work.push(t.none(`update shared_transactions set settled = true where id = $1`, [row.sid]))
+      work.push(t.none(`update shared_transactions set settled = true where id = $1`, [row.sid]));
     });
     _.forEach(balances, (u2s, u1) => {
       _.forEach(u2s, (balance, u2) => {

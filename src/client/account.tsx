@@ -1,10 +1,7 @@
-import * as React from 'react';
-import {Friend, Transaction} from '../shared/types';
-import { index } from '../shared/frames';
-import TxEntry from './txentry';
-import { Redirect, RouteComponentProps } from 'react-router';
-import * as util from './util';
-import { History, Location } from 'history';
+import { History, Location } from "history";
+import * as React from "react";
+import { Friend } from "../shared/types";
+import * as util from "./util";
 
 interface Props {
     history: History;
@@ -30,18 +27,18 @@ export default class Account extends React.Component<Props, State> {
 
     state: State = {
         initialized: false,
-        addFriend: '',
-    }
+        addFriend: "",
+    };
 
     componentDidMount() {
-        util.initializeState(this, 0, 'friends', 'pendingFriends', 'me', 'invites');
+        util.initializeState(this, 0, "friends", "pendingFriends", "me", "invites");
     }
 
     onAddFriend(e: React.FormEvent) {
-        this.setState({addFriendError: ''});
+        this.setState({addFriendError: ""});
         this.acceptFriend(this.state.addFriend, false);
         this.setState({
-            addFriend: '',
+            addFriend: "",
         });
         e.preventDefault();
     }
@@ -62,12 +59,12 @@ export default class Account extends React.Component<Props, State> {
                 this.setState({
                     friends: [...this.state.friends, res.friend],
                     invites: this.state.invites.filter(e => e.email != email),
-                })
+                });
             } else {
                 // {} -> Pending
                 this.setState({
                     pendingFriends: [...this.state.pendingFriends, res.friend],
-                })
+                });
             }
         }).catch(e => {
             if (e == 404) {
@@ -99,7 +96,7 @@ export default class Account extends React.Component<Props, State> {
 
     deleteFriend(email: string) {
         util.apiPost({
-            method: 'DELETE',
+            method: "DELETE",
             path: "/api/friend",
             body: {email},
             location: this.props.location,
@@ -120,22 +117,22 @@ export default class Account extends React.Component<Props, State> {
         if (!this.state.initialized) {
             return null;
         }
-        const friends = this.state.friends.map(friend => <li key={friend.uid}>{friend.email}{' '}
+        const friends = this.state.friends.map(friend => <li key={friend.uid}>{friend.email}{" "}
             <span className="clickable" onClick={() => this.deleteFriend(friend.email)}>Remove</span></li>);
 
-        friends.push(...this.state.pendingFriends.map(friend => <li key={friend.uid}>{friend.email}{' '}
-                <span className="pending">(Pending)</span>{' '}
+        friends.push(...this.state.pendingFriends.map(friend => <li key={friend.uid}>{friend.email}{" "}
+                <span className="pending">(Pending)</span>{" "}
                 <span className="clickable" onClick={() => this.rejectFriend(friend.email)}>Remove</span></li>));
-        
+
         let errorMessage;
         if (this.state.addFriendError) {
-            errorMessage = <p className="errorMessage">{this.state.addFriendError}</p>
+            errorMessage = <p className="errorMessage">{this.state.addFriendError}</p>;
         }
         let invites;
         if (this.state.invites.length > 0) {
-            const invitesLis = this.state.invites.map(i => 
-                <li key={i.uid}>{i.email} {' '}
-                    <span className="clickable" onClick={() => this.acceptFriend(i.email, true)}>Accept</span> {' '}
+            const invitesLis = this.state.invites.map(i =>
+                <li key={i.uid}>{i.email} {" "}
+                    <span className="clickable" onClick={() => this.acceptFriend(i.email, true)}>Accept</span> {" "}
                     <span className="clickable" onClick={() => this.rejectFriend(i.email)}>Reject</span>
                 </li>
             );
@@ -163,7 +160,7 @@ export default class Account extends React.Component<Props, State> {
             <form onSubmit={this.onAddFriend.bind(this)}>
                 <input type="email" placeholder="Email"
                     value={this.state.addFriend}
-                    onChange={util.cc(this, 'addFriend')} />
+                    onChange={util.cc(this, "addFriend")} />
                 <input type="submit" value="Request" />
             </form>
             </main>

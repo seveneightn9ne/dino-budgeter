@@ -1,19 +1,19 @@
-import {Request, Response} from 'express';
-import Money from '../../shared/Money';
-import db from '../db';
-import * as user from '../user';
-import * as util from '../../shared/util';
-import * as transactions from '../transactions';
-import {wrap} from '../api';
-import {UserId, CategoryId, Transaction, Share, TransactionId, SplitId} from '../../shared/types';
-import { distributeTotal } from '../../shared/transactions';
-import * as _ from 'lodash';
+import { Request, Response } from "express";
+import * as _ from "lodash";
+import Money from "../../shared/Money";
+import { distributeTotal } from "../../shared/transactions";
+import { CategoryId, Share, SplitId, Transaction, TransactionId, UserId } from "../../shared/types";
+import * as util from "../../shared/util";
+import { wrap } from "../api";
+import db from "../db";
+import * as transactions from "../transactions";
+import * as user from "../user";
 
 export const handle_transaction_post = wrap(async function(req: Request, res: Response) {
     req.checkBody("frame").notEmpty().isNumeric();
-    req.checkBody('amount').notEmpty().isString();
-    req.checkBody('description').notEmpty().isString();
-    req.checkBody('date').notEmpty();
+    req.checkBody("amount").notEmpty().isString();
+    req.checkBody("description").notEmpty().isString();
+    req.checkBody("date").notEmpty();
     const amount = new Money(req.body.amount);
     const result = await req.getValidationResult();
     let myShare: Share;
@@ -74,12 +74,12 @@ export const handle_transaction_post = wrap(async function(req: Request, res: Re
                 settled: false,
                 myShare, theirShare,
                 otherAmount, payer,
-            }
+            };
             const balance = transactions.getBalance({
                 user: req.user.uid,
                 otherUser: other,
                 amount, otherAmount, payer,
-            })
+            });
             await t.batch([
                 user.addToBalance(req.user.uid, other, balance, t),
                 t.none(query, [other_id, other_gid, frame, otherAmount.string(), req.body.description, other_cat, date]),
@@ -90,17 +90,17 @@ export const handle_transaction_post = wrap(async function(req: Request, res: Re
         }
         const transaction: Transaction = {
             id: tx_id, gid, frame, category, amount, description, alive: true, date, split
-        }
+        };
         res.send({transaction});
     });
 });
 
-type txField = 'amount' | 'date' | 'description' | 'category';
+type txField = "amount" | "date" | "description" | "category";
 function isSharedField(field: txField): boolean {
-    return field == 'date' || field == 'description';
+    return field == "date" || field == "description";
 }
 function canEditShared(field: txField): boolean {
-    return field != 'amount';
+    return field != "amount";
 }
 
 export const handle_transaction_delete = wrap(async function(req: Request, res: Response) {
@@ -121,24 +121,24 @@ export const handle_transaction_delete = wrap(async function(req: Request, res: 
 });
 
 export const handle_transaction_description_post = wrap(async function(req: Request, res: Response) {
-    await handle_transaction_update_post('description', d => !!d)(req, res);
+    await handle_transaction_update_post("description", d => !!d)(req, res);
 });
 
 export const handle_transaction_amount_post = wrap(async function(req: Request, res: Response) {
-    await handle_transaction_update_post('amount',
+    await handle_transaction_update_post("amount",
         s => new Money(s).isValid(),
         s => new Money(s).string())(req, res);
 });
 
 export const handle_transaction_date_post = wrap(async function(req: Request, res: Response) {
-    await handle_transaction_update_post('date',
+    await handle_transaction_update_post("date",
         s => !isNaN(new Date(Number(s)).valueOf()),
         s => new Date(Number(s)))(req, res);
 });
 
 export const handle_transaction_category_post = wrap(async function(req: Request, res: Response) {
     // TODO: validate that the category exists, is alive, is owned by the user, etc.
-    await handle_transaction_update_post('category', undefined, c => c || null)(req, res);
+    await handle_transaction_update_post("category", undefined, c => c || null)(req, res);
 });
 
 function handle_transaction_update_post(
@@ -147,7 +147,7 @@ function handle_transaction_update_post(
         transform?: (val: string) => any,
     ): (req: Request, res: Response) => Promise<void> {
     return async (req: Request, res: Response) => {
-        if (!isValid) isValid = (s) => true;
+        if (!isValid) isValid = () => true;
         if (!transform) transform = (s) => s;
         req.checkBody("id").notEmpty().isString();
         const result = await req.getValidationResult();
@@ -169,7 +169,7 @@ function handle_transaction_update_post(
                 res.sendStatus(400);
                 return;
             }
-            const val = transform(value)
+            const val = transform(value);
             const query = "update transactions set " + field + " = $1 where id = $2";
             await t.none(query, [val, id]);
             if (updateLinked && existing.split) {
@@ -177,7 +177,7 @@ function handle_transaction_update_post(
             }
         });
         res.sendStatus(200);
-    }
+    };
 }
 
 export const handle_transaction_split_post = wrap(async function(req: Request, res: Response) {
@@ -213,15 +213,15 @@ export const handle_transaction_split_post = wrap(async function(req: Request, r
             payer: payer,
         });
         const balanceDelta = newBalance.minus(prevBalance);
-        
+
         const work = [
             user.addToBalance(req.user.uid, otherUid, balanceDelta, t),
-            t.none('update transactions set amount = $1 where id = $2', [myAmount.string(), tid]),
-            t.none('update transactions set amount = $1 where id = $2', [otherAmount.string(), otherTid]),
-            t.none('update transaction_splits set share = $1 where tid = $2', [myShare.string(), tid]),
-            t.none('update transaction_splits set share = $1 where tid = $2', [theirShare.string(), otherTid]),
-            t.none('update shared_transactions set payer = $1 where id = $2', [payer, sid]),
-        ]
+            t.none("update transactions set amount = $1 where id = $2", [myAmount.string(), tid]),
+            t.none("update transactions set amount = $1 where id = $2", [otherAmount.string(), otherTid]),
+            t.none("update transaction_splits set share = $1 where tid = $2", [myShare.string(), tid]),
+            t.none("update transaction_splits set share = $1 where tid = $2", [theirShare.string(), otherTid]),
+            t.none("update shared_transactions set payer = $1 where id = $2", [payer, sid]),
+        ];
         await t.batch(work);
         res.sendStatus(200);
     });

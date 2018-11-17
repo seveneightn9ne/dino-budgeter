@@ -1,13 +1,13 @@
-import {Request, Response} from 'express';
-import Money from '../../shared/Money';
-import db from '../db';
-import * as user from '../user';
-import {wrap} from '../api';
+import { Request, Response } from "express";
+import Money from "../../shared/Money";
+import { wrap } from "../api";
+import db from "../db";
+import * as user from "../user";
 
 export const handle_income_post = wrap(async function(req: Request, res: Response): Promise<void> {
     req.checkBody("frame").isNumeric();
     req.checkBody("income").isNumeric();
-    const result = await req.getValidationResult()
+    const result = await req.getValidationResult();
     if (!result.isEmpty()) {
         res.sendStatus(400);
         return;

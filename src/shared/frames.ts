@@ -1,6 +1,6 @@
-import {Frame, FrameIndex} from './types';
-import Money from './Money';
-import * as categories from './categories';
+import * as categories from "./categories";
+import Money from "./Money";
+import { Frame, FrameIndex } from "./types";
 
 export function index(month: number, year: number): FrameIndex {
     return (year - 1970) * 12 + month;

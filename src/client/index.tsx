@@ -1,13 +1,13 @@
-import * as React from 'react';
-import * as ReactDOM from 'react-dom';
-import { BrowserRouter, Switch, Route, Link, RouteComponentProps } from 'react-router-dom'
-import NoRoute from './noroute';
-import App from './app';
+import * as React from "react";
+import * as ReactDOM from "react-dom";
+import { BrowserRouter, Link, Route, RouteComponentProps, Switch } from "react-router-dom";
+import App from "./app";
+import NoRoute from "./noroute";
 
 const Home = () => <div className="home">
     <h1>Dino Budgeter</h1>
     <main>
-    <Link className="button" to="/login">Log In</Link>{' '}
+    <Link className="button" to="/login">Log In</Link>{" "}
     <Link className="button" to="/signup">Sign Up</Link>
     </main>
 </div>;
@@ -65,5 +65,5 @@ ReactDOM.render(
     <BrowserRouter>
         <Index />
     </BrowserRouter>,
-    document.getElementById('root') as HTMLElement
+    document.getElementById("root") as HTMLElement
 );

@@ -1,10 +1,10 @@
-import passport from 'passport';
-import {Strategy as LocalStrategy} from 'passport-local';
-import {Request, Response} from 'express';
-import {User} from '../shared/types';
-import bcrypt from 'bcrypt';
-import db from './db';
-import {randomId} from '../shared/util';
+import bcrypt from "bcrypt";
+import { Request, Response } from "express";
+import passport from "passport";
+import {Strategy as LocalStrategy } from "passport-local";
+import { User } from "../shared/types";
+import { randomId } from "../shared/util";
+import db from "./db";
 
 passport.serializeUser(function(user: User, cb) {
     cb(null, user.uid);
@@ -25,19 +25,19 @@ passport.use(new LocalStrategy(
         return done(null, row as User);
       } else {
           // TODO how to show the user the error message??
-        return done(null, false, {message: 'Incorrect passowrd.'});
+        return done(null, false, {message: "Incorrect passowrd."});
       }
     })
-    .catch(error => {
-      return done(null, false, { message: 'Incorrect username.' });
+    .catch(() => {
+      return done(null, false, { message: "Incorrect username." });
     });
   }
 ));
 
 // TODO - successRedirect to the `redirect` parameter
-export const handle_login_post = passport.authenticate('local', {
-    successRedirect: '/app',
-    failureRedirect: '/login/error'});
+export const handle_login_post = passport.authenticate("local", {
+    successRedirect: "/app",
+    failureRedirect: "/login/error"});
 
 export const handle_signup_post = function(req: Request, res: Response) {
     req.checkBody("username").isEmail();
@@ -45,18 +45,18 @@ export const handle_signup_post = function(req: Request, res: Response) {
     const email = req.body.username;
     req.getValidationResult().then((result) => {
         const errors = result.mapped();
-        if (errors['username']) {
-            res.redirect('/signup/invalid-email');
+        if (errors["username"]) {
+            res.redirect("/signup/invalid-email");
             return;
         }
-        if (errors['password']) {
-            res.redirect('/signup/no-password');
+        if (errors["password"]) {
+            res.redirect("/signup/no-password");
             return;
         }
         return db.one("select count(*) > 0 as exists from users where email=$1", email);
     }).then((row) => {
-        if (row.exists){
-            res.redirect('/signup/user-exists');
+        if (row.exists) {
+            res.redirect("/signup/user-exists");
         } else {
             const password = req.body.password;
             const password_hash = bcrypt.hashSync(password, 10);
@@ -67,8 +67,8 @@ export const handle_signup_post = function(req: Request, res: Response) {
                 yield t.none("insert into groups values ($1)", [group_id]);
                 yield t.none("insert into membership (uid, gid) values ($1, $2)", [user_id, group_id]);
             }).then(() => {
-                passport.authenticate('local', {successRedirect: '/app'})(req, res);
+                passport.authenticate("local", {successRedirect: "/app"})(req, res);
             });
         }
     });
-}
+};

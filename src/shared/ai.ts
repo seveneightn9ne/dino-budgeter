@@ -1,5 +1,5 @@
-import { FrameIndex, Frame, TransactionId, Transaction } from "./types";
-import Money from './Money';
+import Money from "./Money";
+import { Frame, FrameIndex, Transaction, TransactionId } from "./types";
 export interface AI {
     frame?: FrameIndex;
     message(): string;
@@ -7,17 +7,17 @@ export interface AI {
     action?: Action;
 }
 type Popup = {
-    type: 'popup';
+    type: "popup";
     title: string;
     body: string;
     confirm?: string;
     cancel?: string;
     do: () => Promise<void>;
-}
+};
 type Redirect = {
-    type: 'redirect';
+    type: "redirect";
     to: string;
-}
+};
 type Action = Popup | Redirect;
 
 export class OverspentCategory implements AI {
@@ -76,7 +76,7 @@ export class UncategorizedMulti implements AI {
     message(): string {
         return this.tids.length > 1 ?
             `${this.tids.length} transactions need to be categorized.` :
-            `A transaction needs to be categorized.`
+            `A transaction needs to be categorized.`;
     }
 }
 
@@ -94,13 +94,13 @@ export class DebtAI implements AI {
 
     public cta = "Settle";
     public action: Popup = {
-        type: 'popup',
-        title: 'Mark as settled',
+        type: "popup",
+        title: "Mark as settled",
         body: this.iOwe.cmp(Money.Zero) > 0 ?
             `Do this after you've paid ${this.email} ${this.iOwe.formatted()}.` :
             `Do this after ${this.email} has paid you ${this.iOwe.negate().formatted()}.`,
         do: this.doAction,
-    }
+    };
 
 }
 

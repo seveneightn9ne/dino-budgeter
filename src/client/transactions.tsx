@@ -1,15 +1,15 @@
-import * as React from 'react';
-import {ClickToEditDate, ClickToEditMoney, ClickToEditText, ClickToEditDropdown} from './components/clicktoedit';
-import { Frame, Transaction, TransactionId, Category, GroupId, CategoryId, Friend, Share } from '../shared/types';
-import TxEntry from './txentry';
-import * as util from './util';
-import { getTransactionAIs } from '../shared/ai';
-import AIComponent from './ai';
-import { Location, History } from 'history';
-import { MobileQuery, DesktopOnly } from './components/media';
-import SplitPoplet from './splitpoplet';
-import Poplet from './components/poplet';
-import * as _ from 'lodash';
+import { History, Location } from "history";
+import * as _ from "lodash";
+import * as React from "react";
+import { getTransactionAIs } from "../shared/ai";
+import { Category, CategoryId, Frame, Friend, GroupId, Transaction, TransactionId } from "../shared/types";
+import AIComponent from "./ai";
+import { ClickToEditDate, ClickToEditDropdown, ClickToEditMoney, ClickToEditText } from "./components/clicktoedit";
+import { MobileQuery } from "./components/media";
+import Poplet from "./components/poplet";
+import SplitPoplet from "./splitpoplet";
+import TxEntry from "./txentry";
+import * as util from "./util";
 
 interface Props {
     month: number;
@@ -40,8 +40,8 @@ export default class Transactions extends React.Component<Props, State> {
 
     delete(id: TransactionId): boolean {
         util.apiPost({
-            method: 'DELETE',
-            path: '/api/transaction',
+            method: "DELETE",
+            path: "/api/transaction",
             body: {id},
             location: this.props.location,
             history: this.props.history,
@@ -74,7 +74,7 @@ export default class Transactions extends React.Component<Props, State> {
             this.props.frame, this.props.transactions).map(ai =>
             <AIComponent ai={ai} key={ai.message()} />);
 
-        const rowsDesktop = _.sortBy(this.props.transactions, ['date']).reverse().map((tx) => <tr className="hoverable" key={tx.id}>
+        const rowsDesktop = _.sortBy(this.props.transactions, ["date"]).reverse().map((tx) => <tr className="hoverable" key={tx.id}>
             <td className="del">
                 <span className="deleteCr clickable fa-times fas" onClick={() => this.delete(tx.id)}></span>
             </td>
@@ -112,7 +112,7 @@ export default class Transactions extends React.Component<Props, State> {
                 {tx.split ? <SplitPoplet transaction={tx} onUpdateTransaction={this.props.onUpdateTransaction} /> : null}
             </td></tr>);
 
-        const rowsMobile = _.sortBy(this.props.transactions, ['date']).reverse().map((tx) => 
+        const rowsMobile = _.sortBy(this.props.transactions, ["date"]).reverse().map((tx) =>
             <MobileTransactionRow key={tx.id} tx={tx} onEditTransaction={this.props.onEditTransaction}
                 categoryName={this.categoryName.bind(this)} />);
 
@@ -142,7 +142,7 @@ interface MobileRowProps {
 class MobileTransactionRow extends React.PureComponent<MobileRowProps, {}> {
     render() {
         const tx = this.props.tx;
-        const monthName = util.MONTHS[tx.date.getMonth()].substr(0,3);
+        const monthName = util.MONTHS[tx.date.getMonth()].substr(0, 3);
         return <div key={tx.id} onClick={() => this.props.onEditTransaction(tx)} className="hoverable tx-mobile-row">
             <div className="tx-mobile-date">
                 <div className="tx-mobile-month">{monthName}</div>

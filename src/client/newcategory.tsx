@@ -1,8 +1,8 @@
-import * as React from 'react';
-import {RouteComponentProps, withRouter} from 'react-router';
-import {FrameIndex, Category } from '../shared/types';
-import {fromSerialized} from '../shared/categories';
-import * as util from './util';
+import * as React from "react";
+import { RouteComponentProps, withRouter } from "react-router";
+import { fromSerialized } from "../shared/categories";
+import { Category, FrameIndex } from "../shared/types";
+import * as util from "./util";
 
 interface NewCategoryProps {
     frame: FrameIndex;
@@ -15,7 +15,7 @@ interface NewCategoryState {
 
 class NewCategory extends React.Component<RouteComponentProps<NewCategoryProps> & NewCategoryProps, NewCategoryState> {
 
-    state = {expanded: false, value: ''};
+    state = {expanded: false, value: ""};
 
     expand(): boolean {
         this.setState({expanded: true});
@@ -28,7 +28,7 @@ class NewCategory extends React.Component<RouteComponentProps<NewCategoryProps> 
 
     submit(event: React.FormEvent): void {
         util.apiPost({
-            path: '/api/category',
+            path: "/api/category",
             body: {
                 frame: this.props.frame,
                 name: this.state.value,

@@ -1,8 +1,8 @@
-import {User, GroupId, UserId, Friend} from '../shared/types';
-import Money from '../shared/Money';
-import db from './db';
-import pgPromise from 'pg-promise';
-import _ from 'lodash';
+import _ from "lodash";
+import pgPromise from "pg-promise";
+import Money from "../shared/Money";
+import { Friend, GroupId, User, UserId } from "../shared/types";
+import db from "./db";
 
 export function getGroups(user: User | UserId, t?: pgPromise.ITask<{}>): Promise<GroupId[]> {
     return t ? getGroupsInner(user, t) : db.task(t => getGroupsInner(user, t));
@@ -27,7 +27,7 @@ export function isUserInGroup(user: User, group: GroupId, t: pgPromise.ITask<{}>
 
 export async function getUserByEmail(email: string, t: pgPromise.ITask<{}>): Promise<UserId | null> {
     const row = await t.oneOrNone("select * from users where email = $1", [email]);
-    console.log("get user by email " + email + " yields " + (row||{}).uid);
+    console.log("get user by email " + email + " yields " + (row || {}).uid);
     return row ? row.uid : null;
 }
 
@@ -48,7 +48,7 @@ export async function getEmail(user: UserId, t: pgPromise.ITask<{}>): Promise<st
 
 export async function getEmails(users: UserId[], t: pgPromise.ITask<{}>): Promise<string[]> {
     // how..?
-    //const rows = await t.many("select email from users where uid in ($1)", [users]);
+    // const rows = await t.many("select email from users where uid in ($1)", [users]);
     return await t.batch(users.map(u => getEmail(u, t)));
 }
 
@@ -151,14 +151,14 @@ async function getBalances(user: UserId, t: pgPromise.ITask<{}>): Promise<{[uid:
 
 /** Amounts that user owes each friend. Negative means the friend owes the user. */
 export async function getDebts(user: UserId, t: pgPromise.ITask<{}>): Promise<{[email: string]: Money}> {
-    const uidToDebts =_.mapValues(await getBalances(user, t), (amount, u2) => {
+    const uidToDebts = _.mapValues(await getBalances(user, t), (amount, u2) => {
         const u1 = [user, u2].sort()[0];
         return u1 == user ? amount : amount.negate();
     });
     const uids = _.keys(uidToDebts);
     const emails = await getEmails(uids, t);
     const ret: {[email: string]: Money} = {};
-    for (let i=0; i < uids.length; i++) {
+    for (let i = 0; i < uids.length; i++) {
         ret[emails[i]] = uidToDebts[uids[i]];
     }
     return ret;

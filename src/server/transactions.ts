@@ -1,9 +1,9 @@
-import {TransactionId, Transaction, FrameIndex, SplitId, GroupId, Share, UserId} from '../shared/types';
-import Money from '../shared/Money';
-import pgPromise from 'pg-promise';
-import { addToBalance } from './user';
-export * from '../shared/transactions';
-import { getBalance } from '../shared/transactions';
+import pgPromise from "pg-promise";
+import Money from "../shared/Money";
+import { FrameIndex, GroupId, Share, SplitId, Transaction, TransactionId, UserId } from "../shared/types";
+import { addToBalance } from "./user";
+export * from "../shared/transactions";
+import { getBalance } from "../shared/transactions";
 
 type IDQuery = {id: TransactionId};
 type FrameQuery = {
@@ -18,17 +18,17 @@ type SettledQuery = {
 };
 type Query = IDQuery | FrameQuery | SettledQuery;
 function whereClause(query: Query) {
-    return 'id' in query ? "T.id = $1" :
-        'frame' in query ? "T.gid = $1 and T.frame = $2 and T.alive = $3" :
+    return "id" in query ? "T.id = $1" :
+        "frame" in query ? "T.gid = $1 and T.frame = $2 and T.alive = $3" :
         /* settled */ "U.uid = $1 and S.settled = $2 and T.alive = $3";
 }
 function vars(where: Query) {
-    return 'id' in where ? [where.id] :
-        'frame' in where ? [where.gid, where.frame, where.alive] :
+    return "id" in where ? [where.id] :
+        "frame" in where ? [where.gid, where.frame, where.alive] :
         /* settled */ [where.uid, where.settled, where.alive];
 }
 async function getTransactionsInner(where: Query, t: pgPromise.ITask<{}>): Promise<Transaction[]> {
-    const rows = await t.any(`select 
+    const rows = await t.any(`select
             T.*,
             TS.sid,
             TS.share,
@@ -130,12 +130,12 @@ export async function deleteTransaction(tid: TransactionId, t: pgPromise.ITask<{
 }
 
 export async function getSid(tid: TransactionId, t: pgPromise.ITask<{}>): Promise<SplitId> {
-    const row = await t.oneOrNone('select sid from transaction_splits where tid = $1', [tid]);
+    const row = await t.oneOrNone("select sid from transaction_splits where tid = $1", [tid]);
     return row ? row.sid : null;
 }
 
 export async function settle(sid: SplitId, t: pgPromise.ITask<{}>): Promise<void> {
-    return await t.none('update shared_transactions set settled = true where id = $1', [sid]);
+    return await t.none("update shared_transactions set settled = true where id = $1", [sid]);
 }
 
 export async function getBalanceFromDb(tid: TransactionId, t: pgPromise.ITask<{}>): Promise<Money> {

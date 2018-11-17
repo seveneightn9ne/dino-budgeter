@@ -1,8 +1,8 @@
-import * as React from 'react';
-import Money from '../../shared/Money';
-import { fromYyyymmdd, yyyymmdd } from '../util';
-import { withRouter, RouteComponentProps } from 'react-router-dom';
-import * as util from '../util';
+import * as React from "react";
+import { RouteComponentProps, withRouter } from "react-router-dom";
+import Money from "../../shared/Money";
+import { fromYyyymmdd, yyyymmdd } from "../util";
+import * as util from "../util";
 
 interface ClickToEditProps<T> {
     value: T;
@@ -27,20 +27,20 @@ interface ClickToEditState {
     newValueErr?: boolean;
 }
 
-abstract class ClickToEdit<T,P extends ClickToEditProps<T>> extends React.Component<P & RouteComponentProps<P>, ClickToEditState> {
+abstract class ClickToEdit<T, P extends ClickToEditProps<T>> extends React.Component<P & RouteComponentProps<P>, ClickToEditState> {
 
     static defaultProps = {
         size: 4,
-        className: '',
+        className: "",
         postData: {},
-        type: 'text',
-    }
+        type: "text",
+    };
 
     constructor(props: P & RouteComponentProps<P>) {
         super(props);
         this.state = {
             editing: !!props.open,
-        }
+        };
     }
     abstract postTransform(val: T): string;
     abstract validateChange(val: T): boolean;
@@ -66,8 +66,8 @@ abstract class ClickToEdit<T,P extends ClickToEditProps<T>> extends React.Compon
         this.setState({newValue: event.target.value, newValueErr: false});
     }
 
-    saveNewValue(event: React.FormEvent): void{
-        console.log("Save new value")
+    saveNewValue(event: React.FormEvent): void {
+        console.log("Save new value");
         event.preventDefault();
         const newValue = this.fromInput(this.state.newValue);
         if (!this.validateChange(newValue)) {
@@ -105,7 +105,7 @@ abstract class ClickToEdit<T,P extends ClickToEditProps<T>> extends React.Compon
 abstract class ClickToEditInput<T> extends ClickToEdit<T, ClickToEditInputProps<T>> {
     abstract type: string;
     abstract toInput(val: T): string;
-    saveStyle = {display: 'none'};
+    saveStyle = {display: "none"};
     blur(): void {
         this.endEdit();
     }
@@ -120,8 +120,8 @@ abstract class ClickToEditInput<T> extends ClickToEdit<T, ClickToEditInputProps<
 }
 
 class ClickToEditTextBare extends ClickToEditInput<string> {
-    type = 'text';
-    validateChange(val: string): boolean {
+    type = "text";
+    validateChange(_val: string): boolean {
         return true;
     }
     postTransform(val: string): string {
@@ -141,7 +141,7 @@ class ClickToEditTextBare extends ClickToEditInput<string> {
 export const ClickToEditText = withRouter(ClickToEditTextBare);
 
 class ClickToEditMoneyBare extends ClickToEditInput<Money> {
-    type = 'text';
+    type = "text";
     validateChange(val: Money): boolean {
         return val.isValid();
     }
@@ -162,7 +162,7 @@ class ClickToEditMoneyBare extends ClickToEditInput<Money> {
 export const ClickToEditMoney = withRouter(ClickToEditMoneyBare);
 
 class ClickToEditNumberBare extends ClickToEditInput<number> {
-    type = 'number';
+    type = "number";
     validateChange(val: number): boolean {
         return !isNaN(val);
     }
@@ -182,7 +182,7 @@ class ClickToEditNumberBare extends ClickToEditInput<number> {
 export const ClickToEditNumber = withRouter(ClickToEditNumberBare);
 
 class ClickToEditDateBare extends ClickToEditInput<Date> {
-    type = 'date';
+    type = "date";
     validateChange(val: Date): boolean {
         return !isNaN(val.valueOf());
     }

@@ -1,11 +1,11 @@
-import * as React from 'react';
-import { GroupId, Frame as FrameType } from '../shared/types';
-import Frame from './frame';
-import NoRoute from './noroute';
-import { Switch, Route, Redirect, RouteComponentProps } from 'react-router';
-import AddTransaction from './addtransaction';
-import { MobileQuery } from './components/media';
-import Account from './account';
+import * as React from "react";
+import { Redirect, Route, RouteComponentProps, Switch } from "react-router";
+import { Frame as FrameType, GroupId } from "../shared/types";
+import Account from "./account";
+import AddTransaction from "./addtransaction";
+import { MobileQuery } from "./components/media";
+import Frame from "./frame";
+import NoRoute from "./noroute";
 
 interface AppState {
     group?: GroupId;

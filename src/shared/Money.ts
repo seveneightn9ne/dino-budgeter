@@ -1,4 +1,4 @@
-import BigNumber from 'bignumber.js';
+import BigNumber from "bignumber.js";
 
 export default class Money {
     public num: BigNumber; // really it's private. Don't touch.

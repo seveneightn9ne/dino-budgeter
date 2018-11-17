@@ -1,11 +1,11 @@
-import * as React from 'react';
-import {RouteComponentProps, withRouter} from 'react-router';
-import {Category, CategoryId } from '../shared/types';
-import Money from '../shared/Money';
-import * as util from './util';
-import * as categories from '../shared/categories';
-import {ClickToEditMoney, ClickToEditText, ClickToEditDropdown} from './components/clicktoedit';
-import Poplet from './components/poplet';
+import * as React from "react";
+import { RouteComponentProps, withRouter } from "react-router";
+import * as categories from "../shared/categories";
+import Money from "../shared/Money";
+import { Category, CategoryId } from "../shared/types";
+import { ClickToEditDropdown, ClickToEditMoney, ClickToEditText } from "./components/clicktoedit";
+import Poplet from "./components/poplet";
+import * as util from "./util";
 
 interface CategoryRowProps {
     category: Category;
@@ -40,8 +40,8 @@ class CategoryRow extends React.Component<Props, CategoryRowState> {
 
     delete(): boolean {
         util.apiPost({
-            path: '/api/category',
-            method: 'DELETE',
+            path: "/api/category",
+            method: "DELETE",
             body: {
                 id: this.props.category.id,
                 frame: this.props.category.frame,
@@ -75,10 +75,10 @@ class CategoryRow extends React.Component<Props, CategoryRowState> {
         thatNew.budget = thatNew.budget.plus(this.props.category.balance);
         thatNew.balance = thatNew.balance.plus(this.props.category.balance);
         this.props.onChangeCategory(thatNew);
-    
+
         const thisNew = {...this.props.category};
         thisNew.budget = thisNew.budget.minus(thisNew.balance);
-        thisNew.balance = Money.Zero;        
+        thisNew.balance = Money.Zero;
 
         this.props.onChangeCategory(thisNew);
 
@@ -103,7 +103,7 @@ class CategoryRow extends React.Component<Props, CategoryRowState> {
             postData={{
                 id: this.props.category.id,
                 frame: this.props.category.frame}}
-            postKey="amount" />
+            postKey="amount" />;
         const name = <ClickToEditText
                 size={40}
                 value={this.props.category.name}
@@ -112,18 +112,18 @@ class CategoryRow extends React.Component<Props, CategoryRowState> {
                 postData={{
                     id: this.props.category.id,
                     frame: this.props.category.frame}}
-                postKey="name" />
+                postKey="name" />;
         const spending = this.props.category.balance.minus(this.props.category.budget).negate();
         const spendingCls = spending.cmp(Money.Zero) == 0 ? "zero" : "";
         const budgetCls = this.props.category.budget.cmp(Money.Zero) == 0 ? "zero" : "";
-        const balanceCls = this.props.category.balance.cmp(Money.Zero) == 0 ? "zero" : 
+        const balanceCls = this.props.category.balance.cmp(Money.Zero) == 0 ? "zero" :
             (this.props.category.balance.cmp(Money.Zero) == -1 ? "highlighted" : "");
 
 
-        const balance = this.props.category.balance.cmp(Money.Zero) < 0 ? 
+        const balance = this.props.category.balance.cmp(Money.Zero) < 0 ?
             <Poplet text={this.props.category.balance.formatted()} ref={this.poplet}
                 title={"Cover from another category"}>
-                Cover from {' '}
+                Cover from {" "}
                 <ClickToEditDropdown open value=""
                     values={this.categoryMap(this.props.category.balance.negate())}
                     onChange={this.onCoverBalance.bind(this)}
