@@ -236,6 +236,13 @@ th {
     text-decoration: none;
     color: #000000;
 }
+.new-category-close {
+    margin-right: 5px;
+    color: #aaaaaa;
+}
+.new-category-close:hover {
+    color: #000000;
+}
 td {
     padding: 4px;
 }
