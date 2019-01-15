@@ -3,7 +3,7 @@ import * as React from "react";
 import { index } from "../shared/frames";
 import Money from "../shared/Money";
 import { distributeTotal, fromSerialized } from "../shared/transactions";
-import { Category, Friend, Share, Transaction } from "../shared/types";
+import { Category, Friend, Share, Transaction, CategoryId } from "../shared/types";
 import * as util from "./util";
 
 interface NewTxProps {
@@ -38,6 +38,17 @@ interface TxEntryState {
     yourShare: string;
     theirShare: string;
     youPaid: boolean;
+}
+
+interface SubmitData {
+    amount: Money,
+    total: Money,
+    category: CategoryId,
+    date: Date,
+    frame: number,
+    myShare: Share,
+    theirShare: Share,
+    otherAmount: Money,
 }
 
 function isUpdate(props: Props): props is UpdateTxProps {
@@ -113,13 +124,25 @@ export default class TxEntry extends React.Component<Props, TxEntryState> {
         return true;
     }
 
-    handleSubmit(event: React.FormEvent): void {
+    handleSubmit = (event: React.FormEvent) => {
         event.preventDefault();
+        const data = this.prepareSubmission();
+        if (!data) {
+            return;
+        }
+        if (isUpdate(this.props)) {
+            this.submitForUpdate(this.props, data);
+        } else {
+            this.submitForAdd(this.props, data);
+        }
+    }
+
+    prepareSubmission(): SubmitData | false {
         let amount = new Money(this.state.amount);
         const total = new Money(this.state.amount);
         if (!amount.isValid(false /* allowNegative */)) {
             this.setState({error: true});
-            return;
+            return false;
         }
         const category = this.state.category;
         const date = util.fromYyyymmdd(this.state.date);
@@ -132,130 +155,184 @@ export default class TxEntry extends React.Component<Props, TxEntryState> {
             theirShare = new Share(this.state.theirShare);
             if (!myShare.isValid(false) || !theirShare.isValid(false)) {
                 this.setState({error: true});
-                return;
+                return false;
             }
             [amount, otherAmount] = distributeTotal(amount, myShare, theirShare);
         }
-        if (isUpdate(this.props)) {
-            const newTransaction = {...this.props.transaction};
-            // Updating an existing transaction...
-            const initialState = this.initializeState(this.props);
-            const work = [];
-            // 1. Update the split
-            if (this.props.transaction.split &&
-                (this.state.amount != initialState.amount
-                || this.state.theirShare != initialState.theirShare
-                || this.state.yourShare != initialState.yourShare
-                || this.state.youPaid != initialState.youPaid)) {
-
-                // Update newTransaction
-                newTransaction.split = {...newTransaction.split,
-                    myShare, theirShare, otherAmount,
-                    // XXX: using "0" because I don't know my own uid.
-                    payer: this.state.youPaid ? "0" : newTransaction.split.with.uid,
-                };
-                newTransaction.amount = amount;
-
-                // Post the data
-                work.push(util.apiPost({
-                    path: "/api/transaction/split",
-                    body: {
-                        tid: this.props.transaction.id,
-                        sid: this.props.transaction.split.id,
-                        total, myShare, theirShare,
-                        iPaid: this.state.youPaid,
-                    },
-                    location: this.props.location,
-                    history: this.props.history,
-                }));
-            }
-
-            // 2. Update the description
-            if (this.state.description != initialState.description) {
-                newTransaction.description = this.state.description;
-                work.push(util.apiPost({
-                    path: "/api/transaction/description",
-                    body: {
-                        description: newTransaction.description,
-                        id: newTransaction.id,
-                    },
-                }));
-            }
-
-            // 3. Update the date
-            if (this.state.date != initialState.date) {
-                newTransaction.date = date;
-                work.push(util.apiPost({
-                    path: "/api/transaction/date",
-                    body: {
-                        date: date.valueOf().toString(),
-                        id: newTransaction.id,
-                    },
-                    location: this.props.location,
-                    history: this.props.history,
-                }));
-            }
-
-            // 4. Update the category
-            if (this.state.category != initialState.category) {
-                newTransaction.category = category;
-                work.push(util.apiPost({
-                    path: "/api/transaction/category",
-                    body: {
-                        category, id: newTransaction.id,
-                    },
-                    location: this.props.location,
-                    history: this.props.history,
-                }));
-            }
-
-            // 5. Update the amount (if not split)
-            if (this.state.amount != initialState.amount && !this.props.transaction.split) {
-                newTransaction.amount = amount;
-                work.push(util.apiPost({
-                    path: "/api/transaction/amount",
-                    body: {
-                        amount, id: newTransaction.id,
-                    },
-                    location: this.props.location,
-                    history: this.props.history,
-                }));
-            }
-
-            Promise.all(work).then(() => {
-                isUpdate(this.props) && this.props.onUpdateTransaction(newTransaction);
-            });
-
-        } else {
-            const onAddTransaction = this.props.onAddTransaction;
-            const split = this.state.splitting ? {
-                with: this.state.splitWith,
-                myShare, theirShare, otherAmount,
-                iPaid: this.state.youPaid,
-            } : undefined;
-            // Saving a new transaction...
-            util.apiPost({
-                path: "/api/transaction",
-                body: {
-                    frame: frame,
-                    amount: amount,
-                    description: this.state.description,
-                    date: date,
-                    category: category,
-                    split: split,
-                },
-                location: this.props.location,
-                history: this.props.history,
-            }).then((response) => {
-                const transaction = fromSerialized(response.transaction);
-                // Not clearing date & category
-                this.setState({amount: "", description: "", splitting: false, splitWith: this.defaultSplitWith(),
-                    yourShare: "1", theirShare: "1", youPaid: true});
-                onAddTransaction(transaction);
-            });
-        }
+        return {amount, total, category, date, frame, myShare, theirShare, otherAmount};
     }
 
+    submitForUpdate(props: UpdateTxProps, data: SubmitData) {
+        const newTransaction = {...props.transaction};
+        // Updating an existing transaction...
+        const initialState = this.initializeState(props);
+        const work: Promise<any>[] = [];
+
+        const tasks = [
+            this.submitUpdateSplit,
+            this.submitUpdateDescription,
+            this.submitUpdateDate,
+            this.submitUpdateCategory,
+            this.submitUpdateAmount,
+        ];
+        tasks.forEach(task => {
+            const promise = task(props, initialState, newTransaction, data);
+            if (promise) {
+                work.push(promise);
+            }
+        });
+
+        Promise.all(work).then(() => {
+            isUpdate(this.props) && this.props.onUpdateTransaction(newTransaction);
+        });
+    }
+
+    submitUpdateSplit = (props: UpdateTxProps, initialState: TxEntryState, newTransaction: Transaction, data: SubmitData) => {
+        const {myShare, theirShare, amount, otherAmount, total} = data;
+
+        if (!(props.transaction.split &&
+            (this.state.amount != initialState.amount
+            || this.state.theirShare != initialState.theirShare
+            || this.state.yourShare != initialState.yourShare
+            || this.state.youPaid != initialState.youPaid))) {
+            
+            return null;
+        }
+
+        // Update newTransaction
+        newTransaction.split = {...newTransaction.split,
+            myShare, theirShare, otherAmount,
+            // XXX: using "0" because I don't know my own uid.
+            payer: this.state.youPaid ? "0" : newTransaction.split.with.uid,
+        };
+        newTransaction.amount = amount;
+
+        // Post the data
+        return util.apiPost({
+            path: "/api/transaction/split",
+            body: {
+                tid: props.transaction.id,
+                sid: props.transaction.split.id,
+                total, myShare, theirShare,
+                iPaid: this.state.youPaid,
+            },
+            location: this.props.location,
+            history: this.props.history,
+        });
+    }
+
+    submitUpdateDescription = (_props: UpdateTxProps, initialState: TxEntryState, newTransaction: Transaction, _data: SubmitData) => {
+        if (this.state.description == initialState.description) {
+            return null;
+        }
+        newTransaction.description = this.state.description;
+        return util.apiPost({
+            path: "/api/transaction/description",
+            body: {
+                description: newTransaction.description,
+                id: newTransaction.id,
+            },
+        });
+    }
+
+    submitUpdateDate = (_props: UpdateTxProps, initialState: TxEntryState, newTransaction: Transaction, data: SubmitData) => {
+        if (this.state.date == initialState.date) {
+            return null;
+        }
+        newTransaction.date = data.date;
+        return util.apiPost({
+            path: "/api/transaction/date",
+            body: {
+                date: data.date.valueOf().toString(),
+                id: newTransaction.id,
+            },
+            location: this.props.location,
+            history: this.props.history,
+        });
+    }
+
+    submitUpdateCategory = (_props: UpdateTxProps, initialState: TxEntryState, newTransaction: Transaction, data: SubmitData) => {
+        if (this.state.category == initialState.category) {
+            return null;
+        }
+        newTransaction.category = data.category;
+        return util.apiPost({
+            path: "/api/transaction/category",
+            body: {
+                category: data.category, id: newTransaction.id,
+            },
+            location: this.props.location,
+            history: this.props.history,
+        });
+    }
+
+    submitUpdateAmount = (props: UpdateTxProps, initialState: TxEntryState, newTransaction: Transaction, data: SubmitData) => {
+        if (this.state.amount == initialState.amount || props.transaction.split) {
+            return null;
+        }
+        newTransaction.amount = data.amount;
+        return util.apiPost({
+            path: "/api/transaction/amount",
+            body: {
+                amount: data.amount, id: newTransaction.id,
+            },
+            location: this.props.location,
+            history: this.props.history,
+        });
+    }
+
+    submitForAdd = (props: NewTxProps, data: SubmitData) => {
+        const {amount, frame, category, date, myShare, theirShare, otherAmount} = data;
+        const onAddTransaction = props.onAddTransaction;
+        const split = this.state.splitting ? {
+            with: this.state.splitWith,
+            myShare, theirShare, otherAmount,
+            iPaid: this.state.youPaid,
+        } : undefined;
+        // Saving a new transaction...
+        util.apiPost({
+            path: "/api/transaction",
+            body: {
+                frame: frame,
+                amount: amount,
+                description: this.state.description,
+                date: date,
+                category: category,
+                split: split,
+            },
+            location: this.props.location,
+            history: this.props.history,
+        }).then((response) => {
+            const transaction = fromSerialized(response.transaction);
+            // Not clearing date & category
+            this.setState({amount: "", description: "", splitting: false, splitWith: this.defaultSplitWith(),
+                yourShare: "1", theirShare: "1", youPaid: true});
+            onAddTransaction(transaction);
+        });
+    }
+
+    renderSplitSection = () => {
+        return <div>
+            <label>Split with: 
+                <select onChange={util.cc(this, "splitWith")} value={this.state.splitWith}>
+                    {this.props.friends.map(f => <option key={f.uid}>{f.email}</option>)}
+                </select>
+            </label>
+            <label className="first half">
+                Your share: <input type="text" value={this.state.yourShare} onChange={util.cc(this, "yourShare")} size={1} />
+            </label>
+            <label className="half">
+                Their share: <input type="text" value={this.state.theirShare} onChange={util.cc(this, "theirShare")} size={1} />
+            </label>
+            <div className="section" style={{clear: "both"}}>
+                <label className="nostyle"><input type="radio" name="payer" value="0" checked={this.state.youPaid}
+                    onChange={(e) => this.setState({youPaid: e.target.checked})} /> You paid</label>
+                <label className="nostyle"><input type="radio" name="payer" value="1" checked={!this.state.youPaid}
+                    onChange={(e) => this.setState({youPaid: !e.target.checked})} /> They paid</label>
+            </div>
+        </div>;
+    }
+    
     render(): JSX.Element {
         const options = this.props.categories.map(c => {
             return <option key={c.id} value={c.id}>{c.name}</option>;
@@ -263,24 +340,11 @@ export default class TxEntry extends React.Component<Props, TxEntryState> {
         const className = this.state.error ? "error" : "";
         // Show the splitting option if you're adding and have friends, or if you're updating a split transaction.
         const splitting = (isUpdate(this.props) ? this.props.transaction.split : this.props.friends.length > 0) ? (this.state.splitting ?
-            <div><label>Split with: <select onChange={util.cc(this, "splitWith")} value={this.state.splitWith}>
-                    {this.props.friends.map(f => <option key={f.uid}>{f.email}</option>)}
-                </select></label>
-                <label className="first half">
-                    Your share: <input type="text" value={this.state.yourShare} onChange={util.cc(this, "yourShare")} size={1} />
-                </label><label className="half">
-                    Their share: <input type="text" value={this.state.theirShare} onChange={util.cc(this, "theirShare")} size={1} /></label>
-                <div className="section" style={{clear: "both"}}>
-                    <label className="nostyle"><input type="radio" name="payer" value="0" checked={this.state.youPaid}
-                        onChange={(e) => this.setState({youPaid: e.target.checked})} /> You paid</label>
-                    <label className="nostyle"><input type="radio" name="payer" value="1" checked={!this.state.youPaid}
-                        onChange={(e) => this.setState({youPaid: !e.target.checked})} /> They paid</label>
-                </div>
-            </div>
+            this.renderSplitSection()
             : <span className="section clickable" onClick={() => this.setState({splitting: true})}>Split transaction...</span>)
             : null;
         return <div className="txentry">
-            <form onSubmit={this.handleSubmit.bind(this)}>
+            <form onSubmit={this.handleSubmit}>
                 <label>{isUpdate(this.props) && this.props.transaction.split ? "Total" : "Amount"}:
                 <input autoFocus className={className} value={this.state.amount} onChange={util.cc(this, "amount")} size={6} /></label>
                 <label>Description:
@@ -298,5 +362,3 @@ export default class TxEntry extends React.Component<Props, TxEntryState> {
         </div>;
     }
 }
-
-// export default withRouter(TxEntry);
