@@ -311,12 +311,22 @@ export default class TxEntry extends React.Component<Props, TxEntryState> {
         });
     }
 
+    openSplitSection = () => {
+        this.setState({splitting: true});
+    }
+    closeSplitSection = () => {
+        this.setState({splitting: false});
+    }
+
     renderSplitSection = () => {
+        // You can remove a split iff it's a new transaction.
+        const closeButton = isUpdate(this.props) ? null : <span className="close clickable fa-times fas" onClick={this.closeSplitSection} />;
         return <div>
             <label>Split with: 
                 <select onChange={util.cc(this, "splitWith")} value={this.state.splitWith}>
                     {this.props.friends.map(f => <option key={f.uid}>{f.email}</option>)}
                 </select>
+                {closeButton}
             </label>
             <label className="first half">
                 Your share: <input type="text" value={this.state.yourShare} onChange={util.cc(this, "yourShare")} size={1} />
@@ -341,7 +351,7 @@ export default class TxEntry extends React.Component<Props, TxEntryState> {
         // Show the splitting option if you're adding and have friends, or if you're updating a split transaction.
         const splitting = (isUpdate(this.props) ? this.props.transaction.split : this.props.friends.length > 0) ? (this.state.splitting ?
             this.renderSplitSection()
-            : <span className="section clickable" onClick={() => this.setState({splitting: true})}>Split transaction...</span>)
+            : <span className="section clickable" onClick={this.openSplitSection}>Split transaction...</span>)
             : null;
         return <div className="txentry">
             <form onSubmit={this.handleSubmit}>

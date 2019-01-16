@@ -340,6 +340,16 @@ form {
     border-right: 1px solid #eeeeee;
 }
 
+.txentry label .close {
+    font-size: 24px;
+    float: right;
+    margin-top: 3px; /* would rather center it vertically */
+}
+.txentry label .close:hover {
+    text-decoration: none;
+    color: #000;
+}
+
 .fullpage h1, .transactions.editing h1 {
     padding: 20px;
     border-bottom: 1px solid #e9e3f9;
@@ -416,13 +426,13 @@ footer .link {
     border: 1px solid #eeeeee;
     position: relative;
 }
-.poplet .close {
+.poplet > .close {
     position: absolute;
     top: 24px;
     right: 24px;
     font-size: 24px;
 }
-.poplet .close:hover {
+.poplet > .close:hover {
     text-decoration: none;
     color: #000;
 }
