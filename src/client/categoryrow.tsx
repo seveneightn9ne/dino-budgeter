@@ -97,6 +97,7 @@ class CategoryRow extends React.Component<Props, CategoryRowState> {
 
     render() {
         const budget = <ClickToEditMoney
+            size={6}
             value={this.props.category.budget}
             onChange={this.onUpdateBudget.bind(this)}
             postTo="/api/category/budget"

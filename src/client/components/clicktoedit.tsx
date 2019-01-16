@@ -59,16 +59,16 @@ abstract class ClickToEdit<T, P extends ClickToEditProps<T>> extends React.Compo
         this.setState({editing: !!this.props.open});
     }
 
-    updateValue(event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>): void {
+    updateValue(event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>, cb?: () => void): void {
         if (this.props.onProvisionalChange) {
             this.props.onProvisionalChange(this.fromInput(event.target.value));
         }
-        this.setState({newValue: event.target.value, newValueErr: false});
+        this.setState({newValue: event.target.value, newValueErr: false}, cb);
     }
 
-    saveNewValue(event: React.FormEvent): void {
+    saveNewValue(event?: React.FormEvent): void {
         console.log("Save new value");
-        event.preventDefault();
+        if (event) event.preventDefault();
         const newValue = this.fromInput(this.state.newValue);
         if (!this.validateChange(newValue)) {
 
@@ -97,7 +97,7 @@ abstract class ClickToEdit<T, P extends ClickToEditProps<T>> extends React.Compo
                 {this.renderInput()}
                 <input type="submit" value="Save" style={this.saveStyle} />
                 </form>
-            : <span className="clickable formatted" onClick={this.edit.bind(this)}>{this.formatDisplay(this.props.value)}</span>;
+            : <span className="clickable editable formatted" onClick={this.edit.bind(this)}>{this.formatDisplay(this.props.value)}</span>;
         return <span className={this.props.className}>{val}</span>;
     }
 }
@@ -209,7 +209,7 @@ export const ClickToEditDate = withRouter(ClickToEditDateBare);
 
 type CTEDP = ClickToEditDropdownProps & RouteComponentProps<ClickToEditDropdownProps>;
 class ClickToEditDropdownBare extends ClickToEdit<string, ClickToEditDropdownProps> {
-    saveStyle = {};
+    saveStyle = {display: "none"};
     constructor(props: CTEDP) {
         super(props);
         this.state = {...this.state, newValue: this.getInitialValue(props)};
@@ -232,11 +232,16 @@ class ClickToEditDropdownBare extends ClickToEdit<string, ClickToEditDropdownPro
     formatDisplay(val: string): string {
         return this.props.values.get(val);
     }
+    onChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+        this.updateValue(e, () => {
+            this.saveNewValue();
+        });
+    }
     renderInput() {
         const options: JSX.Element[] = [];
         this.props.values.forEach((display, val) =>
             options.push(<option key={val} value={val}>{display}</option>));
-        return <select autoFocus onChange={(e) => this.updateValue(e)} value={this.state.newValue}>
+        return <select autoFocus onChange={this.onChange} value={this.state.newValue}>
             {options}
         </select>;
     }

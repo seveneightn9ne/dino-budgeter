@@ -57,6 +57,7 @@ export default class Categories extends React.Component<Props, State> {
         // income - spent = balance;
         // spent = income - balance;
         const income = <ClickToEditMoney
+            size={6}
             value={this.props.frame.income}
             onChange={this.props.onNewIncome}
             postTo="/api/income"

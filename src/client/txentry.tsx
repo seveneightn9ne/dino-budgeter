@@ -318,6 +318,15 @@ export default class TxEntry extends React.Component<Props, TxEntryState> {
         this.setState({splitting: false});
     }
 
+    selectOnFocus = (e: React.FocusEvent<HTMLInputElement>) => {
+        console.log("selecting " + e.currentTarget.className);
+        e.currentTarget.select();
+    }
+
+    onPayerChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        this.setState({youPaid: e.target.value === "0"});
+    }
+
     renderSplitSection = () => {
         // You can remove a split iff it's a new transaction.
         const closeButton = isUpdate(this.props) ? null : <span className="close clickable fa-times fas" onClick={this.closeSplitSection} />;
@@ -329,16 +338,16 @@ export default class TxEntry extends React.Component<Props, TxEntryState> {
                 {closeButton}
             </label>
             <label className="first half">
-                Your share: <input type="text" value={this.state.yourShare} onChange={util.cc(this, "yourShare")} size={1} />
+                Your share: <input type="text" value={this.state.yourShare} onChange={util.cc(this, "yourShare")} size={1} className="center" onFocus={this.selectOnFocus} />
             </label>
             <label className="half">
-                Their share: <input type="text" value={this.state.theirShare} onChange={util.cc(this, "theirShare")} size={1} />
+                Their share: <input type="text" value={this.state.theirShare} onChange={util.cc(this, "theirShare")} size={1} className="center" onFocus={this.selectOnFocus} />
             </label>
             <div className="section" style={{clear: "both"}}>
                 <label className="nostyle"><input type="radio" name="payer" value="0" checked={this.state.youPaid}
-                    onChange={(e) => this.setState({youPaid: e.target.checked})} /> You paid</label>
+                    onChange={this.onPayerChange} /> You paid</label>
                 <label className="nostyle"><input type="radio" name="payer" value="1" checked={!this.state.youPaid}
-                    onChange={(e) => this.setState({youPaid: !e.target.checked})} /> They paid</label>
+                    onChange={this.onPayerChange} /> They paid</label>
             </div>
         </div>;
     }
@@ -347,7 +356,7 @@ export default class TxEntry extends React.Component<Props, TxEntryState> {
         const options = this.props.categories.map(c => {
             return <option key={c.id} value={c.id}>{c.name}</option>;
         });
-        const className = this.state.error ? "error" : "";
+        const className = this.state.error ? "center error" : "center";
         // Show the splitting option if you're adding and have friends, or if you're updating a split transaction.
         const splitting = (isUpdate(this.props) ? this.props.transaction.split : this.props.friends.length > 0) ? (this.state.splitting ?
             this.renderSplitSection()
@@ -355,10 +364,9 @@ export default class TxEntry extends React.Component<Props, TxEntryState> {
             : null;
         return <div className="txentry">
             <form onSubmit={this.handleSubmit}>
-                <label>{isUpdate(this.props) && this.props.transaction.split ? "Total" : "Amount"}:
-                <input autoFocus className={className} value={this.state.amount} onChange={util.cc(this, "amount")} size={6} /></label>
-                <label>Description:
-                <input value={this.state.description} onChange={util.cc(this, "description")} /></label>
+                <label>{isUpdate(this.props) && this.props.transaction.split ? "Total" : "Amount"}: <input
+                    autoFocus className={className} value={this.state.amount} onChange={util.cc(this, "amount")} size={6} /></label>
+                <label>Description: <input value={this.state.description} onChange={util.cc(this, "description")} /></label>
                 <label><input type="date" value={this.state.date} onChange={util.cc(this, "date")} /></label>
                 <label><select onChange={util.cc(this, "category")} value={this.state.category}>
                     <option value="">Uncategorized</option>

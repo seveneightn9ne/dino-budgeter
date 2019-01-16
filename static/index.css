@@ -263,9 +263,11 @@ td.amount {
 }
 td.date {
     width: 100px;
+    white-space: nowrap;
 }
 td.category {
-    width: 300px;
+    width: 100px;
+    white-space: nowrap;
 }
 td.split {
     width: 60px;
@@ -279,7 +281,7 @@ form {
 }
 
 .cte input {
-    height: 16px;
+    height: 18px;
 }
 .cte select {
     height: 24px;
@@ -287,6 +289,28 @@ form {
 .cte input[type=submit] {
     height: 24px;
     width: 70px;
+}
+/* Give space for the hover icon */
+.editable {
+    padding-right: 20px;
+}
+.editable:hover {
+    padding-right: 0;
+}
+/* Show pencil on hover */
+.editable:hover::after {
+    display: inline-block;
+    font-style: normal;
+    font-variant: normal;
+    text-rendering: auto;
+    -webkit-font-smoothing: antialiased;
+    font-family: "Font Awesome 5 Free";
+    font-weight: 900;
+    content: "\f303";
+    color: inherit;
+    opacity: 0.7;
+    padding-left: 6px;
+    font-size: 14px;
 }
 
 /* mobile transactions list */
@@ -438,4 +462,21 @@ footer .link {
 }
 .poplet h2 {
     margin: 0;
+}
+
+input:not([type=submit]):not([type=file]), select {
+    border-width: 0;
+    border-bottom: 2px dashed #999999;
+    font-family: inherit;
+    color: inherit;
+    background-color: inherit;
+}
+
+select { /* Remove the system dropdown arrow */
+    appearance: none;
+    -webkit-appearance: none;
+}
+
+input.center {
+    text-align: center;
 }
