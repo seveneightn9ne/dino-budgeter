@@ -132,7 +132,11 @@ input.error {
 tr:hover .deleteCr {
     visibility: visible;
 }
-
+a.button {
+    /* not buttons so need to set default font explicitly */
+    font-family: sans-serif;
+    font-size: 90%;
+}
 .button {
     background-image: linear-gradient(#7c4dff, #512da8);
     color: white;
@@ -144,10 +148,6 @@ tr:hover .deleteCr {
 }
 .button.nomargin {
     margin: 0;
-}
-
-.home {
-    text-align: center;
 }
 
 /* Categories Page */
@@ -479,4 +479,22 @@ select { /* Remove the system dropdown arrow */
 
 input.center {
     text-align: center;
+}
+
+/* home, signup, login page */
+.login form {
+    width: 300px;
+    margin: 20px 0;
+    font-size: 16px;
+}
+.login form > div {
+    margin-bottom: 20px;
+}
+.login .button {
+    margin: 40px 0;
+    display: block;
+    width: 150px;
+}
+.home div {
+    margin-top: 20px;
 }
