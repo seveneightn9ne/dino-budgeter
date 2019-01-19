@@ -32,13 +32,13 @@ export async function getUserByEmail(email: string, t: pgPromise.ITask<{}>): Pro
 }
 
 export async function getFriendByEmail(email: string, t: pgPromise.ITask<{}>): Promise<Friend | null> {
-    const row = await t.oneOrNone("select U.uid, M.gid from users U left join membership M on U.uid = M.uid where U.email = $1", [email]);
-    return row ? {uid: row.uid, gid: row.gid, email} : null;
+    const row = await t.oneOrNone("select U.uid, U.name, M.gid from users U left join membership M on U.uid = M.uid where U.email = $1", [email]);
+    return row ? {uid: row.uid, gid: row.gid, email, name: row.name} : null;
 }
 
 export async function getFriend(uid: UserId, t: pgPromise.ITask<{}>): Promise<Friend | null> {
-    const row = await t.oneOrNone("select U.email, M.gid from users U left join membership M on U.uid = M.uid where U.uid = $1", [uid]);
-    return row ? {uid: uid, gid: row.gid, email: row.email} : null;
+    const row = await t.oneOrNone("select U.email, U.name, M.gid from users U left join membership M on U.uid = M.uid where U.uid = $1", [uid]);
+    return row ? {uid: uid, gid: row.gid, email: row.email, name: row.name} : null;
 }
 
 export async function getEmail(user: UserId, t: pgPromise.ITask<{}>): Promise<string> {
@@ -50,6 +50,10 @@ export async function getEmails(users: UserId[], t: pgPromise.ITask<{}>): Promis
     // how..?
     // const rows = await t.many("select email from users where uid in ($1)", [users]);
     return await t.batch(users.map(u => getEmail(u, t)));
+}
+
+export async function setName(user: UserId, name: string, t: pgPromise.ITask<{}>): Promise<void> {
+    return await t.none("update users set name = $1 where uid = $2", [name, user]);
 }
 
 export async function addFriend(actor: UserId, friend: UserId, t: pgPromise.ITask<{}>) {
@@ -79,7 +83,7 @@ export async function softDeleteFriendship(u1: UserId, u2: UserId, t: pgPromise.
 
 // Only gets friendships that have been accepted both ways.
 export async function getFriends(user: UserId, t: pgPromise.ITask<{}>): Promise<Friend[]> {
-    const rows = await t.manyOrNone(`select U.uid, U.email, G.gid from friendship F
+    const rows = await t.manyOrNone(`select U.uid, U.email, U.name, G.gid from friendship F
         left join users U on (
             (F.u1 = U.uid and F.u2 = $1)
          or (F.u2 = U.uid and F.u1 = $1))
@@ -89,7 +93,7 @@ export async function getFriends(user: UserId, t: pgPromise.ITask<{}>): Promise<
 }
 
 export async function getPendingFriends(user: UserId, t: pgPromise.ITask<{}>): Promise<Friend[]> {
-    const rows = await t.manyOrNone(`select U.uid, U.email, G.gid from friendship F
+    const rows = await t.manyOrNone(`select U.uid, U.email, '' as name, G.gid from friendship F
         left join users U on (
             (F.u1 = U.uid and F.u2 = $1)
          or (F.u2 = U.uid and F.u1 = $1))
@@ -101,7 +105,7 @@ export async function getPendingFriends(user: UserId, t: pgPromise.ITask<{}>): P
 }
 
 export async function getFriendInvites(user: UserId, t: pgPromise.ITask<{}>): Promise<Friend[]> {
-    const rows = await t.manyOrNone(`select U.uid, U.email, G.gid from friendship F
+    const rows = await t.manyOrNone(`select U.uid, U.email, '' as name, G.gid from friendship F
         left join users U on (
             (F.u1 = U.uid and F.u2 = $1)
          or (F.u2 = U.uid and F.u1 = $1))

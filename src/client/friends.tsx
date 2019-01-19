@@ -33,6 +33,16 @@ export default class Friends extends React.Component<Props, State> {
         });
     }
 
+    name = (email: string) => {
+        let name = email;
+        this.props.friends.forEach(f => {
+            if (f.email === email) {
+                name = f.name || f.email;
+            }
+        });
+        return name;
+    }
+
     render() {
         const allFriends: {[email: string]: {
             debt?: Money,
@@ -58,7 +68,7 @@ export default class Friends extends React.Component<Props, State> {
         });
         const rows = _.map(allFriends, (val, email) => <tr>
             <td>{val.pending ? <span className="bean">Pending</span> : val.invite ? <span className="bean">Invite</span> : null}</td>
-            <td>{email}</td>
+            <td>{this.name(email)}</td>
             <td>{val.debt && val.debt.cmp(Money.Zero) > 0 ? val.debt.formatted() : null}</td>
             <td>{val.debt && val.debt.cmp(Money.Zero) < 0 ? val.debt.negate().formatted() : null}</td>
             <td>{val.debt && val.debt.cmp(Money.Zero) != 0 ? <Poplet text="Settle Debt">

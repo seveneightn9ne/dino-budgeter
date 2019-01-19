@@ -38,7 +38,8 @@ async function getTransactionsInner(where: Query, t: pgPromise.ITask<{}>): Promi
             T2.gid as other_gid,
             T2.amount as other_amount,
             U2.uid as other_uid,
-            U2.email as other_email from transactions T
+            U2.email as other_email,
+            U2.name as other_name from transactions T
         left join membership M on M.gid = T.gid
         left join users U on U.uid = M.uid
         left join transaction_splits TS on T.id = TS.tid
@@ -55,6 +56,7 @@ async function getTransactionsInner(where: Query, t: pgPromise.ITask<{}>): Promi
                 uid: row.other_uid,
                 gid: row.other_gid,
                 email: row.other_email,
+                name: row.other_name,
             },
             myShare: new Share(row.share),
             theirShare: new Share(row.other_share),

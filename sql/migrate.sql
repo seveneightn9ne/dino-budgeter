@@ -61,7 +61,14 @@ alter table friendship add alive bool not null default true;
 end if;
 end $$;
 
--- migration 6:
+-- migration 6: names
+do $$ begin
+if not exists(select * from information_schema.columns where table_name = 'users' and column_name = 'name')
+then
+alter table users add name varchar(255) default null;
+end if;
+end $$;
 
+-- migration 7:
 
 commit;

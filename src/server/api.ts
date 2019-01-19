@@ -64,6 +64,7 @@ export const handle_init_get = wrap(async function(req: Request, res: Response):
             resData.me = {
                 email: req.user.email,
                 uid: req.user.uid,
+                name: req.user.name,
                 gid: await gid(),
             };
         }

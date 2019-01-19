@@ -79,3 +79,11 @@ export const handle_friend_settle_post = wrap(async function(req: Request, res: 
         res.sendStatus(200);
     });
 });
+
+export const handle_change_name_post = wrap(async function(req: Request, res: Response) {
+    const name = req.body.name;
+    await db.tx(async t => {
+        await user.setName(req.user.uid, name, t);
+        res.sendStatus(200);
+    });
+});

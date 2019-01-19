@@ -70,7 +70,7 @@ export default class SplitPoplet extends React.Component<Props, State> {
 
     render() {
         return <Poplet className="txentry" text="shared" ref={this.poplet}>
-            <h2>Split with {this.props.transaction.split.with.email}</h2>
+            <h2>Split with {this.props.transaction.split.with.name || this.props.transaction.split.with.email}</h2>
             <form onSubmit={this.handleSubmit.bind(this)}>
             <label>Total: <input className={cls(this.state.totalErr)} type="text" size={6} onFocus={this.selectOnFocus}
                 value={this.state.total} onChange={cc(this, "total")} /></label>

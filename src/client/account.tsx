@@ -19,6 +19,7 @@ interface NonInitializedState {
     initialized: boolean;
     addFriend: string;
     addFriendError?: string;
+    name: string;
 }
 
 interface State extends Partial<InitializedState>, NonInitializedState {}
@@ -28,10 +29,15 @@ export default class Account extends React.Component<Props, State> {
     state: State = {
         initialized: false,
         addFriend: "",
+        name: "",
     };
 
     componentDidMount() {
-        util.initializeState(this, 0, "friends", "pendingFriends", "me", "invites");
+        util.initializeState(this, 0, "friends", "pendingFriends", "me", "invites").then(() => {
+            this.setState({
+                name: this.state.me.name || this.state.me.email,
+            });
+        });
     }
 
     onAddFriend(e: React.FormEvent) {
@@ -39,6 +45,22 @@ export default class Account extends React.Component<Props, State> {
         this.acceptFriend(this.state.addFriend, false);
         this.setState({
             addFriend: "",
+        });
+        e.preventDefault();
+    }
+
+    onSaveName = (e: React.FormEvent) => {
+        const name = this.state.name;
+        util.apiPost({
+            path: "/api/name",
+            body: {name},
+            location: this.props.location,
+            history: this.props.history,
+        }).then(() => {
+            this.setState({
+                me: {...this.state.me, name},
+                name: name || this.state.me.email,
+            });
         });
         e.preventDefault();
     }
@@ -118,11 +140,11 @@ export default class Account extends React.Component<Props, State> {
             return null;
         }
         const friends = this.state.friends.map(friend => <li key={friend.uid}>{friend.email}{" "}
-            <span className="clickable" onClick={() => this.deleteFriend(friend.email)}>Remove</span></li>);
+            <span className="button inline secondary" onClick={() => this.deleteFriend(friend.email)}>Remove</span></li>);
 
         friends.push(...this.state.pendingFriends.map(friend => <li key={friend.uid}>{friend.email}{" "}
                 <span className="pending">(Pending)</span>{" "}
-                <span className="clickable" onClick={() => this.rejectFriend(friend.email)}>Remove</span></li>));
+                <span className="button inline secondary" onClick={() => this.rejectFriend(friend.email)}>Remove</span></li>));
 
         let errorMessage;
         if (this.state.addFriendError) {
@@ -144,12 +166,18 @@ export default class Account extends React.Component<Props, State> {
 
             </div>;
         }
+        const defaultName = this.state.me ? this.state.me.name || this.state.me.email : '';
+        const nameCls = this.state.name === defaultName ? "button secondary inline" : "button inline"
         return <div>
             <header><div className="inner">
                 <h1>Account Settings</h1>
             </div></header>
-            <main>
+            <main className="account">
             <p>{this.state.me.email}</p>
+            <form onSubmit={this.onSaveName}>
+            <label>Name (shown to friends): <input type="text" value={this.state.name} onChange={util.cc(this, "name")} /></label>{' '}
+            <input type="submit" value="Save" className={nameCls} />
+            </form>
             {invites}
             <h2>Friends</h2>
             <ul>
@@ -157,11 +185,9 @@ export default class Account extends React.Component<Props, State> {
             </ul>
             <p>Add a friend by email. Once they confirm, you'll be able to split transactions with them.</p>
             {errorMessage}
-            <form onSubmit={this.onAddFriend.bind(this)}>
-                <input type="email" placeholder="Email"
-                    value={this.state.addFriend}
-                    onChange={util.cc(this, "addFriend")} />
-                <input type="submit" value="Request" />
+            <form className="oneline" onSubmit={this.onAddFriend.bind(this)}>
+                <label>Email: <input type="email" value={this.state.addFriend} onChange={util.cc(this, "addFriend")} /></label>
+                <input type="submit" value="Request" className="button secondary" />
             </form>
             </main>
         </div>;

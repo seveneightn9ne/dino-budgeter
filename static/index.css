@@ -4,6 +4,7 @@ Purple: #7c4dff;
 DarkPurple: #512da8;
 DarkerPurple: #2f156b;
 LightPurple: #e9e3f9;
+LightishPurple: #b499fc;
 Text: #444444;
 
 **/
@@ -132,10 +133,11 @@ input.error {
 tr:hover .deleteCr {
     visibility: visible;
 }
-a.button {
+a.button, span.button {
     /* not buttons so need to set default font explicitly */
     font-family: sans-serif;
     font-size: 90%;
+    cursor: pointer;
 }
 .button {
     background-image: linear-gradient(#7c4dff, #512da8);
@@ -145,9 +147,23 @@ a.button {
     margin: 4px 8px;
     text-decoration: none;
     border-style: none;
+    cursor: pointer;
 }
 .button.nomargin {
     margin: 0;
+}
+.button.secondary {
+    background-image: linear-gradient(#ffffff, #e9e3f9);
+    color: #2f156b;
+    border: 1px solid #b499fc;
+    padding: 9px 19px;
+}
+form.oneline .button, .button.inline {
+    padding: 5px 20px;
+    margin-left: 8px;
+}
+form.oneline .button.secondary, .button.inline.secondary {
+    padding: 4px 19px;
 }
 
 /* Categories Page */
@@ -497,4 +513,9 @@ input.center {
 }
 .home div {
     margin-top: 20px;
+}
+
+/* account page */
+.account .button {
+    margin-left: 0;
 }

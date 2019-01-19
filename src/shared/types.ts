@@ -61,6 +61,7 @@ export interface Friend {
     uid: UserId;
     gid: GroupId;
     email: string;
+    name: string;
 }
 
 export interface InitState {

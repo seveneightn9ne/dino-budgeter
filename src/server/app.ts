@@ -56,6 +56,7 @@ app.post("/api/friend",            ensureLogin.ensureLoggedIn("/api/auth-redirec
 app.post("/api/friend/reject",     ensureLogin.ensureLoggedIn("/api/auth-redirect"), user.handle_reject_friend_post);
 app.delete("/api/friend",          ensureLogin.ensureLoggedIn("/api/auth-redirect"), user.handle_friend_delete);
 app.post("/api/friend/settle",     ensureLogin.ensureLoggedIn("/api/auth-redirect"), user.handle_friend_settle_post);
+app.post("/api/name",              ensureLogin.ensureLoggedIn("/api/auth-redirect"), user.handle_change_name_post);
 
 app.get("/api/init",               ensureLogin.ensureLoggedIn("/api/auth-redirect"), api.handle_init_get);
 

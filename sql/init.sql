@@ -16,7 +16,8 @@ create table users (
   uid char(32) primary key,
   email varchar(255) unique not null,
   password_hash char(60) not null,
-  ctime timestamp not null default current_timestamp
+  ctime timestamp not null default current_timestamp,
+  name varchar(255),
 );
 create index email on users(email);
 
