@@ -2,6 +2,7 @@ import _ from "lodash";
 import pgPromise from "pg-promise";
 import Money from "../shared/Money";
 import { Friend, GroupId, User, UserId } from "../shared/types";
+import * as payments from "./payments";
 import db from "./db";
 
 export function getGroups(user: User | UserId, t?: pgPromise.ITask<{}>): Promise<GroupId[]> {
@@ -122,40 +123,9 @@ export async function isFriend(u1: UserId, u2: UserId, t: pgPromise.ITask<{}>): 
     return row.exists;
 }
 
-export async function addToBalance(u1: UserId, u2: UserId, amount: Money, t: pgPromise.ITask<{}>): Promise<void> {
-    [u1, u2] = [u1, u2].sort();
-    const row = await t.one(`select balance from friendship where u1 = $1 and u2 = $2`, [u1, u2]);
-    const balance = new Money(row.balance).plus(amount);
-    await t.none(`update friendship set balance = $1 where u1 = $2 and u2 = $3`, [balance.string(), u1, u2]);
-}
-
-export async function getBalance(u1: UserId, u2: UserId, t: pgPromise.ITask<{}>): Promise<Money> {
-    [u1, u2] = [u1, u2].sort();
-    const row = await t.oneOrNone(`select balance, alive from friendship where u1 = $1 and u2 = $2`, [u1, u2]);
-    if (row && row.balance && row.alive) {
-        return new Money(row.balance);
-    }
-    return Money.Zero;
-}
-
-async function getBalances(user: UserId, t: pgPromise.ITask<{}>): Promise<{[uid: string]: Money}> {
-    const rows = await t.manyOrNone(`select * from friendship where u1 = $1 or u2 = $1`, [user]);
-    const ret: {[uid: string]: Money} = {};
-    rows.forEach(row => {
-        const balance = new Money(row.balance);
-        if (!row.alive && balance.cmp(Money.Zero) == 0) {
-            // Deleted friendship with no balance - ignore.
-            return;
-        }
-        const otherUser = row.u1 == user ? row.u2 : row.u1;
-        ret[otherUser] = balance;
-    });
-    return ret;
-}
-
 /** Amounts that user owes each friend. Negative means the friend owes the user. */
 export async function getDebts(user: UserId, t: pgPromise.ITask<{}>): Promise<{[email: string]: Money}> {
-    const uidToDebts = _.mapValues(await getBalances(user, t), (amount, u2) => {
+    const uidToDebts = _.mapValues(await payments.getBalances(user, t), (amount, u2) => {
         const u1 = [user, u2].sort()[0];
         return u1 == user ? amount : amount.negate();
     });

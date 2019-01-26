@@ -89,4 +89,13 @@ create table transaction_splits (
 );
 create index split_sid on transaction_splits(sid);
 
+create table payments (
+  friendship_u1 char(32) not null references users,
+  friendship_u2 char(32) not null references users,
+  amount text not null default '0',
+  is_charge bool not null, -- either charge or payment.
+  ctime timestamp not null default current_timestamp
+);
+create index payments_idx on payments(friendship_u1, friendship_u2, ctime);
+
 commit;

@@ -244,9 +244,9 @@ export default class Frame extends React.Component<FrameProps & RouteComponentPr
         this.setState({frame: newFrame});
     }
 
-    onSettle(email: string) {
-        const debts = {...this.state.debts, [email]: Money.Zero};
-        this.setState({debts});
+    onPayment = (email: string, amount: Money) => {
+        const newDebt = this.state.debts[email].minus(amount);
+        this.setState({debts: {...this.state.debts, [email]: newDebt}});
     }
 
     render() {
@@ -299,7 +299,7 @@ export default class Frame extends React.Component<FrameProps & RouteComponentPr
                 location={this.props.location} history={this.props.history} />;
 
         const debts = <Friends debts={this.state.debts} friends={this.state.friends}
-            pendingFriends={this.state.pendingFriends} invites={this.state.invites} onSettle={this.onSettle.bind(this)}
+            pendingFriends={this.state.pendingFriends} invites={this.state.invites} onPayment={this.onPayment}
             location={this.props.location} history={this.props.history} />;
 
         const prevButton = <Link to={`/app/${this.prevMonth() + 1}/${this.prevYear()}`} className="fa-chevron-left fas framenav" />;

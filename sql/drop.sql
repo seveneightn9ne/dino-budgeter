@@ -1,5 +1,6 @@
 begin;
 drop table if exists playground;
+drop table if exists payments;
 drop table if exists transaction_splits;
 drop table if exists transactions;
 drop table if exists shared_transactions;

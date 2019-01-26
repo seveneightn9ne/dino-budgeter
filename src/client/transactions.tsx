@@ -6,7 +6,7 @@ import { Category, CategoryId, Frame, Friend, GroupId, Transaction, TransactionI
 import AIComponent from "./ai";
 import { ClickToEditDate, ClickToEditDropdown, ClickToEditMoney, ClickToEditText } from "./components/clicktoedit";
 import { MobileQuery } from "./components/media";
-import Poplet from "./components/poplet";
+import { ControlledPoplet } from "./components/poplet";
 import SplitPoplet from "./splitpoplet";
 import TxEntry from "./txentry";
 import * as util from "./util";
@@ -28,14 +28,13 @@ interface Props {
     history: History;
 }
 
-type State = {};
+type State = {
+    popletOpen: boolean;
+};
 
 export default class Transactions extends React.Component<Props, State> {
-
-    private poplet: React.RefObject<Poplet>;
-    constructor(props: Props) {
-        super(props);
-        this.poplet = React.createRef();
+    state = {
+        popletOpen: false,
     }
 
     delete(id: TransactionId): boolean {
@@ -66,8 +65,11 @@ export default class Transactions extends React.Component<Props, State> {
 
     onAddTransaction(t: Transaction) {
         this.props.onAddTransaction(t);
-        if (this.poplet.current) this.poplet.current.close();
+        this.closePoplet();
     }
+
+    closePoplet = () => this.setState({popletOpen: false});
+    openPoplet = () => this.setState({popletOpen: true});
 
     render() {
         const ais = getTransactionAIs(
@@ -122,11 +124,12 @@ export default class Transactions extends React.Component<Props, State> {
                 <table><tbody>
                     <tr><th></th><th>Date</th><th>Description</th><th>Category</th><th>Amount</th><th></th></tr>
                     <tr><td></td><td colSpan={5}>
-                    <Poplet ref={this.poplet} text={<span><span className="fa-plus-circle fas"></span> Transaction</span>}>
+                    <ControlledPoplet open={this.state.popletOpen} onRequestClose={this.closePoplet} onRequestOpen={this.openPoplet}
+                        text={<span><span className="fa-plus-circle fas"></span> Transaction</span>}>
                         <TxEntry onAddTransaction={this.onAddTransaction.bind(this)} defaultDate={this.props.newTxDate}
                             categories={this.props.categories} friends={this.props.friends}
                             location={this.props.location} history={this.props.history} />
-                    </Poplet></td></tr>
+                    </ControlledPoplet></td></tr>
                     {rowsDesktop}
                 </tbody></table>
             } mobile={rowsMobile} />

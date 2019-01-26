@@ -3,7 +3,7 @@ import * as React from "react";
 import Money from "../shared/Money";
 import * as transactions from "../shared/transactions";
 import { Share, Transaction } from "../shared/types";
-import Poplet from "./components/poplet";
+import { ControlledPoplet } from "./components/poplet";
 import { apiPost, cc } from "./util";
 
 interface Props {
@@ -19,13 +19,12 @@ interface State {
     theirShare: string;
     theirErr: boolean;
     youPaid: boolean;
+    popletOpen: boolean;
 }
 export default class SplitPoplet extends React.Component<Props, State> {
-    private poplet: React.RefObject<Poplet>;
     constructor(props: Props) {
         super(props);
         this.state = initialState(props.transaction);
-        this.poplet = React.createRef();
     }
 
     handleSubmit(event: React.FormEvent): void {
@@ -59,7 +58,6 @@ export default class SplitPoplet extends React.Component<Props, State> {
             // onUpdateTransaction will unmount this component
             this.props.onUpdateTransaction(newTransaction);
             this.setState(initialState(newTransaction));
-            if (this.poplet.current) this.poplet.current.close();
         });
     }
 
@@ -68,8 +66,12 @@ export default class SplitPoplet extends React.Component<Props, State> {
         e.currentTarget.select();
     }
 
+    open = () => this.setState({popletOpen: true});
+    close = () => this.setState({popletOpen: false});
+
     render() {
-        return <Poplet className="txentry" text="shared" ref={this.poplet}>
+        return <ControlledPoplet className="txentry" text="shared"
+            open={this.state.popletOpen} onRequestOpen={this.open} onRequestClose={this.close}>
             <h2>Split with {this.props.transaction.split.with.name || this.props.transaction.split.with.email}</h2>
             <form onSubmit={this.handleSubmit.bind(this)}>
             <label>Total: <input className={cls(this.state.totalErr)} type="text" size={6} onFocus={this.selectOnFocus}
@@ -89,7 +91,7 @@ export default class SplitPoplet extends React.Component<Props, State> {
             <div className="section">You spent {youPay(this.state).formatted()}.</div>
             <input className="button" type="submit" value="Save" />
             </form>
-        </Poplet>;
+        </ControlledPoplet>;
     }
 }
 
@@ -106,6 +108,7 @@ function initialState(transaction: Transaction): State {
         theirShare: theirShare.string(),
         theirErr: false,
         youPaid: transaction.split.payer != transaction.split.with.uid,
+        popletOpen: false,
     };
 }
 

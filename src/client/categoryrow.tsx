@@ -4,7 +4,7 @@ import * as categories from "../shared/categories";
 import Money from "../shared/Money";
 import { Category, CategoryId } from "../shared/types";
 import { ClickToEditDropdown, ClickToEditMoney, ClickToEditText } from "./components/clicktoedit";
-import Poplet from "./components/poplet";
+import { ControlledPoplet } from "./components/poplet";
 import * as util from "./util";
 
 interface CategoryRowProps {
@@ -16,17 +16,13 @@ interface CategoryRowProps {
 type Props = CategoryRowProps & RouteComponentProps<CategoryRowProps>;
 interface CategoryRowState {
     provisionalCoverFrom?: CategoryId;
+    popletOpen: boolean;
 }
 
 class CategoryRow extends React.Component<Props, CategoryRowState> {
-    state: CategoryRowState = {};
-    private poplet: React.RefObject<Poplet>;
-
-    constructor(props: Props) {
-        super(props);
-        // create a ref to store the textInput DOM element
-        this.poplet = React.createRef();
-      }
+    state: CategoryRowState = {
+        popletOpen: false,
+    };
 
     categoryMap(minBalance: Money): Map<string, string> {
         const map = new Map();
@@ -85,10 +81,12 @@ class CategoryRow extends React.Component<Props, CategoryRowState> {
         this.closePoplet();
     }
 
-    closePoplet() {
-        if (this.poplet.current) {
-            this.poplet.current.close();
-        }
+    closePoplet = () => {
+        this.setState({popletOpen: false});
+    }
+
+    openPoplet = () => {
+        this.setState({popletOpen: true});
     }
 
     previewCover(from: CategoryId) {
@@ -122,7 +120,8 @@ class CategoryRow extends React.Component<Props, CategoryRowState> {
 
 
         const balance = this.props.category.balance.cmp(Money.Zero) < 0 ?
-            <Poplet text={this.props.category.balance.formatted()} ref={this.poplet}
+            <ControlledPoplet text={this.props.category.balance.formatted()} open={this.state.popletOpen}
+                onRequestClose={this.closePoplet} onRequestOpen={this.openPoplet}
                 title={"Cover from another category"}>
                 Cover from {" "}
                 <ClickToEditDropdown open value=""
@@ -135,7 +134,7 @@ class CategoryRow extends React.Component<Props, CategoryRowState> {
                         amount: this.props.category.balance.negate(),
                         frame: this.props.category.frame,
                     }} />
-            </Poplet> : this.props.category.balance.formatted();
+            </ControlledPoplet> : this.props.category.balance.formatted();
 
         return <tr key={this.props.category.id} className="hoverable">
             <td className="del"><span className="deleteCr clickable fa-times fas" onClick={() => this.delete()} /></td>

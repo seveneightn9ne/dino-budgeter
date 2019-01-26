@@ -75,6 +75,22 @@ export interface InitState {
     me?: Friend;
 }
 
+export interface Payment {
+    type: 'payment',
+    payer: UserId,
+    payee: UserId,
+    amount: Money,
+    date: Date,
+}
+
+export interface Charge {
+    type: 'charge',
+    debtor: UserId,
+    debtee: UserId,
+    amount: Money,
+    date: Date,
+}
+
 export class Share extends Money {
     static normalize(...shares: Share[]): NormalizedShare[] {
         const total = shares.reduce((a, b) => a.plus(b), Share.Zero);

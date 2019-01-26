@@ -1,7 +1,7 @@
 import pgPromise from "pg-promise";
 import Money from "../shared/Money";
 import { FrameIndex, GroupId, Share, SplitId, Transaction, TransactionId, UserId } from "../shared/types";
-import { addToBalance } from "./user";
+import { addToBalance } from "./payments";
 export * from "../shared/transactions";
 import { getBalance } from "../shared/transactions";
 

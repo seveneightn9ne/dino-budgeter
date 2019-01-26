@@ -8,6 +8,7 @@ import { wrap } from "../api";
 import db from "../db";
 import * as transactions from "../transactions";
 import * as user from "../user";
+import * as payments from "../payments";
 
 export const handle_transaction_post = wrap(async function(req: Request, res: Response) {
     req.checkBody("frame").notEmpty().isNumeric();
@@ -81,7 +82,7 @@ export const handle_transaction_post = wrap(async function(req: Request, res: Re
                 amount, otherAmount, payer,
             });
             await t.batch([
-                user.addToBalance(req.user.uid, other, balance, t),
+                payments.addToBalance(req.user.uid, other, balance, t),
                 t.none(query, [other_id, other_gid, frame, otherAmount.string(), req.body.description, other_cat, date]),
                 t.none(`insert into shared_transactions (id, payer, settled) values ($1, $2, true)`, [sid, payer]),
                 t.none(`insert into transaction_splits (tid, sid, share) values ($1, $2, $3)`, [tx_id, sid, myShare.string()]),
@@ -215,7 +216,7 @@ export const handle_transaction_split_post = wrap(async function(req: Request, r
         const balanceDelta = newBalance.minus(prevBalance);
 
         const work = [
-            user.addToBalance(req.user.uid, otherUid, balanceDelta, t),
+            payments.addToBalance(req.user.uid, otherUid, balanceDelta, t),
             t.none("update transactions set amount = $1 where id = $2", [myAmount.string(), tid]),
             t.none("update transactions set amount = $1 where id = $2", [otherAmount.string(), otherTid]),
             t.none("update transaction_splits set share = $1 where tid = $2", [myShare.string(), tid]),

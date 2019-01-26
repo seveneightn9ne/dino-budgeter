@@ -1,9 +1,9 @@
 import { History, Location } from "history";
-import * as _ from "lodash";
+import _ from "lodash";
 import * as React from "react";
 import Money from "../shared/Money";
 import { Friend } from "../shared/types";
-import Poplet from "./components/poplet";
+import { ControlledPoplet } from "./components/poplet";
 import * as util from "./util";
 
 interface Props {
@@ -13,80 +13,166 @@ interface Props {
     debts: {[email: string]: Money};
     location: Location;
     history: History;
-    onSettle: (email: string) => void;
+    onPayment: (email: string, amount: Money) => void;
 }
 
-type State = {};
+type State = {
+    paymentOpen: boolean,
+    payment_amount: string,
+    payment_youPay: boolean,
+
+    chargeOpen: boolean,
+    charge_amount: string,
+    charge_youCharge: boolean,
+};
 
 export default class Friends extends React.Component<Props, State> {
-    settle(email: string): Promise<void> {
-        return util.apiPost({
-            path: "/api/friend/settle",
+    state = {
+        paymentOpen: false,
+        payment_youPay: true,
+        payment_amount: '',
+        chargeOpen: false,
+        charge_youCharge: true,
+        charge_amount: '',
+    }
+
+    selectOnFocus = (e: React.FocusEvent<HTMLInputElement>) => 
+        e.currentTarget.select();
+
+    openPayment = () => this.setState({
+        paymentOpen: true,
+        payment_youPay: true,
+        payment_amount: '',
+    });
+    closePayment = () => this.setState({paymentOpen: false});
+    openCharge = () => this.setState({
+        chargeOpen: true,
+        charge_youCharge: true,
+        charge_amount: '',
+    });
+    closeCharge = () => this.setState({chargeOpen: false});
+
+    onSubmitPayment = (email: string) => (e: React.FormEvent) =>
+        this.onSubmitInner(e, email, this.state.payment_amount, this.state.payment_youPay, true);
+
+    onSubmitCharge = (email: string) => (e: React.FormEvent) => 
+        this.onSubmitInner(e, email, this.state.charge_amount, this.state.charge_youCharge, true);
+
+    onSubmitInner = (e: React.FormEvent, email: string, amountStr: string, youPay: boolean, isPayment: boolean) => {
+        e.preventDefault();
+        let amount = new Money(amountStr);
+        if (!amount.isValid()) {
+            return;
+        }
+        util.apiPost({
+            path: '/api/payment',
             body: {
-                amount: this.props.debts[email],
-                email,
+                email, amount, youPay, isPayment,
             },
             location: this.props.location,
             history: this.props.history,
         }).then(() => {
-            this.props.onSettle(email);
+            if (!youPay) {
+                amount = amount.negate();
+            }
+            if (!isPayment) {
+                amount = amount.negate();
+            }
+            this.props.onPayment(email, amount);
+            this.closePayment();
+            this.closeCharge();
         });
     }
-
-    name = (email: string) => {
-        let name = email;
-        this.props.friends.forEach(f => {
-            if (f.email === email) {
-                name = f.name || f.email;
-            }
-        });
-        return name;
+    allFriends = () => {
+        let allFriends: {
+            name?: string,
+            email: string,
+            debt: Money,
+            pending?: true,
+            invite?: true,
+        }[] = this.props.friends.map(f => ({
+            name: f.name,
+            email: f.email,
+            debt: this.props.debts[f.email] || Money.Zero,
+        }));
+        allFriends = allFriends.concat(this.props.pendingFriends.map(f => ({
+            email: f.email,
+            debt: this.props.debts[f.email] || Money.Zero,
+            pending: true as true,
+        })));
+        allFriends = allFriends.concat(this.props.invites.map(f => ({
+            email: f.email,
+            debt: this.props.debts[f.email] || Money.Zero,
+            invite: true as true,
+        })));
+        return allFriends;
     }
 
     render() {
-        const allFriends: {[email: string]: {
-            debt?: Money,
-            pending?: true,
-            invite?: true,
-        }} = _.mapValues(this.props.debts, amount => ({
-            debt: amount,
-        }));
-        this.props.friends.forEach(f => {
-            if (allFriends[f.email] == undefined) {
-                allFriends[f.email] = {};
-            }
+        // TODO - want friendship last-active to sort the friendships.
+       
+        const rows = this.allFriends().map(f => {
+            const displayName = f.name || f.email;
+            const email = displayName !== f.email ? 
+                <div className="friend-email">{f.email}</div> : null;
+            const debt = f.debt.cmp(Money.Zero) == 0 ? null :
+                f.debt.cmp(Money.Zero) > 0 ?
+                    <div className="friend-debt">
+                        you owe {f.debt.formatted()}
+                    </div> :
+                    <div className="friend-debt">
+                        owes you {f.debt.negate().formatted()}
+                    </div>;
+            const payment = <ControlledPoplet
+                open={this.state.paymentOpen} onRequestOpen={this.openPayment} onRequestClose={this.closePayment}
+                text={<span><span className="fa-plus-circle fas"></span> Payment</span>}>
+                <h2>New Payment</h2>
+                <form onSubmit={this.onSubmitPayment(f.email)}>
+                    <label>Amount: <input type="text" size={6} onFocus={this.selectOnFocus}
+                        value={this.state.payment_amount} onChange={util.cc(this, "payment_amount")} /></label>
+                    <div className="section" style={{clear: "both"}}>
+                        <label className="nostyle"><input type="radio" name="payer" value="0" checked={this.state.payment_youPay}
+                            onChange={(e) => this.setState({payment_youPay: e.target.checked})} /> You're paying {displayName}</label>
+                        <label className="nostyle"><input type="radio" name="payer" value="1" checked={!this.state.payment_youPay}
+                            onChange={(e) => this.setState({payment_youPay: !e.target.checked})} /> {displayName} is paying you</label>
+                    </div>
+                    <input className="button" type="submit" value="Save" />
+                </form>
+            </ControlledPoplet>
+            const charge = <ControlledPoplet
+                open={this.state.chargeOpen} onRequestOpen={this.openCharge} onRequestClose={this.closeCharge}
+                text={<span><span className="fa-plus-circle fas"></span> Charge</span>}>
+                <h2>New Charge</h2>
+                <form onSubmit={this.onSubmitCharge(f.email)}>
+                    <label>Amount: <input type="text" size={6} onFocus={this.selectOnFocus}
+                        value={this.state.charge_amount} onChange={util.cc(this, "charge_amount")} /></label>
+                    <div className="section" style={{clear: "both"}}>
+                        <label className="nostyle"><input type="radio" name="payer" value="1" checked={this.state.charge_youCharge}
+                            onChange={(e) => this.setState({charge_youCharge: e.target.checked})} /> {displayName} owes you</label>
+                        <label className="nostyle"><input type="radio" name="payer" value="0" checked={!this.state.charge_youCharge}
+                            onChange={(e) => this.setState({charge_youCharge: !e.target.checked})} /> You owe {displayName}</label>
+                    </div>
+                    <input className="button" type="submit" value="Save" />
+                </form>
+            </ControlledPoplet>
+            return (<div className="friend-row" key={f.email}>
+                <div className="friend-title">
+                    <div className="friend-name">{displayName}</div>
+                    {email}
+                </div>
+                {debt}
+                <div className="friend-actions">
+                    <div className="friend-pay">
+                        {payment}
+                    </div>
+                    <div className="friend-charge">
+                        {charge}
+                    </div>
+                </div>
+            </div>);
         });
-        this.props.pendingFriends.forEach(f => {
-            if (allFriends[f.email] == undefined) {
-                allFriends[f.email] = {pending: true};
-            }
-        });
-        this.props.invites.forEach(f => {
-            if (allFriends[f.email] == undefined) {
-                allFriends[f.email] = {invite: true};
-            }
-        });
-        const rows = _.map(allFriends, (val, email) => <tr>
-            <td>{val.pending ? <span className="bean">Pending</span> : val.invite ? <span className="bean">Invite</span> : null}</td>
-            <td>{this.name(email)}</td>
-            <td>{val.debt && val.debt.cmp(Money.Zero) > 0 ? val.debt.formatted() : null}</td>
-            <td>{val.debt && val.debt.cmp(Money.Zero) < 0 ? val.debt.negate().formatted() : null}</td>
-            <td>{val.debt && val.debt.cmp(Money.Zero) != 0 ? <Poplet text="Settle Debt">
-                <h2>Settle debts with {email}</h2>
-                <p>{val.debt.cmp(Money.Zero) > 0 ? `Do this after you've paid ${email} ${val.debt.formatted()}.` :
-                    `Do this after ${email} has paid you ${val.debt.negate().formatted()}.`}</p>
-                <button className="button" onClick={() => this.settle(email)}>Settle Debt</button>
-            </Poplet> : null}</td>
-            <td><span className="clickable">{val.invite ? "Accept Friend" : "Remove Friend"}</span></td>
-        </tr>);
         return <div className="friends">
-            <table>
-                <tbody>
-                    <tr><th></th><th>Friend</th><th>You owe</th><th>They Owe</th><th></th><th></th></tr>
-                    {rows}
-                </tbody>
-            </table>
-
+            {rows}
         </div>;
     }
 }

@@ -15,6 +15,7 @@ import * as categories from "./api/categories";
 import * as frame from "./api/frame";
 import * as transactions from "./api/transactions";
 import * as user from "./api/user";
+import * as payments from "./api/payments";
 import * as auth from "./auth";
 import db from "./db";
 
@@ -55,7 +56,7 @@ app.get("/api/auth-redirect",      user.handle_auth_redirect_get);
 app.post("/api/friend",            ensureLogin.ensureLoggedIn("/api/auth-redirect"), user.handle_add_friend_post);
 app.post("/api/friend/reject",     ensureLogin.ensureLoggedIn("/api/auth-redirect"), user.handle_reject_friend_post);
 app.delete("/api/friend",          ensureLogin.ensureLoggedIn("/api/auth-redirect"), user.handle_friend_delete);
-app.post("/api/friend/settle",     ensureLogin.ensureLoggedIn("/api/auth-redirect"), user.handle_friend_settle_post);
+app.post("/api/payment",           ensureLogin.ensureLoggedIn("/api/auth-redirect"), payments.handle_payment_post);
 app.post("/api/name",              ensureLogin.ensureLoggedIn("/api/auth-redirect"), user.handle_change_name_post);
 
 app.get("/api/init",               ensureLogin.ensureLoggedIn("/api/auth-redirect"), api.handle_init_get);
