@@ -5,6 +5,7 @@ import Money from "../shared/Money";
 import { Friend } from "../shared/types";
 import { ControlledPoplet } from "./components/poplet";
 import * as util from "./util";
+import { Payment } from "../shared/api";
 
 interface Props {
     friends: Friend[];
@@ -64,8 +65,8 @@ export default class Friends extends React.Component<Props, State> {
         if (!amount.isValid()) {
             return;
         }
-        util.apiPost({
-            path: '/api/payment',
+        util.apiFetch({
+            api: Payment,
             body: {
                 email, amount, youPay, isPayment,
             },

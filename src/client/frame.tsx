@@ -13,6 +13,7 @@ import Friends from "./friends";
 import Transactions from "./transactions";
 import TxEntry from "./txentry";
 import * as util from "./util";
+import { Income } from "../shared/api";
 
 type FrameProps = RouteComponentProps<{month: string, year: string}>;
 interface FrameState {
@@ -220,8 +221,8 @@ export default class Frame extends React.Component<FrameProps & RouteComponentPr
             event.preventDefault();
             return;
         }
-        util.apiPost({
-            path: "/api/income",
+        util.apiFetch({
+            api: Income,
             body: {
                 frame: this.state.frame.index,
                 income: setIncome,
@@ -282,6 +283,8 @@ export default class Frame extends React.Component<FrameProps & RouteComponentPr
             onAddCategory={this.onAddCategory.bind(this)}
             onChangeCategory={this.onChangeCategory.bind(this)}
             onDeleteCategory={this.onDeleteCategory.bind(this)}
+            location={this.props.location}
+            history={this.props.history}
             onNewIncome={this.onNewIncome.bind(this)} />;
 
         const appPrefix = `/app/${this.month() + 1}/${this.year()}`;

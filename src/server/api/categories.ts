@@ -31,7 +31,7 @@ export const handle_category_post = wrap(async function(req: Request, res: Respo
             "budget) values ($1, $2, $3, $4, $5, $6, $7)", [
                 c.id, c.gid, c.frame, c.alive, c.name, c.ordering, c.budget.string()]);
     });
-    res.send({category: c});
+    res.send(c);
 });
 
 export const handle_category_delete = wrap(async function(req: Request, res: Response) {

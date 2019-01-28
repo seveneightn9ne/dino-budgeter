@@ -13,10 +13,7 @@ export const wrap = function(handler: (req: Request, res: Response) => Promise<v
             console.log("Error (caught)", err);
             const status = 500;
             res.status(status).send({
-                "error": {
-                    "status": status,
-                    "message": "internal server error",
-                }
+                "error": "internal server error",
             });
         });
     };

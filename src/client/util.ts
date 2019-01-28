@@ -1,11 +1,9 @@
 import { History, Location } from "history";
 import { FrameIndex, InitState } from "../shared/types";
 export * from "../shared/util";
-import * as _ from "lodash";
-import * as categories from "../shared/categories";
+import _ from "lodash";
 import * as frames from "../shared/frames";
-import Money from "../shared/Money";
-import * as transactions from "../shared/transactions";
+import * as api from "../shared/api";
 
 export const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
@@ -41,87 +39,60 @@ export function defaultTxDate(frame: FrameIndex): Date {
     return newTxDate;
 }
 
-function apiFetch(options: {
-    path: string,
-    body?: {[key: string]: any},
+export function apiFetch<Request, Response>(options: {
+    api: api.API<Request, Response>,
+    body?: Request,
     location?: Location,
     history?: History,
-    method: "GET" | "POST" | "PUT" | "DELETE",
-}): Promise<any> {
-    return fetch(options.path, {
-        method: options.method,
+}): Promise<Response> {
+    return fetch(options.api.path, {
+        method: options.api.method,
         headers: {
             "Accept": "application/json",
             "Content-Type": "application/json"
           },
         body: options.body ? JSON.stringify(options.body) : undefined,
     }).then(result => {
-        if (result.status != 200 && result.status != 204) {
+        if (result.status == 204) {
+            // Assert that 204 corresponds to EmptyResponse.
+            // The server should have typechecking to verify
+            // that 204 is allowed only when Response is EmptyResponse.
+            return api.EmptyResponseValue as unknown as Response;
+        }
+        if (result.status == 401) {
+            // Note, discarding non-path bits of the location
+            const redir = options.location ? options.location.pathname : "";
+            const path = `/login?redirectTo=${redir}`;
+            if (options.history) {
+                options.history.push(path);
+                throw new Error(`Reauth required`);
+            } else {
+                window.location.href = path;
+            }
+        }
+        if (result.status != 200) {
             throw result.status;
         }
-        return result.json().then(json => {
-            if (json.error == "reauth") {
-                // Note, discarding non-path bits of the location
-                const redir = options.location ? options.location.pathname : "";
-                const path = `/login?redirectTo=${redir}`;
-                if (options.history) {
-                    options.history.push(path);
-                    throw new Error(`Reauth required`);
-                } else {
-                    window.location.href = path;
-                }
-            }
+        return result.text().then(t => {
+            const json: Response = JSON.parse(t, options.api.responseReviver);
             return json;
-        }).catch(() => {
-            // The response was not JSON but it was 200 so it probably was just "OK"
-            return {};
         });
     });
 }
 
-export function apiPost(options: {
-    path: string,
-    body: {[key: string]: any},
-    location?: Location,
-    history?: History,
-    method?: "POST" | "PUT" | "DELETE",
-}): Promise<any> {
-    return apiFetch({...options, method: options.method || "POST"});
-}
-
-export function apiGet(options: {
-    path: string,
-    location?: Location,
-    history?: History,
-}): Promise<any> {
-    return apiFetch({...options, method: "GET"});
-}
-
 export function initializeState<S extends {initialized: boolean}, W extends (keyof (InitState & S))[]>
         (self: React.Component<any, S>, index: FrameIndex, ...wants: W) {
-    let params = wants.map(w => w + "=true").join("&");
-    if (index) {
-        params += "&index=" + index;
-    }
-    return apiGet({
-        path: "/api/init?" + params,
+    return apiFetch({
+        api: api.Initialize,
+        body: {
+            index,
+            fields: wants as (keyof InitState)[],
+        },
         location: self.props.location,
         history: self.props.history,
     }).then(response => {
-        if (response.frame) {
-            response.frame = frames.fromSerialized(response.frame);
-        }
-        if (response.categories) {
-            response.categories = response.categories.map(categories.fromSerialized);
-        }
-        if (response.transactions) {
-            response.transactions = response.transactions.map(transactions.fromSerialized);
-        }
-        if (response.debts) {
-            response.debts = _.mapValues(response.debts, v => new Money(v));
-        }
         return new Promise((resolve) => {
-            self.setState({...response, initialized: true}, () => {
+            self.setState({...(response as any), initialized: true}, () => {
                 resolve();
             });
         });

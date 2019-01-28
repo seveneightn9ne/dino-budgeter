@@ -2,9 +2,10 @@ import { History, Location } from "history";
 import * as React from "react";
 import { index } from "../shared/frames";
 import Money from "../shared/Money";
-import { distributeTotal, fromSerialized } from "../shared/transactions";
+import { distributeTotal } from "../shared/transactions";
 import { Category, Friend, Share, Transaction, CategoryId } from "../shared/types";
 import * as util from "./util";
+import * as api from '../shared/api';
 
 interface NewTxProps {
     onAddTransaction: (transaction: Transaction) => void;
@@ -112,9 +113,8 @@ export default class TxEntry extends React.Component<Props, TxEntryState> {
     }
 
     delete(t: Transaction): boolean {
-        util.apiPost({
-            method: "DELETE",
-            path: "/api/transaction",
+        util.apiFetch({
+            api: api.DeleteTransaction,
             body: {id: t.id},
             location: this.props.location,
             history: this.props.history,
@@ -208,8 +208,8 @@ export default class TxEntry extends React.Component<Props, TxEntryState> {
         newTransaction.amount = amount;
 
         // Post the data
-        return util.apiPost({
-            path: "/api/transaction/split",
+        return util.apiFetch({
+            api: api.TransactionSplit,
             body: {
                 tid: props.transaction.id,
                 sid: props.transaction.split.id,
@@ -226,8 +226,8 @@ export default class TxEntry extends React.Component<Props, TxEntryState> {
             return null;
         }
         newTransaction.description = this.state.description;
-        return util.apiPost({
-            path: "/api/transaction/description",
+        return util.apiFetch({
+            api: api.TransactionDescription,
             body: {
                 description: newTransaction.description,
                 id: newTransaction.id,
@@ -240,10 +240,10 @@ export default class TxEntry extends React.Component<Props, TxEntryState> {
             return null;
         }
         newTransaction.date = data.date;
-        return util.apiPost({
-            path: "/api/transaction/date",
+        return util.apiFetch({
+            api: api.TransactionDate,
             body: {
-                date: data.date.valueOf().toString(),
+                date: data.date,
                 id: newTransaction.id,
             },
             location: this.props.location,
@@ -256,10 +256,11 @@ export default class TxEntry extends React.Component<Props, TxEntryState> {
             return null;
         }
         newTransaction.category = data.category;
-        return util.apiPost({
-            path: "/api/transaction/category",
+        return util.apiFetch({
+            api: api.TransactionCategory,
             body: {
-                category: data.category, id: newTransaction.id,
+                category: data.category,
+                id: newTransaction.id,
             },
             location: this.props.location,
             history: this.props.history,
@@ -271,8 +272,8 @@ export default class TxEntry extends React.Component<Props, TxEntryState> {
             return null;
         }
         newTransaction.amount = data.amount;
-        return util.apiPost({
-            path: "/api/transaction/amount",
+        return util.apiFetch({
+            api: api.TransactionAmount,
             body: {
                 amount: data.amount, id: newTransaction.id,
             },
@@ -290,8 +291,8 @@ export default class TxEntry extends React.Component<Props, TxEntryState> {
             iPaid: this.state.youPaid,
         } : undefined;
         // Saving a new transaction...
-        util.apiPost({
-            path: "/api/transaction",
+        util.apiFetch({
+            api: api.AddTransaction,
             body: {
                 frame: frame,
                 amount: amount,
@@ -302,8 +303,7 @@ export default class TxEntry extends React.Component<Props, TxEntryState> {
             },
             location: this.props.location,
             history: this.props.history,
-        }).then((response) => {
-            const transaction = fromSerialized(response.transaction);
+        }).then((transaction) => {
             // Not clearing date & category
             this.setState({amount: "", description: "", splitting: false, splitWith: this.defaultSplitWith(),
                 yourShare: "1", theirShare: "1", youPaid: true});

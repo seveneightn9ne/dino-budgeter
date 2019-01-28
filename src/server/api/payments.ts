@@ -35,6 +35,6 @@ export const handle_payment_post = wrap(async function(req: Request, res: Respon
         } else {
             await payments.addCharge(from, to, amount, t);
         }
-        res.sendStatus(200);
+        res.sendStatus(204);
     });
 });

@@ -6,6 +6,7 @@ import { Category, CategoryId } from "../shared/types";
 import { ClickToEditDropdown, ClickToEditMoney, ClickToEditText } from "./components/clicktoedit";
 import { ControlledPoplet } from "./components/poplet";
 import * as util from "./util";
+import { DeleteCategory, CategoryBudget, CategoryName, BudgetingMove } from "../shared/api";
 
 interface CategoryRowProps {
     category: Category;
@@ -35,9 +36,8 @@ class CategoryRow extends React.Component<Props, CategoryRowState> {
     }
 
     delete(): boolean {
-        util.apiPost({
-            path: "/api/category",
-            method: "DELETE",
+        util.apiFetch({
+            api: DeleteCategory,
             body: {
                 id: this.props.category.id,
                 frame: this.props.category.frame,
@@ -58,7 +58,7 @@ class CategoryRow extends React.Component<Props, CategoryRowState> {
         this.props.onChangeCategory(newCategory);
     }
 
-    onUpdateName(newName: string) {
+    onUpdateName = (newName: string) => {
         const newCategory = {...this.props.category};
         newCategory.name = newName;
         this.props.onChangeCategory(newCategory);
@@ -96,21 +96,25 @@ class CategoryRow extends React.Component<Props, CategoryRowState> {
     render() {
         const budget = <ClickToEditMoney
             size={6}
+            api={CategoryBudget}
             value={this.props.category.budget}
             onChange={this.onUpdateBudget.bind(this)}
-            postTo="/api/category/budget"
             postData={{
                 id: this.props.category.id,
                 frame: this.props.category.frame}}
+            location={this.props.location}
+            history={this.props.history}
             postKey="amount" />;
         const name = <ClickToEditText
                 size={40}
+                api={CategoryName}
                 value={this.props.category.name}
-                onChange={this.onUpdateName.bind(this)}
-                postTo="/api/category/name"
+                onChange={this.onUpdateName}
                 postData={{
                     id: this.props.category.id,
                     frame: this.props.category.frame}}
+                location={this.props.location}
+                history={this.props.history}
                 postKey="name" />;
         const spending = this.props.category.balance.minus(this.props.category.budget).negate();
         const spendingCls = spending.cmp(Money.Zero) == 0 ? "zero" : "";
@@ -125,10 +129,12 @@ class CategoryRow extends React.Component<Props, CategoryRowState> {
                 title={"Cover from another category"}>
                 Cover from {" "}
                 <ClickToEditDropdown open value=""
+                    api={BudgetingMove}
                     values={this.categoryMap(this.props.category.balance.negate())}
                     onChange={this.onCoverBalance.bind(this)}
-                    postTo="/api/budgeting/move"
                     postKey="from"
+                    location={this.props.location}
+                    history={this.props.history}
                     postData={{
                         to: this.props.category.id,
                         amount: this.props.category.balance.negate(),

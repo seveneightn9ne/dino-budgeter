@@ -10,6 +10,7 @@ import { ControlledPoplet } from "./components/poplet";
 import SplitPoplet from "./splitpoplet";
 import TxEntry from "./txentry";
 import * as util from "./util";
+import { DeleteTransaction, TransactionDate, TransactionDescription, TransactionCategory, TransactionAmount } from "../shared/api";
 
 interface Props {
     month: number;
@@ -38,9 +39,8 @@ export default class Transactions extends React.Component<Props, State> {
     }
 
     delete(id: TransactionId): boolean {
-        util.apiPost({
-            method: "DELETE",
-            path: "/api/transaction",
+        util.apiFetch({
+            api: DeleteTransaction,
             body: {id},
             location: this.props.location,
             history: this.props.history,
@@ -81,34 +81,46 @@ export default class Transactions extends React.Component<Props, State> {
                 <span className="deleteCr clickable fa-times fas" onClick={() => this.delete(tx.id)}></span>
             </td>
             <td className="date"><ClickToEditDate value={tx.date}
+                api={TransactionDate}
                 onChange={date =>
                     this.props.onUpdateTransaction({...tx, date})}
-                postTo="/api/transaction/date"
                 postKey="date"
+                location={this.props.location}
+                history={this.props.history}
                 postData={{id: tx.id}}
             /></td>
-            <td className="stretch"><ClickToEditText value={tx.description} size={20}
+            <td className="stretch"><ClickToEditText
+                api={TransactionDescription}
+                value={tx.description}
+                size={20}
                 onChange={description =>
                     this.props.onUpdateTransaction({...tx, description})}
-                postTo="/api/transaction/description"
                 postKey="description"
+                location={this.props.location}
+                history={this.props.history}
                 postData={{id: tx.id}}
             /></td>
             <td className={tx.category ? "category" : "category highlighted"}>
-            <ClickToEditDropdown value={tx.category || ""}
+            <ClickToEditDropdown
+                api={TransactionCategory}
+                value={tx.category || ""}
                 values={this.categoryMap()}
                 onChange={cid => this.props.onUpdateTransaction({...tx, category: cid})}
-                postTo="/api/transaction/category"
                 postKey="category"
                 postData={{id: tx.id}}
+                location={this.props.location}
+                history={this.props.history}
             /></td>
             <td className="amount">{tx.split ? tx.amount.formatted() :
-                <ClickToEditMoney value={tx.amount}
+                <ClickToEditMoney
+                    api={TransactionAmount}
+                    value={tx.amount}
                     onChange={amount =>
                         this.props.onUpdateTransaction({...tx, amount})}
-                    postTo="/api/transaction/amount"
                     postKey="amount"
                     postData={{id: tx.id}}
+                    location={this.props.location}
+                    history={this.props.history}
             />}</td>
             <td className="split">
                 {tx.split ? <SplitPoplet transaction={tx} onUpdateTransaction={this.props.onUpdateTransaction} /> : null}

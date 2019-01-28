@@ -92,7 +92,7 @@ export const handle_transaction_post = wrap(async function(req: Request, res: Re
         const transaction: Transaction = {
             id: tx_id, gid, frame, category, amount, description, alive: true, date, split
         };
-        res.send({transaction});
+        res.send(transaction);
     });
 });
 
@@ -133,8 +133,8 @@ export const handle_transaction_amount_post = wrap(async function(req: Request, 
 
 export const handle_transaction_date_post = wrap(async function(req: Request, res: Response) {
     await handle_transaction_update_post("date",
-        s => !isNaN(new Date(Number(s)).valueOf()),
-        s => new Date(Number(s)))(req, res);
+        s => !isNaN(new Date(s).valueOf()),
+        s => new Date(s))(req, res);
 });
 
 export const handle_transaction_category_post = wrap(async function(req: Request, res: Response) {

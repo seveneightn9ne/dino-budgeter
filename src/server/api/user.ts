@@ -4,8 +4,8 @@ import { wrap } from "../api";
 import db from "../db";
 import * as user from "../user";
 
-export const handle_auth_redirect_get = function(req: Request, res: Response) {
-    res.send({error: "reauth", redirectTo: req.query.redirectTo});
+export const handle_auth_redirect_get = function(_req: Request, res: Response) {
+    res.sendStatus(401);
 };
 
 export const handle_add_friend_post = wrap(async function(req: Request, res: Response) {
@@ -20,7 +20,7 @@ export const handle_add_friend_post = wrap(async function(req: Request, res: Res
             return;
         }
         await user.addFriend(req.user.uid, friend.uid, t);
-        res.send({friend});
+        res.send(friend);
     });
 });
 

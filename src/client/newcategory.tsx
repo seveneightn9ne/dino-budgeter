@@ -1,9 +1,9 @@
 import * as React from "react";
 import { RouteComponentProps, withRouter } from "react-router";
-import { fromSerialized } from "../shared/categories";
 import { Category, FrameIndex } from "../shared/types";
 import * as util from "./util";
 import KeyPress from "./components/keypress";
+import { AddCategory } from "../shared/api";
 
 interface NewCategoryProps {
     frame: FrameIndex;
@@ -33,8 +33,8 @@ class NewCategory extends KeyPress<RouteComponentProps<NewCategoryProps> & NewCa
     }
 
     submit = (event: React.FormEvent) => {
-        util.apiPost({
-            path: "/api/category",
+        util.apiFetch({
+            api: AddCategory,
             body: {
                 frame: this.props.frame,
                 name: this.state.value,
@@ -42,7 +42,7 @@ class NewCategory extends KeyPress<RouteComponentProps<NewCategoryProps> & NewCa
             location: this.props.location,
             history: this.props.history,
         }).then(response => {
-            this.props.onAddCategory(fromSerialized(response.category));
+            this.props.onAddCategory(response);
             this.setState({expanded: false, value: ""});
         });
         event.preventDefault();

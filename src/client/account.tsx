@@ -2,6 +2,7 @@ import { History, Location } from "history";
 import * as React from "react";
 import { Friend } from "../shared/types";
 import * as util from "./util";
+import { Name, AcceptFriend, RejectFriend, DeleteFriend } from "../shared/api";
 
 interface Props {
     history: History;
@@ -51,8 +52,8 @@ export default class Account extends React.Component<Props, State> {
 
     onSaveName = (e: React.FormEvent) => {
         const name = this.state.name;
-        util.apiPost({
-            path: "/api/name",
+        util.apiFetch({
+            api: Name,
             body: {name},
             location: this.props.location,
             history: this.props.history,
@@ -70,22 +71,22 @@ export default class Account extends React.Component<Props, State> {
     }
 
     acceptFriend(email: string, wasInvited: boolean) {
-        util.apiPost({
-            path: "/api/friend",
+        util.apiFetch({
+            api: AcceptFriend,
             body: {email},
             location: this.props.location,
             history: this.props.history,
-        }).then((res) => {
+        }).then((friend) => {
             if (wasInvited) {
                 // Invite -> Friend
                 this.setState({
-                    friends: [...this.state.friends, res.friend],
+                    friends: [...this.state.friends, friend],
                     invites: this.state.invites.filter(e => e.email != email),
                 });
             } else {
                 // {} -> Pending
                 this.setState({
-                    pendingFriends: [...this.state.pendingFriends, res.friend],
+                    pendingFriends: [...this.state.pendingFriends, friend],
                 });
             }
         }).catch(e => {
@@ -99,8 +100,8 @@ export default class Account extends React.Component<Props, State> {
 
     // TODO: could/should reject by uid
     rejectFriend(email: string) {
-        util.apiPost({
-            path: "/api/friend/reject",
+        util.apiFetch({
+            api: RejectFriend,
             body: {email},
             location: this.props.location,
             history: this.props.history,
@@ -117,9 +118,8 @@ export default class Account extends React.Component<Props, State> {
     }
 
     deleteFriend(email: string) {
-        util.apiPost({
-            method: "DELETE",
-            path: "/api/friend",
+        util.apiFetch({
+            api: DeleteFriend,
             body: {email},
             location: this.props.location,
             history: this.props.history,

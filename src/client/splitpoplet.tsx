@@ -4,7 +4,8 @@ import Money from "../shared/Money";
 import * as transactions from "../shared/transactions";
 import { Share, Transaction } from "../shared/types";
 import { ControlledPoplet } from "./components/poplet";
-import { apiPost, cc } from "./util";
+import { apiFetch, cc } from "./util";
+import { TransactionSplit } from "../shared/api";
 
 interface Props {
     // me: UserId;
@@ -41,8 +42,8 @@ export default class SplitPoplet extends React.Component<Props, State> {
             return;
         }
         const yourAmount = youPay(this.state);
-        apiPost({
-            path: "/api/transaction/split",
+        apiFetch({
+            api: TransactionSplit,
             body: {
                 tid: this.props.transaction.id,
                 sid: this.props.transaction.split.id,
