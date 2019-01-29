@@ -18,9 +18,10 @@ import * as user from "./api/user";
 import * as payments from "./api/payments";
 import * as auth from "./auth";
 import db from "./db";
+import { AcceptFriend, Initialize, RejectFriend, DeleteFriend, Name, Payment, Income, BudgetingMove, AddTransaction, DeleteTransaction, TransactionDescription, TransactionAmount, TransactionDate, TransactionCategory, TransactionSplit, AddCategory, DeleteCategory, CategoryBudget, CategoryName } from '../shared/api';
 
 const app = express();
-app.use(bodyParser.json());
+//app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(validator());
 app.use(cookieParser.default());
@@ -53,30 +54,30 @@ app.post("/signup", auth.handle_signup_post);
  * API Routes. They require login.
  */
 app.get("/api/auth-redirect",      user.handle_auth_redirect_get);
-app.post("/api/friend",            ensureLogin.ensureLoggedIn("/api/auth-redirect"), user.handle_add_friend_post);
-app.post("/api/friend/reject",     ensureLogin.ensureLoggedIn("/api/auth-redirect"), user.handle_reject_friend_post);
-app.delete("/api/friend",          ensureLogin.ensureLoggedIn("/api/auth-redirect"), user.handle_friend_delete);
-app.post("/api/payment",           ensureLogin.ensureLoggedIn("/api/auth-redirect"), payments.handle_payment_post);
-app.post("/api/name",              ensureLogin.ensureLoggedIn("/api/auth-redirect"), user.handle_change_name_post);
 
-app.get("/api/init",               ensureLogin.ensureLoggedIn("/api/auth-redirect"), api.handle_init_get);
+api.registerHandler(app, AcceptFriend, user.handle_add_friend_post);
+api.registerHandler(app, RejectFriend, user.handle_reject_friend_post);
+api.registerHandler(app, DeleteFriend, user.handle_friend_delete);
+api.registerHandler(app, Name, user.handle_change_name_post);
 
-app.post("/api/income",            ensureLogin.ensureLoggedIn("/api/auth-redirect"), frame.handle_income_post);
-app.post("/api/budgeting/move",    ensureLogin.ensureLoggedIn("/api/auth-redirect"), frame.handle_budgeting_move_post);
+api.registerHandler(app, Payment, payments.handle_payment_post);
+api.registerHandler(app, Initialize, api.handle_init_get);
 
-app.post("/api/transaction",       ensureLogin.ensureLoggedIn("/api/auth-redirect"), transactions.handle_transaction_post);
-app.delete("/api/transaction",     ensureLogin.ensureLoggedIn("/api/auth-redirect"), transactions.handle_transaction_delete);
-app.post("/api/transaction/description", ensureLogin.ensureLoggedIn("/api/auth-redirect"), transactions.handle_transaction_description_post);
-app.post("/api/transaction/amount", ensureLogin.ensureLoggedIn("/api/auth-redirect"), transactions.handle_transaction_amount_post);
-app.post("/api/transaction/date",  ensureLogin.ensureLoggedIn("/api/auth-redirect"), transactions.handle_transaction_date_post);
-app.post("/api/transaction/category", ensureLogin.ensureLoggedIn("/api/auth-redirect"), transactions.handle_transaction_category_post);
-app.post("/api/transaction/split", ensureLogin.ensureLoggedIn("/api/auth-redirect"), transactions.handle_transaction_split_post);
+api.registerHandler(app, Income, frame.handle_income_post);
+api.registerHandler(app, BudgetingMove, frame.handle_budgeting_move_post);
 
-app.post("/api/category",          ensureLogin.ensureLoggedIn("/api/auth-redirect"), categories.handle_category_post);
-app.delete("/api/category",        ensureLogin.ensureLoggedIn("/api/auth-redirect"), categories.handle_category_delete);
-app.post("/api/category/budget",   ensureLogin.ensureLoggedIn("/api/auth-redirect"), categories.handle_category_budget_post);
-app.post("/api/category/name",     ensureLogin.ensureLoggedIn("/api/auth-redirect"), categories.handle_category_name_post);
+api.registerHandler(app, AddTransaction, transactions.handle_transaction_post);
+api.registerHandler(app, DeleteTransaction, transactions.handle_transaction_delete);
+api.registerHandler(app, TransactionDescription, transactions.handle_transaction_description_post);
+api.registerHandler(app, TransactionAmount, transactions.handle_transaction_amount_post);
+api.registerHandler(app, TransactionDate, transactions.handle_transaction_date_post);
+api.registerHandler(app, TransactionCategory, transactions.handle_transaction_category_post);
+api.registerHandler(app, TransactionSplit, transactions.handle_transaction_split_post);
 
+api.registerHandler(app, AddCategory, categories.handle_category_post);
+api.registerHandler(app, DeleteCategory, categories.handle_category_delete);
+api.registerHandler(app, CategoryBudget, categories.handle_category_budget_post);
+api.registerHandler(app, CategoryName, categories.handle_category_name_post);
 
 /* Static Routes */
 app.use(serveStatic(path.join(__dirname, "../client")));

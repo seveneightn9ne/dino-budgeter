@@ -10,6 +10,7 @@ export type SplitId = string;
 // Corresponds to `users` db table
 export interface User {
     uid: UserId;
+    name: string;
     email: string;
     password_hash: string;
 }

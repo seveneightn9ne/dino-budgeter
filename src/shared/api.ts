@@ -59,47 +59,15 @@ export class API<Request, Response = null> {
 export const EmptyResponseValue = {};
 export type EmptyResponse = typeof EmptyResponseValue;
 
-export const Payment = new API<{
+export type PaymentRequest = {
     amount: Money;
     email: string;
     youPay: boolean;
     isPayment: boolean;
-}, EmptyResponse>('/api/payment');
+};
+export const Payment = new API<PaymentRequest, EmptyResponse>('/api/payment');
 
-export const DeleteTransaction = new API<{
-    id: TransactionId,
-}, EmptyResponse>('/api/transaction', {}, {}, 'DELETE');
-
-export const TransactionSplit = new API<{
-    tid: TransactionId,
-    sid: SplitId,
-    total: Money,
-    myShare: Share,
-    theirShare: Share,
-    iPaid: boolean,
-}, EmptyResponse>('/api/transaction/split', {"total": reviveMoney, "myShare": reviveMoney, "theirShare": reviveMoney});
-
-export const TransactionDescription = new API<{
-    description: string,
-    id: TransactionId,
-}, EmptyResponse>('/api/transaction/description');
-
-export const TransactionDate = new API<{
-    date: Date,
-    id: TransactionId,
-}, EmptyResponse>('/api/transaction/date', {"date": Date});
-
-export const TransactionCategory = new API<{
-    category: CategoryId,
-    id: TransactionId,
-}, EmptyResponse>('/api/transaction/category');
-
-export const TransactionAmount = new API<{
-    amount: Money,
-    id: TransactionId,
-}, EmptyResponse>('/api/transaction/amount', {'amount': reviveMoney})
-
-export const AddTransaction = new API<{
+export type AddTransactionRequest = {
     frame: FrameIndex,
     amount: Money,
     description: string,
@@ -112,7 +80,8 @@ export const AddTransaction = new API<{
         otherAmount: Money,
         iPaid: boolean,
     },
-}, Transaction>('/api/transaction', {
+};
+export const AddTransaction = new API<AddTransactionRequest, Transaction>('/api/transaction', {
     'amount': reviveMoney,
     'date': reviveDate,
     split: {
@@ -130,10 +99,54 @@ export const AddTransaction = new API<{
     }
 });
 
-export const Initialize = new API<{
+export type DeleteTransactionRequest = {id: TransactionId};
+export const DeleteTransaction = new API<DeleteTransactionRequest, EmptyResponse>('/api/transaction', {}, {}, 'DELETE');
+
+export type TransactionSplitRequest = {
+    tid: TransactionId,
+    sid: SplitId,
+    total: Money,
+    myShare: Share,
+    theirShare: Share,
+    iPaid: boolean,
+};
+export const TransactionSplit = new API<TransactionSplitRequest, EmptyResponse>('/api/transaction/split', {
+    "total": reviveMoney,
+    "myShare": reviveMoney,
+    "theirShare": reviveMoney
+});
+
+export type TransactionDescriptionRequest = {
+    description: string,
+    id: TransactionId,
+};
+export const TransactionDescription = new API<TransactionDescriptionRequest, EmptyResponse>('/api/transaction/description');
+
+export type TransactionDateRequest = {
+    date: Date,
+    id: TransactionId,
+};
+export const TransactionDate = new API<TransactionDateRequest, EmptyResponse>('/api/transaction/date', {"date": Date});
+
+export type TransactionCategoryRequest = {
+    category: CategoryId,
+    id: TransactionId,
+};
+export const TransactionCategory = new API<TransactionCategoryRequest, EmptyResponse>('/api/transaction/category');
+
+export type TransactionAmountRequest = {
+    amount: Money,
+    id: TransactionId,
+};
+export const TransactionAmount = new API<TransactionAmountRequest, EmptyResponse>('/api/transaction/amount', {'amount': reviveMoney})
+
+export type InitializeRequest = {
     index: FrameIndex,
     fields: (keyof InitState)[],
- }, Partial<InitState>>('/api/init', {}, {
+}
+// TODO parameterize response based on request
+export type InitializeResponse = Partial<InitState>;
+export const Initialize = new API<InitializeRequest, InitializeResponse>('/api/init', {}, {
     frame: {
         income: reviveMoney,
         balance: reviveMoney,
@@ -163,18 +176,20 @@ export const Initialize = new API<{
     )
 });
 
-export const AddCategory = new API<{
+export type AddCategoryRequest = {
     frame: FrameIndex,
     name: string,
-}, Category>('/api/category', {}, {
+};
+export const AddCategory = new API<AddCategoryRequest, Category>('/api/category', {}, {
     balance: reviveMoney,
     budget: reviveMoney,
 });
 
-export const DeleteCategory = new API<{
+export type DeleteCategoryRequest = {
     id: CategoryId,
     frame: FrameIndex,
-}, EmptyResponse>('/api/category', {}, {}, 'DELETE')
+};
+export const DeleteCategory = new API<DeleteCategoryRequest, EmptyResponse>('/api/category', {}, {}, 'DELETE')
 
 export type CategoryBudgetRequest = {
     id: CategoryId,
@@ -192,12 +207,13 @@ export type CategoryNameRequest = {
 };
 export const CategoryName = new API<CategoryNameRequest, EmptyResponse>('/api/category/name');
 
-export const BudgetingMove = new API<{
+export type BudgetingMoveRequest = {
     to: CategoryId,
     from: CategoryId,
     amount: Money,
     frame: FrameIndex,
-}, EmptyResponse>('/api/budgeting/move', {
+}
+export const BudgetingMove = new API<BudgetingMoveRequest, EmptyResponse>('/api/budgeting/move', {
     amount: reviveMoney,
 });
 
@@ -209,10 +225,12 @@ export const Income = new API<IncomeRequest, EmptyResponse>('/api/income', {
     income: reviveMoney,
 });
 
-export const Name = new API<{name: string}, EmptyResponse>('/api/name');
-export const AcceptFriend = new API<{email: string}, Friend>('/api/friend');
-export const RejectFriend = new API<{email: string}, EmptyResponse>('/api/friend/reject');
-export const DeleteFriend = new API<{email: string}, EmptyResponse>('/api/friend', {}, {}, 'DELETE');
+export type NameRequest = {name: string};
+export const Name = new API<NameRequest, EmptyResponse>('/api/name');
+export type FriendRequest = {email: string};
+export const AcceptFriend = new API<FriendRequest, Friend>('/api/friend');
+export const RejectFriend = new API<FriendRequest, EmptyResponse>('/api/friend/reject');
+export const DeleteFriend = new API<FriendRequest, EmptyResponse>('/api/friend', {}, {}, 'DELETE');
 
 console.log("test reviving")
 console.log(AddTransaction.requestReviver('split', {

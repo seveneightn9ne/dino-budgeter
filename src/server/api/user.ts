@@ -1,65 +1,57 @@
 
 import { Request, Response } from "express";
-import { wrap } from "../api";
+import { StatusCodeNoResponse } from "../api";
 import db from "../db";
 import * as user from "../user";
+import { FriendRequest, NameRequest } from "../../shared/api";
+import { Friend, User } from "../../shared/types";
 
 export const handle_auth_redirect_get = function(_req: Request, res: Response) {
     res.sendStatus(401);
 };
 
-export const handle_add_friend_post = wrap(async function(req: Request, res: Response) {
-    if (!req.body.email) {
-        res.sendStatus(400);
-        return;
-    }
-    await db.tx(async t => {
-        const friend = await user.getFriendByEmail(req.body.email, t);
+export function handle_add_friend_post(request: FriendRequest, actor: User): Promise<Friend | StatusCodeNoResponse> {
+    return db.tx(async t => {
+        const friend = await user.getFriendByEmail(request.email, t);
         if (!friend) {
-            res.sendStatus(404);
-            return;
+            return 404;
         }
-        await user.addFriend(req.user.uid, friend.uid, t);
-        res.send(friend);
+        await user.addFriend(actor.uid, friend.uid, t);
+        return friend;
     });
-});
+}
 
-export const handle_reject_friend_post = wrap(async function(req: Request, res: Response) {
-    if (!req.body.email || (req.body.email == req.user.email)) {
-        res.sendStatus(400);
-        return;
+export function handle_reject_friend_post(request: FriendRequest, actor: User): Promise<StatusCodeNoResponse> {
+    if (request.email == actor.email) {
+        return Promise.resolve(400 as StatusCodeNoResponse);
     }
-    await db.tx(async t => {
-        const uid = await user.getUserByEmail(req.body.email, t);
+    return db.tx(async t => {
+        const uid = await user.getUserByEmail(request.email, t);
         if (!uid) {
-            res.sendStatus(404);
-            return;
+            return 404;
         }
-        await user.deleteFriendship(req.user.uid, uid, t);
-        res.sendStatus(200);
+        await user.deleteFriendship(actor.uid, uid, t);
+        return 204;
     });
-});
+}
 
-export const handle_friend_delete = wrap(async function(req: Request, res: Response) {
-    if (!req.body.email || (req.body.email == req.user.email)) {
-        res.sendStatus(400);
-        return;
+export function handle_friend_delete(request: FriendRequest, actor: User): Promise<StatusCodeNoResponse> {
+    if (request.email == actor.email) {
+        return Promise.resolve(400 as StatusCodeNoResponse);
     }
-    await db.tx(async t => {
-        const uid = await user.getUserByEmail(req.body.email, t);
+    return db.tx(async t => {
+        const uid = await user.getUserByEmail(request.email, t);
         if (!uid) {
-            res.sendStatus(404);
-            return;
+            return 404;
         }
-        await user.softDeleteFriendship(req.user.uid, uid, t);
-        res.sendStatus(200);
+        await user.softDeleteFriendship(actor.uid, uid, t);
+        return 204;
     });
-});
+}
 
-export const handle_change_name_post = wrap(async function(req: Request, res: Response) {
-    const name = req.body.name;
-    await db.tx(async t => {
-        await user.setName(req.user.uid, name, t);
-        res.sendStatus(200);
+export function handle_change_name_post(request: NameRequest, actor: User): Promise<StatusCodeNoResponse> {
+    return db.tx(async t => {
+        await user.setName(actor.uid, request.name, t);
+        return 204 as StatusCodeNoResponse;
     });
-});
+}

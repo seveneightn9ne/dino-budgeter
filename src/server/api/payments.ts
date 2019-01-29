@@ -1,40 +1,29 @@
-import { Request, Response } from "express";
-import Money from "../../shared/Money";
-import { wrap } from "../api";
+import { StatusCodeNoResponse } from "../api";
 import db from "../db";
 import * as user from "../user";
 import * as payments from "../payments";
+import { PaymentRequest } from "../../shared/api";
+import { User } from "../../shared/types";
 
-/**
- * {
- *   amount: Money
- *   email: "friend@email.com"
- *   youPay: true
- *   isPayment: true (else is charge/youCharge)
- * }
- */
-export const handle_payment_post = wrap(async function(req: Request, res: Response) {
-    const amount = new Money(req.body.amount);
-    if (!amount.isValid() || !req.body.email) {
-        res.sendStatus(400);
-        return;
+export function handle_payment_post(request: PaymentRequest, actor: User): Promise<StatusCodeNoResponse> {
+    if (!request.amount.isValid()) {
+        return Promise.resolve(400 as StatusCodeNoResponse);
     }
-    await db.tx(async t => {
-        const friend = await user.getFriendByEmail(req.body.email, t);
-        if (!await user.isFriend(req.user.uid, friend.uid, t)) {
-            res.sendStatus(400);
-            return;
+    return db.tx(async t => {
+        const friend = await user.getFriendByEmail(request.email, t);
+        if (!friend || !await user.isFriend(actor.uid, friend.uid, t)) {
+            return 400;
         }
-        let from = req.user.uid;
+        let from = actor.uid;
         let to = friend.uid;
-        if (!req.body.youPay) {
+        if (!request.youPay) {
             [from, to] = [to, from];
         }
-        if (req.body.isPayment) {
-            await payments.addPayment(from, to, amount, t);
+        if (request.isPayment) {
+            await payments.addPayment(from, to, request.amount, t);
         } else {
-            await payments.addCharge(from, to, amount, t);
+            await payments.addCharge(from, to, request.amount, t);
         }
-        res.sendStatus(204);
+        return 204;
     });
-});
+}

@@ -1,67 +1,43 @@
-import { Request, Response } from "express";
-import * as _ from "lodash";
-import Money from "../../shared/Money";
+import _ from "lodash";
 import { distributeTotal } from "../../shared/transactions";
-import { CategoryId, Share, SplitId, Transaction, TransactionId, UserId } from "../../shared/types";
+import { CategoryId, Transaction, TransactionId, User } from "../../shared/types";
 import * as util from "../../shared/util";
-import { wrap } from "../api";
+import { StatusCodeNoResponse } from "../api";
 import db from "../db";
 import * as transactions from "../transactions";
 import * as user from "../user";
 import * as payments from "../payments";
+import { AddTransactionRequest, DeleteTransactionRequest, TransactionDescriptionRequest, TransactionAmountRequest, TransactionDateRequest, TransactionCategoryRequest, TransactionSplitRequest } from "../../shared/api";
 
-export const handle_transaction_post = wrap(async function(req: Request, res: Response) {
-    req.checkBody("frame").notEmpty().isNumeric();
-    req.checkBody("amount").notEmpty().isString();
-    req.checkBody("description").notEmpty().isString();
-    req.checkBody("date").notEmpty();
-    const amount = new Money(req.body.amount);
-    const result = await req.getValidationResult();
-    let myShare: Share;
-    let theirShare: Share;
-    let other: UserId;
-    let otherAmount: Money;
-    let payer: UserId;
-    if (!result.isEmpty() || !amount.isValid(false /** allowNegative */)) {
-        console.log("Validation failed");
-        res.sendStatus(400);
-        return;
+export function handle_transaction_post(request: AddTransactionRequest, actor: User): Promise<Transaction | StatusCodeNoResponse> {
+    const other = request.split ? request.split.with : undefined;
+    const payer = request.split ? request.split.iPaid ? actor.uid : other : undefined;
+    if (!request.amount.isValid(false /** allowNegative */)) {
+        return Promise.resolve(400 as StatusCodeNoResponse);
     }
-    if (req.body.split) {
-        myShare = new Share(req.body.split.myShare);
-        theirShare = new Share(req.body.split.theirShare);
-        otherAmount = new Money(req.body.split.otherAmount);
-        other = req.body.split.with as string;
-        payer = req.body.split.iPaid ? req.user.uid : other;
-        if (!otherAmount.isValid(false) ||
-            !myShare.isValid(false) ||
-            !theirShare.isValid(false)) {
+    if (request.split) {
+        if (!request.split.otherAmount.isValid(false) ||
+            !request.split.myShare.isValid(false) ||
+            !request.split.theirShare.isValid(false)) {
             console.log("Split validation failed");
-            res.sendStatus(400);
-            return;
+            return Promise.resolve(400 as StatusCodeNoResponse);
         }
-        const total = amount.plus(otherAmount);
-        const [calcAmount, calcOtherAmount] = distributeTotal(total, myShare, theirShare);
-        if (calcAmount.string() != amount.string() || calcOtherAmount.string() != otherAmount.string()) {
+        const total = request.amount.plus(request.split.otherAmount);
+        const [calcAmount, calcOtherAmount] = distributeTotal(total, request.split.myShare, request.split.theirShare);
+        if (calcAmount.string() != request.amount.string() || calcOtherAmount.string() != request.split.otherAmount.string()) {
             console.log("Calculated different values for split");
-            res.sendStatus(400);
-            return;
+            return Promise.resolve(400 as StatusCodeNoResponse);
         }
     }
     const tx_id = util.randomId();
-    const frame = req.body.frame;
-    const category = req.body.category;
-    const date = new Date(req.body.date);
-    const description = req.body.description;
-    await db.tx(async t => {
-        if (other && !await user.isFriend(req.user.uid, other, t)) {
-            res.sendStatus(400);
-            return;
+    return db.tx(async t => {
+        if (other && !await user.isFriend(actor.uid, other, t)) {
+            return 400 as StatusCodeNoResponse;
         }
-        const gid = await user.getDefaultGroup(req.user, t);
+        const gid = await user.getDefaultGroup(actor, t);
         const query = "insert into transactions (id, gid, frame, amount, description, category, date) values ($1, $2, $3, $4, $5, $6, $7)";
         await t.none(query,
-            [tx_id, gid, frame, amount.string(), req.body.description, category || null, date]);
+            [tx_id, gid, request.frame, request.amount.string(), request.description, request.category || null, request.date]);
         let split = undefined;
         if (other) {
             const other_id = util.randomId();
@@ -73,28 +49,40 @@ export const handle_transaction_post = wrap(async function(req: Request, res: Re
                 id: sid,
                 with: other_friend,
                 settled: false,
-                myShare, theirShare,
-                otherAmount, payer,
+                myShare: request.split.myShare,
+                theirShare: request.split.theirShare,
+                otherAmount: request.split.otherAmount,
+                payer,
             };
             const balance = transactions.getBalance({
-                user: req.user.uid,
+                user: actor.uid,
                 otherUser: other,
-                amount, otherAmount, payer,
+                amount: request.amount,
+                otherAmount: request.split.otherAmount,
+                payer,
             });
             await t.batch([
-                payments.addToBalance(req.user.uid, other, balance, t),
-                t.none(query, [other_id, other_gid, frame, otherAmount.string(), req.body.description, other_cat, date]),
+                payments.addToBalance(actor.uid, other, balance, t),
+                t.none(query, [other_id, other_gid, request.frame, request.split.otherAmount.string(), request.description, other_cat, request.date]),
                 t.none(`insert into shared_transactions (id, payer, settled) values ($1, $2, true)`, [sid, payer]),
-                t.none(`insert into transaction_splits (tid, sid, share) values ($1, $2, $3)`, [tx_id, sid, myShare.string()]),
-                t.none(`insert into transaction_splits (tid, sid, share) values ($1, $2, $3)`, [other_id, sid, theirShare.string()]),
+                t.none(`insert into transaction_splits (tid, sid, share) values ($1, $2, $3)`, [tx_id, sid, request.split.myShare.string()]),
+                t.none(`insert into transaction_splits (tid, sid, share) values ($1, $2, $3)`, [other_id, sid, request.split.theirShare.string()]),
             ]);
         }
         const transaction: Transaction = {
-            id: tx_id, gid, frame, category, amount, description, alive: true, date, split
+            id: tx_id,
+            gid,
+            frame: request.frame,
+            category: request.category,
+            amount: request.amount,
+            description: request.description,
+            alive: true,
+            date: request.date,
+            split
         };
-        res.send(transaction);
+        return transaction;
     });
-});
+}
 
 type txField = "amount" | "date" | "description" | "category";
 function isSharedField(field: txField): boolean {
@@ -104,110 +92,93 @@ function canEditShared(field: txField): boolean {
     return field != "amount";
 }
 
-export const handle_transaction_delete = wrap(async function(req: Request, res: Response) {
-    const id = req.body.id;
-    if (!id) {
-        console.log("No tid");
-        res.sendStatus(400);
-        return;
-    }
-    await db.tx(async t => {
-        if (!(await transactions.canUserEdit(id, req.user.uid, t))) {
-            res.sendStatus(401);
-            return;
+export function handle_transaction_delete(request: DeleteTransactionRequest, actor: User): Promise<StatusCodeNoResponse> {
+    return db.tx(async t => {
+        if (!(await transactions.canUserEdit(request.id, actor.uid, t))) {
+            // Maybe no auth? maybe no exists? maybe no id at all?
+            return 400;
         }
-        await transactions.deleteTransaction(id, t);
-        res.sendStatus(200);
+        await transactions.deleteTransaction(request.id, t);
+        return 204 as StatusCodeNoResponse;
     });
-});
-
-export const handle_transaction_description_post = wrap(async function(req: Request, res: Response) {
-    await handle_transaction_update_post("description", d => !!d)(req, res);
-});
-
-export const handle_transaction_amount_post = wrap(async function(req: Request, res: Response) {
-    await handle_transaction_update_post("amount",
-        s => new Money(s).isValid(),
-        s => new Money(s).string())(req, res);
-});
-
-export const handle_transaction_date_post = wrap(async function(req: Request, res: Response) {
-    await handle_transaction_update_post("date",
-        s => !isNaN(new Date(s).valueOf()),
-        s => new Date(s))(req, res);
-});
-
-export const handle_transaction_category_post = wrap(async function(req: Request, res: Response) {
-    // TODO: validate that the category exists, is alive, is owned by the user, etc.
-    await handle_transaction_update_post("category", undefined, c => c || null)(req, res);
-});
-
-function handle_transaction_update_post(
-        field: txField,
-        isValid?: (val: string) => boolean,
-        transform?: (val: string) => any,
-    ): (req: Request, res: Response) => Promise<void> {
-    return async (req: Request, res: Response) => {
-        if (!isValid) isValid = () => true;
-        if (!transform) transform = (s) => s;
-        req.checkBody("id").notEmpty().isString();
-        const result = await req.getValidationResult();
-        const value = req.body[field];
-        if (!result.isEmpty() || !isValid(value)) {
-            res.sendStatus(400);
-            return;
-        }
-        const updateLinked = isSharedField(field);
-        const id = req.body.id;
-        await db.tx(async t => {
-            const existing = await transactions.getTransaction(id, t);
-            if (existing.gid != await user.getDefaultGroup(req.user, t)) {
-                res.sendStatus(401);
-                return;
-            }
-            if (existing.split && !canEditShared(field)) {
-                console.log("Can't edit " + field + " on a shared transaction");
-                res.sendStatus(400);
-                return;
-            }
-            const val = transform(value);
-            const query = "update transactions set " + field + " = $1 where id = $2";
-            await t.none(query, [val, id]);
-            if (updateLinked && existing.split) {
-                await t.none(query, [val, await transactions.getOtherTid(id, existing.split.id, t)]);
-            }
-        });
-        res.sendStatus(200);
-    };
 }
 
-export const handle_transaction_split_post = wrap(async function(req: Request, res: Response) {
-    const tid: TransactionId = req.body.tid;
-    const sid: SplitId = req.body.sid;
-    const total = new Money(req.body.total);
-    const myShare = new Share(req.body.myShare);
-    const theirShare = new Share(req.body.theirShare);
+export function handle_transaction_description_post(request: TransactionDescriptionRequest, actor: User): Promise<StatusCodeNoResponse> {
+    return handle_transaction_update_post("description", request, actor, d => !!d);
+}
+
+export function handle_transaction_amount_post(request: TransactionAmountRequest, actor: User): Promise<StatusCodeNoResponse> {
+    return handle_transaction_update_post("amount", request, actor,
+        amount => amount.isValid(),
+        amount => amount.string());
+}
+
+export function handle_transaction_date_post(request: TransactionDateRequest, actor: User): Promise<StatusCodeNoResponse> {
+    return handle_transaction_update_post("date", request, actor);
+}
+
+export function handle_transaction_category_post(request: TransactionCategoryRequest, actor: User): Promise<StatusCodeNoResponse> {
+    // TODO: validate that the category exists, is alive, is owned by the user, etc.
+    return handle_transaction_update_post("category", request, actor, undefined, c => c || null);
+}
+
+function handle_transaction_update_post<Request extends {id: TransactionId}, Field extends Exclude<keyof Request, 'id'> & txField>(
+        field: Field,
+        request: Request,
+        actor: User,
+        isValid?: (val: Request[Field]) => boolean,
+        transform?: (val: Request[Field]) => string): Promise<StatusCodeNoResponse> {
+    const value = request[field];
+    if (!isValid) isValid = () => true;
+    if (!transform) {
+        if (typeof value == "string") {
+            transform = (s) => s as typeof value;
+        } else {
+            throw Error("Must provide a transform for a non-string value in " + field);
+        }
+    }
+    if (!isValid(value)) {
+        return Promise.resolve(400 as StatusCodeNoResponse);
+    }
+    const updateLinked = isSharedField(field);
+    const id = request.id;
+    return db.tx(async t => {
+        const existing = await transactions.getTransaction(id, t);
+        if (existing.gid != await user.getDefaultGroup(actor, t)) {
+            return 401;
+        }
+        if (existing.split && !canEditShared(field)) {
+            console.log("Can't edit " + field + " on a shared transaction");
+            return 400;
+        }
+        const val = transform(value);
+        const query = "update transactions set " + field + " = $1 where id = $2";
+        await t.none(query, [val, id]);
+        if (updateLinked && existing.split) {
+            await t.none(query, [val, await transactions.getOtherTid(id, existing.split.id, t)]);
+        }
+        return 204 as StatusCodeNoResponse;
+    });
+}
+
+export function handle_transaction_split_post(request: TransactionSplitRequest, actor: User): Promise<StatusCodeNoResponse> {
+    const {tid, sid, total, myShare, theirShare} = request;
     if (!total.isValid(false) ||
         !myShare.isValid(false) ||
         !theirShare.isValid(false) ||
         !tid || !sid) {
-        res.sendStatus(400);
-        return;
+        return Promise.resolve(400 as StatusCodeNoResponse);
     }
     const [myAmount, otherAmount] = distributeTotal(total, myShare, theirShare);
-    await db.tx(async t => {
+    return  db.tx(async t => {
         const otherTid = await transactions.getOtherTid(tid, sid, t);
         const otherUid = await transactions.getUser(otherTid, t);
-        const payer = req.body.iPaid ? req.user.uid : otherUid;
-        console.log("I am", req.user.uid);
-        console.log("my tid is", tid);
-        console.log("other tid is", otherTid);
-        console.log("other uid is", otherUid);
+        const payer = request.iPaid ? actor.uid : otherUid;
 
         // Update the friendship balance
         const prevBalance = await transactions.getBalanceFromDb(tid, t);
         const newBalance = transactions.getBalance({
-            user: req.user.uid,
+            user: actor.uid,
             otherUser: otherUid,
             amount: myAmount,
             otherAmount: otherAmount,
@@ -216,7 +187,7 @@ export const handle_transaction_split_post = wrap(async function(req: Request, r
         const balanceDelta = newBalance.minus(prevBalance);
 
         const work = [
-            payments.addToBalance(req.user.uid, otherUid, balanceDelta, t),
+            payments.addToBalance(actor.uid, otherUid, balanceDelta, t),
             t.none("update transactions set amount = $1 where id = $2", [myAmount.string(), tid]),
             t.none("update transactions set amount = $1 where id = $2", [otherAmount.string(), otherTid]),
             t.none("update transaction_splits set share = $1 where tid = $2", [myShare.string(), tid]),
@@ -224,6 +195,6 @@ export const handle_transaction_split_post = wrap(async function(req: Request, r
             t.none("update shared_transactions set payer = $1 where id = $2", [payer, sid]),
         ];
         await t.batch(work);
-        res.sendStatus(200);
+        return 204 as StatusCodeNoResponse;
     });
-});
+}

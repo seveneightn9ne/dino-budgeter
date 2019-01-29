@@ -1,61 +1,40 @@
-import { Request, Response } from "express";
 import Money from "../../shared/Money";
-import { wrap } from "../api";
+import { StatusCodeNoResponse } from "../api";
 import db from "../db";
 import * as user from "../user";
+import { IncomeRequest, BudgetingMoveRequest } from "../../shared/api";
+import { User } from "../../shared/types";
 
-export const handle_income_post = wrap(async function(req: Request, res: Response): Promise<void> {
-    req.checkBody("frame").isNumeric();
-    req.checkBody("income").isNumeric();
-    const result = await req.getValidationResult();
-    if (!result.isEmpty()) {
-        res.sendStatus(400);
-        return;
+export function handle_income_post(request: IncomeRequest, actor: User): Promise<StatusCodeNoResponse> {
+    if (!request.income.isValid()) {
+        return Promise.resolve(400 as StatusCodeNoResponse);
     }
-    const income = new Money(req.body.income);
-    if (!income.isValid()) {
-        res.sendStatus(400);
-        return;
-    }
-    const frame = Number(req.body.frame);
-    await db.tx(async t => {
-        const gid = await user.getDefaultGroup(req.user, t);
+    return db.tx(async t => {
+        const gid = await user.getDefaultGroup(actor, t);
         await t.none("update frames set income = $1 where gid = $2 and index = $3",
-            [income.string(), gid, frame]);
-        res.sendStatus(200);
+            [request.income.string(), gid, request.frame]);
+        return 204 as StatusCodeNoResponse;
     });
-});
+}
 
-export const handle_budgeting_move_post = wrap(async function(req: Request, res: Response) {
-    req.checkBody("to").notEmpty().isString();
-    req.checkBody("from").notEmpty().isString();
-    req.checkBody("amount").notEmpty().isNumeric();
-    req.checkBody("frame").notEmpty().isNumeric();
-    const amount = new Money(req.body.amount);
-    const from = req.body.from;
-    const to = req.body.to;
-    const frame = Number(req.body.frame);
-    const result = await req.getValidationResult();
-    if (!result.isEmpty() || !amount.isValid()) {
-        console.log(result.mapped());
-        res.sendStatus(400);
-        return;
+export function handle_budgeting_move_post(request: BudgetingMoveRequest, actor: User): Promise<StatusCodeNoResponse> {
+    if (!request.amount.isValid()) {
+        return Promise.resolve(400 as StatusCodeNoResponse);
     }
-    await db.tx(async t => {
-        const gid = await user.getDefaultGroup(req.user, t);
+    return db.tx(async t => {
+        const gid = await user.getDefaultGroup(actor, t);
         const fromRow = (await t.oneOrNone("select * from categories where id = $1 and gid = $2 and frame = $3",
-            [from, gid, frame]));
+            [request.from, gid, request.frame]));
         const toRow = (await t.oneOrNone("select * from categories where id = $1 and gid = $2 and frame = $3",
-            [to, gid, frame]));
+            [request.to, gid, request.frame]));
         if (!fromRow || !toRow) {
-            res.sendStatus(400);
-            return;
+            return 400;
         }
-        const newFromBudget = new Money(fromRow.budget).minus(amount);
-        const newToBudget = new Money(toRow.budget).plus(amount);
-        await t.none("update categories set budget = $1 where id = $2 and frame = $3", [newFromBudget.string(), from, frame]);
-        await t.none("update categories set budget = $1 where id = $2 and frame = $3", [newToBudget.string(), to, frame]);
-        res.sendStatus(200);
+        const newFromBudget = new Money(fromRow.budget).minus(request.amount);
+        const newToBudget = new Money(toRow.budget).plus(request.amount);
+        await t.none("update categories set budget = $1 where id = $2 and frame = $3", [newFromBudget.string(), request.from, request.frame]);
+        await t.none("update categories set budget = $1 where id = $2 and frame = $3", [newToBudget.string(), request.to, request.frame]);
+        return 204 as StatusCodeNoResponse;
     });
 
-});
+}
