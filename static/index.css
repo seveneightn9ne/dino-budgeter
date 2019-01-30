@@ -359,33 +359,33 @@ form {
 }
 
 /* poplet forms */
-.poplet label, .poplet .section {
+.poplet label, .poplet .section, .fullpage label, .fullpage .section {
     display: block;
     background-color: white;
     border-bottom: solid 1px #eeeeee;
     padding: 20px;
 }
 
-.poplet label.nostyle {
+.poplet label.nostyle, .fullpage label.nostyle {
     padding: 0;
     border-width: 0;
 }
 
-.poplet label.half {
+.poplet label.half, .fullpage label.half {
     width: 50%;
     box-sizing: border-box;
     float: left;
 }
-.poplet label.first.half {
+.poplet label.first.half, .fullpage label.first.half {
     border-right: 1px solid #eeeeee;
 }
 
-.poplet label .close {
+.poplet label .close, .fullpage label .close {
     font-size: 24px;
     float: right;
     margin-top: 3px; /* would rather center it vertically */
 }
-.poplet label .close:hover {
+.poplet label .close:hover, .fullpage label.close:hover {
     text-decoration: none;
     color: #000;
 }
