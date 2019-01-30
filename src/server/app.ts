@@ -21,7 +21,9 @@ import db from "./db";
 import { AcceptFriend, Initialize, RejectFriend, DeleteFriend, Name, Payment, Income, BudgetingMove, AddTransaction, DeleteTransaction, TransactionDescription, TransactionAmount, TransactionDate, TransactionCategory, TransactionSplit, AddCategory, DeleteCategory, CategoryBudget, CategoryName } from '../shared/api';
 
 const app = express();
-//app.use(bodyParser.json());
+app.use(bodyParser.text({
+  type: "application/json"
+}));
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(validator());
 app.use(cookieParser.default());

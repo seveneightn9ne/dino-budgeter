@@ -34,10 +34,10 @@ export class API<Request, Response = null> {
         public responseRevivers: {[k in keyof Response]?: Revivable<Response[k]>} = {},
         public method: "POST" | "PUT" | "DELETE" = "POST",
     ) {}
-    public requestReviver(key: string, value: any): any {
+    public requestReviver = (key: string, value: any) => {
         return API.reviver(key, value, this.requestRevivers);
     }
-    public responseReviver(key: string, value: any): any {
+    public responseReviver = (key: string, value: any) => {
         return API.reviver(key, value, this.responseRevivers);
     }
     static isNestedRevivable<R>(r: Revivable<R>): r is {[k in keyof R]?: ReviverFunc} {
@@ -65,7 +65,9 @@ export type PaymentRequest = {
     youPay: boolean;
     isPayment: boolean;
 };
-export const Payment = new API<PaymentRequest, EmptyResponse>('/api/payment');
+export const Payment = new API<PaymentRequest, EmptyResponse>('/api/payment', {
+    'amount': reviveMoney,
+});
 
 export type AddTransactionRequest = {
     frame: FrameIndex,
@@ -231,12 +233,3 @@ export type FriendRequest = {email: string};
 export const AcceptFriend = new API<FriendRequest, Friend>('/api/friend');
 export const RejectFriend = new API<FriendRequest, EmptyResponse>('/api/friend/reject');
 export const DeleteFriend = new API<FriendRequest, EmptyResponse>('/api/friend', {}, {}, 'DELETE');
-
-console.log("test reviving")
-console.log(AddTransaction.requestReviver('split', {
-    'myShare': '0.0',
-    'theirShare': '1.5',
-    'otherAmount': '10.0',
-    iPaid: true,
-    with: 'foo@foo.com'
-}));
