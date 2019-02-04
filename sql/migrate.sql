@@ -84,4 +84,22 @@ create index payments_idx on payments(friendship_u1, friendship_u2, ctime);
 end if;
 end $$;
 
+-- migration 8: payments memo field
+do $$ begin
+if not exists(select * from information_schema.columns where table_name = 'payments' and column_name = 'memo')
+then
+alter table payments add memo text not null default '';
+end if;
+end $$;
+
+-- migration 9: payments frame field
+do $$ begin
+if not exists(select * from information_schema.columns where table_name = 'payments' and column_name = 'frame')
+then
+alter table payments add frame int not null;
+end if;
+end $$;
+
+-- migration 10:
+
 commit;

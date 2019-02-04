@@ -10,6 +10,7 @@ export function handle_payment_post(request: PaymentRequest, actor: User): Promi
         return Promise.resolve(400 as StatusCodeNoResponse);
     }
     return db.tx(async t => {
+        const frame = request.paymentFrame;
         const friend = await user.getFriendByEmail(request.email, t);
         if (!friend || !await user.isFriend(actor.uid, friend.uid, t)) {
             return 400;
@@ -20,9 +21,9 @@ export function handle_payment_post(request: PaymentRequest, actor: User): Promi
             [from, to] = [to, from];
         }
         if (request.isPayment) {
-            await payments.addPayment(from, to, request.amount, t);
+            await payments.addPayment(frame, from, to, request.memo, request.amount, t);
         } else {
-            await payments.addCharge(from, to, request.amount, t);
+            await payments.addCharge(frame, from, to, request.memo, request.amount, t);
         }
         return 204;
     });

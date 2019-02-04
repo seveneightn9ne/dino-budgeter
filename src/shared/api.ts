@@ -64,6 +64,8 @@ export type PaymentRequest = {
     email: string;
     youPay: boolean;
     isPayment: boolean;
+    memo: string;
+    paymentFrame: FrameIndex;
 };
 export const Payment = new API<PaymentRequest, EmptyResponse>('/api/payment', {
     'amount': reviveMoney,
@@ -167,15 +169,28 @@ export const Initialize = new API<InitializeRequest, InitializeResponse>('/api/i
             }
         })
     ),
-    debts: reviveValues(v => new Money(v)),
-    categories: reviveArray((cat: Category) => 
+    debts: reviveValues(v => 
+        API.reviver('debts', v, {
+            debts: {
+                balance: reviveMoney,
+                payments: reviveArray((pmt) => 
+                    API.reviver('payments', pmt, {
+                        payments: {
+                            amount: reviveMoney,
+                            date: reviveDate,
+                        }
+                    })
+                )
+            }
+        })),
+    categories: reviveArray((cat: Category) =>
         API.reviver('categories', cat, {
             categories: {
                 balance: reviveMoney,
                 budget: reviveMoney,
             }
         })
-    )
+    ),
 });
 
 export type AddCategoryRequest = {

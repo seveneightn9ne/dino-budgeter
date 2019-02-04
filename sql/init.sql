@@ -94,7 +94,9 @@ create table payments (
   friendship_u2 char(32) not null references users,
   amount text not null default '0',
   is_charge bool not null, -- either charge or payment.
-  ctime timestamp not null default current_timestamp
+  ctime timestamp not null default current_timestamp,
+  memo text not null default '',
+  frame int not null
 );
 create index payments_idx on payments(friendship_u1, friendship_u2, ctime);
 

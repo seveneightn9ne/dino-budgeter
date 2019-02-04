@@ -561,6 +561,9 @@ input.center {
 .friend-row > div {
     margin: 0 10px;
 }
+.friend-collapse {
+    margin-left: -15px;
+}
 .friend-email {
     font-size: 12px;
 }
@@ -572,6 +575,15 @@ input.center {
 }
 .friend-actions {
     font-size: 14px;
+}
+.friend-table-container {
+    padding-left: 55px;
+}
+.friend-table {
+    margin-top: -30px;
+}
+.friend-more {
+    margin-left: 55px;
 }
 @media (max-width: 599px) {
     .friend-row {

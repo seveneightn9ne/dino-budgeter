@@ -1,7 +1,7 @@
 import _ from "lodash";
 import pgPromise from "pg-promise";
 import Money from "../shared/Money";
-import { UserId, Payment, Charge } from "../shared/types";
+import { UserId, Payment, Charge, FrameIndex } from "../shared/types";
 
 export async function addToBalance(u1: UserId, u2: UserId, amount: Money, t: pgPromise.ITask<{}>): Promise<void> {
     [u1, u2] = [u1, u2].sort();
@@ -34,37 +34,44 @@ export async function getBalances(user: UserId, t: pgPromise.ITask<{}>): Promise
     return ret;
 }
 
-export async function addPayment(from: UserId, to: UserId, amount: Money, t: pgPromise.ITask<{}>): Promise<void> {
+export async function addPayment(frame: FrameIndex, from: UserId, to: UserId, memo: string, amount: Money, t: pgPromise.ITask<{}>): Promise<void> {
     const [u1, u2] = [from, to].sort();
     // Jess pays Miles $10.
     // If Jess is u1, the balance should decrease by $10.
     if (u1 === from) {
         amount = amount.negate();
     }
-    return addPaymentInner(u1, u2, amount, false, t);
+    return addPaymentInner(frame, u1, u2, memo, amount, false, t);
 }
 
-export async function addCharge(debtor: UserId, debtee: UserId, amount: Money, t: pgPromise.ITask<{}>): Promise<void> {
+export async function addCharge(frame: FrameIndex, debtor: UserId, debtee: UserId, memo: string, amount: Money, t: pgPromise.ITask<{}>): Promise<void> {
     const [u1, u2] = [debtor, debtee].sort();
     // Miles owes Jess $10, so Jess is the debtor.
     // If Jess is u1, the balance should decrease by $10.
     if (u1 === debtor) {
         amount = amount.negate();
     }
-    return addPaymentInner(u1, u2, amount, true, t);
+    return addPaymentInner(frame, u1, u2, memo, amount, true, t);
 }
 
 /** u1, u2 must be sorted */
-async function addPaymentInner(u1: UserId, u2: UserId, amount: Money, isCharge: boolean, t: pgPromise.ITask<{}>) {
-    await t.none("insert into payments (friendship_u1, friendship_u2, amount, is_charge) values ($1, $2, $3, $4)", [u1, u2, amount.string(), isCharge]);
+async function addPaymentInner(frame: FrameIndex, u1: UserId, u2: UserId, memo: string, amount: Money, isCharge: boolean, t: pgPromise.ITask<{}>) {
+    await t.none("insert into payments (friendship_u1, friendship_u2, amount, is_charge, memo, frame) values ($1, $2, $3, $4, $5, $6)", [u1, u2, amount.string(), isCharge, memo, frame]);
     await addToBalance(u1, u2, amount, t);
 }
 
-export async function getPayments(u1: UserId, u2: UserId, t: pgPromise.ITask<{}>): Promise<(Payment | Charge)[]> {
+export async function getPayments(u1: UserId, u2: UserId, t: pgPromise.ITask<{}>, frame?: FrameIndex): Promise<(Payment | Charge)[]> {
     [u1, u2] = [u1, u2].sort();
-    const rows = await t.manyOrNone("select * from payments where friendship_u1 = $1 and friendship_u2 = $2", [u1, u2]);
-    return rows.map(row => {
-        const date = new Date(row.date);
+    let rows;
+    if (frame) {
+        rows = await t.manyOrNone("select * from payments where friendship_u1 = $1 and friendship_u2 = $2 and frame = $3", [u1, u2, frame]);
+    } else {
+        rows = await t.manyOrNone("select * from payments where friendship_u1 = $1 and friendship_u2 = $2", [u1, u2]);
+    }
+    return _.reverse(_.sortBy(rows.map(row => {
+        const date = new Date(row.ctime);
+        const memo = row.memo;
+        const paymentFrame = row.frame;
         let amount = new Money(row.amount);
         if (row.is_charge) {
             // amount is what u1 owes u2. so u1 is the debtee by default.
@@ -77,20 +84,21 @@ export async function getPayments(u1: UserId, u2: UserId, t: pgPromise.ITask<{}>
             }
             return {
                 type: 'charge',
-                debtor, debtee, amount, date
+                debtor, debtee, amount, date, memo, paymentFrame
             } as Charge;
         } else {
             // amount is what u1 owes u2. so u2 is the payer by default.
             let payer = u2;
             let payee = u1;
             if (amount.cmp(Money.Zero) == -1) {
+                amount = amount.negate();
                 payer = u1;
                 payee = u2;
             }
             return {
                 type: 'payment',
-                payer, payee, amount, date
+                payer, payee, amount, date, memo, paymentFrame
             } as Payment;
         }
-    });
+    }), 'date'));
 }

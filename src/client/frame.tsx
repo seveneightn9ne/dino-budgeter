@@ -6,7 +6,7 @@ import { AI, getAIs } from "../shared/ai";
 import * as frames from "../shared/frames";
 import Money from "../shared/Money";
 import { getBalanceDelta } from "../shared/transactions";
-import { Category, CategoryId, Frame as FrameType, FrameIndex, Friend, Transaction, TransactionId } from "../shared/types";
+import { Category, CategoryId, Frame as FrameType, FrameIndex, Friend, Transaction, TransactionId, Payment, Charge } from "../shared/types";
 import Categories from "./categories";
 import { DesktopOnly, MobileOnly } from "./components/media";
 import Friends from "./friends";
@@ -27,7 +27,10 @@ interface FrameState {
     invites?: Friend[];
     friends?: Friend[];
     pendingFriends?: Friend[];
-    debts?: {[email: string]: Money};
+    debts?: {[email: string]: {
+        balance: Money, 
+        payments: (Payment|Charge)[],
+    }};
     modal?: Transaction;
 }
 
@@ -126,7 +129,7 @@ export default class Frame extends React.Component<FrameProps & RouteComponentPr
 
     onAddTransaction(t: Transaction) {
         const newFrame = {...this.state.frame};
-        if (t.frame == this.state.frame.index) {
+        if (t.txnFrame == this.state.frame.index) {
             newFrame.balance = this.state.frame.balance.minus(t.amount);
             newFrame.spending = this.state.frame.spending.plus(t.amount);
             newFrame.categories = newFrame.categories.map(c => {
@@ -136,14 +139,17 @@ export default class Frame extends React.Component<FrameProps & RouteComponentPr
                 }
                 return c;
             });
-        } else if (t.frame < this.state.frame.index) {
+        } else if (t.txnFrame < this.state.frame.index) {
             newFrame.balance = this.state.frame.balance.minus(t.amount);
         }
         const transactions = [...this.state.transactions, t];
         const debts = {...this.state.debts};
         if (t.split) {
-            const prevBalance = debts[t.split.with.email] || Money.Zero;
-            debts[t.split.with.email] = prevBalance.plus(getBalanceDelta(this.state.me.uid, null, t));
+            const prevBalance = debts[t.split.with.email].balance || Money.Zero;
+            debts[t.split.with.email] = {
+                balance: prevBalance.plus(getBalanceDelta(this.state.me.uid, null, t)),
+                payments: debts[t.split.with.email].payments,
+            };
         }
         this.setState({
             frame: newFrame,
@@ -185,8 +191,11 @@ export default class Frame extends React.Component<FrameProps & RouteComponentPr
         });
         const debts = {...this.state.debts};
         if (t.split) {
-            const prevBalance = debts[t.split.with.email] || Money.Zero;
-            debts[t.split.with.email] = prevBalance.plus(getBalanceDelta(this.state.me.uid, oldTransaction, t));
+            const prevBalance = debts[t.split.with.email].balance || Money.Zero;
+            debts[t.split.with.email] = {
+                balance: prevBalance.plus(getBalanceDelta(this.state.me.uid, oldTransaction, t)),
+                payments: debts[t.split.with.email].payments,
+            }
         }
         this.setState({transactions, frame: newFrame, debts, modal: undefined});
     }
@@ -203,8 +212,11 @@ export default class Frame extends React.Component<FrameProps & RouteComponentPr
             })};
         const debts = {...this.state.debts};
         if (transaction.split) {
-            const prevBalance = debts[transaction.split.with.email] || Money.Zero;
-            debts[transaction.split.with.email] = prevBalance.plus(getBalanceDelta(this.state.me.uid, transaction, null));
+            const prevBalance = debts[transaction.split.with.email].balance || Money.Zero;
+            debts[transaction.split.with.email] = {
+                balance: prevBalance.plus(getBalanceDelta(this.state.me.uid, transaction, null)),
+                payments: debts[transaction.split.with.email].payments,
+            };
             this.setState({debts});
         }
         this.setState({transactions, frame, debts, modal: undefined});
@@ -245,9 +257,18 @@ export default class Frame extends React.Component<FrameProps & RouteComponentPr
         this.setState({frame: newFrame});
     }
 
-    onPayment = (email: string, amount: Money) => {
-        const newDebt = this.state.debts[email].minus(amount);
-        this.setState({debts: {...this.state.debts, [email]: newDebt}});
+    onPayment = (email: string, pmt: Charge|Payment) => {
+        let diffToBalance = pmt.amount.plus(Money.Zero);
+        if (pmt.type =='charge') {
+            diffToBalance = diffToBalance.negate();
+        }
+        if ((pmt.type == 'charge' && pmt.debtor !== this.state.me.uid) || 
+            (pmt.type == 'payment' && pmt.payer !== this.state.me.uid)) {
+            diffToBalance = diffToBalance.negate();
+        }
+        const newBalance = this.state.debts[email].balance.minus(diffToBalance);
+        const newPayments = [pmt, ...this.state.debts[email].payments];
+        this.setState({debts: {...this.state.debts, [email]: {balance: newBalance, payments: newPayments}}});
     }
 
     render() {
@@ -301,7 +322,7 @@ export default class Frame extends React.Component<FrameProps & RouteComponentPr
                 friends={this.state.friends}
                 location={this.props.location} history={this.props.history} />;
 
-        const debts = <Friends debts={this.state.debts} friends={this.state.friends}
+        const debts = <Friends debts={this.state.debts} friends={this.state.friends} me={this.state.me} index={this.index()}
             pendingFriends={this.state.pendingFriends} invites={this.state.invites} onPayment={this.onPayment}
             location={this.props.location} history={this.props.history} />;
 

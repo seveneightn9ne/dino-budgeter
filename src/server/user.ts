@@ -1,7 +1,7 @@
 import _ from "lodash";
 import pgPromise from "pg-promise";
 import Money from "../shared/Money";
-import { Friend, GroupId, User, UserId } from "../shared/types";
+import { Friend, GroupId, User, UserId, Payment, Charge } from "../shared/types";
 import * as payments from "./payments";
 import db from "./db";
 
@@ -124,16 +124,19 @@ export async function isFriend(u1: UserId, u2: UserId, t: pgPromise.ITask<{}>): 
 }
 
 /** Amounts that user owes each friend. Negative means the friend owes the user. */
-export async function getDebts(user: UserId, t: pgPromise.ITask<{}>): Promise<{[email: string]: Money}> {
+export async function getDebts(user: UserId, t: pgPromise.ITask<{}>): Promise<{[email: string]: {balance: Money, payments: (Payment|Charge)[]}}> {
     const uidToDebts = _.mapValues(await payments.getBalances(user, t), (amount, u2) => {
         const u1 = [user, u2].sort()[0];
         return u1 == user ? amount : amount.negate();
     });
     const uids = _.keys(uidToDebts);
     const emails = await getEmails(uids, t);
-    const ret: {[email: string]: Money} = {};
+    const ret: {[email: string]: {balance: Money, payments: (Payment|Charge)[]}} = {};
     for (let i = 0; i < uids.length; i++) {
-        ret[emails[i]] = uidToDebts[uids[i]];
+        ret[emails[i]] = {
+            balance: uidToDebts[uids[i]],
+            payments: await payments.getPayments(user, uids[i], t),
+        }
     }
     return ret;
 }

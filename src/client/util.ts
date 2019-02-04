@@ -92,6 +92,7 @@ export function initializeState<S extends {initialized: boolean}, W extends (key
         history: self.props.history,
     }).then(response => {
         return new Promise((resolve) => {
+            //console.log(response);
             self.setState({...(response as any), initialized: true}, () => {
                 resolve();
             });

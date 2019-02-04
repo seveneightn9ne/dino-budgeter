@@ -41,7 +41,7 @@ export interface Frame {
 export interface Transaction {
     id: TransactionId;
     gid: GroupId;
-    frame: FrameIndex;
+    txnFrame: FrameIndex;
     category: CategoryId | null;
     amount: Money;
     description: string;
@@ -72,7 +72,10 @@ export interface InitState {
     pendingFriends?: Friend[];
     invites?: Friend[];
     transactions?: Transaction[];
-    debts?: {[email: string]: Money};
+    debts?: {[email: string]: {
+        balance: Money,
+        payments: (Payment | Charge)[],
+    }};
     me?: Friend;
 }
 
@@ -82,6 +85,8 @@ export interface Payment {
     payee: UserId,
     amount: Money,
     date: Date,
+    memo: string,
+    paymentFrame: FrameIndex,
 }
 
 export interface Charge {
@@ -90,6 +95,8 @@ export interface Charge {
     debtee: UserId,
     amount: Money,
     date: Date,
+    memo: string,
+    paymentFrame: FrameIndex,
 }
 
 export class Share extends Money {
