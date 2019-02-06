@@ -41,7 +41,7 @@ export interface Frame {
 export interface Transaction {
     id: TransactionId;
     gid: GroupId;
-    txnFrame: FrameIndex;
+    frame: FrameIndex;
     category: CategoryId | null;
     amount: Money;
     description: string;

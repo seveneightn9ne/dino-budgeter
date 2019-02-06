@@ -72,7 +72,7 @@ export function handle_transaction_post(request: AddTransactionRequest, actor: U
         const transaction: Transaction = {
             id: tx_id,
             gid,
-            txnFrame: request.frame,
+            frame: request.frame,
             category: request.category,
             amount: request.amount,
             description: request.description,

@@ -67,7 +67,7 @@ async function getTransactionsInner(where: Query, t: pgPromise.ITask<{}>): Promi
         return {
             id: row.id,
             gid: row.gid,
-            txnFrame: row.frame,
+            frame: row.frame,
             category: row.category,
             amount: new Money(row.amount),
             description: row.description,

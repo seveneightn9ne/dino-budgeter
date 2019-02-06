@@ -129,7 +129,7 @@ export default class Frame extends React.Component<FrameProps & RouteComponentPr
 
     onAddTransaction(t: Transaction) {
         const newFrame = {...this.state.frame};
-        if (t.txnFrame == this.state.frame.index) {
+        if (t.frame == this.state.frame.index) {
             newFrame.balance = this.state.frame.balance.minus(t.amount);
             newFrame.spending = this.state.frame.spending.plus(t.amount);
             newFrame.categories = newFrame.categories.map(c => {
@@ -139,7 +139,7 @@ export default class Frame extends React.Component<FrameProps & RouteComponentPr
                 }
                 return c;
             });
-        } else if (t.txnFrame < this.state.frame.index) {
+        } else if (t.frame < this.state.frame.index) {
             newFrame.balance = this.state.frame.balance.minus(t.amount);
         }
         const transactions = [...this.state.transactions, t];
