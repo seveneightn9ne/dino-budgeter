@@ -27,6 +27,118 @@ function reviveDate(v: any): any {
     return new Date(v);
 }
 
+
+
+
+
+function sNumber(): SchemaField<number> {
+    return (key: string, val: any): number => {
+        if (typeof val === "number") {
+            return val;
+        }
+        throw Error("Field " + key + " must be a number");
+    }
+}
+
+function sString(opts: {nonEmpty?: boolean} = {}): SchemaField<string> {
+    const {nonEmpty} = opts;
+    return (key: string, val: any): string => {
+        if (typeof val === "string") {
+            if (nonEmpty && val.length == 0) {
+                throw Error("Field " + key + " cannot be an empty string");
+            }
+            return val;
+        }
+        throw Error("Field " + key + " must be a string");
+    }
+}
+
+function sBoolean(): SchemaField<boolean> {
+    const f: SchemaBase<boolean> = (key: string, val: any): boolean => {
+        if (typeof val === "boolean") {
+            return val;
+        }
+        throw Error("Field " + key + " must be a boolean");
+    }
+    return f as SchemaField<boolean>;
+}
+
+function sDate(): SchemaField<Date> {
+    return (key: string, val: any): Date => {
+        const date = new Date(val);
+        if (_.isNaN(date.valueOf())) {
+            throw Error("Field " + key + " must be a date");
+        }
+        return date;
+    }
+}
+
+function sMoney(opts: {nonNegative?: boolean} = {}): SchemaField<Money> {
+    const {nonNegative} = opts;
+    return (key: string, val: any): Money => {
+        const money = new Money(val);
+        if (money.isValid(!nonNegative)) {
+            return money;
+        }
+        throw Error("Field " + key + " must be a Money");
+    }
+}
+
+function sShare(opts: {nonNegative?: boolean} = {}): SchemaField<Share> {
+    const {nonNegative} = opts;
+    return (key: string, val: any): Share => {
+        const share = new Share(val);
+        if (share.isValid(!nonNegative)) {
+            return share;
+        }
+        throw Error("Field " + key + " must be a Share");
+    }
+}
+
+function sOptional<T extends RequestField>(schema: SchemaField<T>): SchemaBase<T> {
+    return (key: string, val: any): T | undefined => {
+        if (val === undefined) {
+            return undefined;
+        }
+        return validateSchemaField(schema, key, val);
+    }
+}
+
+/*
+function sObject<Schema extends SchemaType>(body: Schema): SchemaField<RequestType<Schema> | any> {
+    const ret: {[k: string]: any} = (key: string, obj: any): RequestType<Schema> => {
+        if (!_.isPlainObject(obj)) {
+            throw Error("Field " + key + " must be an object");
+        }
+        validateObject(body, obj);
+        return obj;
+    }};
+    _.forOwn(body, (field, key) => {
+        ret[key] = field;
+    });
+    return ret;
+}*/
+
+// TODO UN EXPORT THIS ITS UNUSED FOR NOW
+export function sArray<T extends RequestBaseType>(innerType: SchemaBase<T>): SchemaBase<T[]> {
+    return (key: string, val: any): T[] => {
+        if (!_.isArray(val)) {
+            throw Error("Field " + key + " must be an array");
+        }
+        // TODO what if innerType is an object?
+        return _.map(val, (innerVal) => innerType(key, innerVal) as T) as T[];
+    };
+}
+
+/**
+ * schema: {
+ *      foo: sString(),
+ *      bar: {
+ *          barBaz: sArray(sNumber()),
+ *      }
+ * }
+ */
+
 export class API<Request, Response = null> {
     constructor(
         public path: string,
@@ -56,6 +168,95 @@ export class API<Request, Response = null> {
         return (reviver as ReviverFunc)(value);
     }
 }
+type RequestBaseType = string | number | boolean | Date | Money | Share;
+//type RequestBaseType = RequestBaseBaseType | RequestBaseBaseType[]; // only allows 1 level nesting array >:(
+//type RequestBaseType = RequestBaseBaseType | RequestBaseBaseType[];
+type RequestBase = RequestBaseType | RequestBaseType[];
+type RequestField = RequestBase | object;
+export type RequestType = {
+    [key: string]: RequestField;
+}
+type SchemaBase<T> = (k: string, v: any) => T;
+type SchemaField<T> = T extends object ? (SchemaType<T> | SchemaBase<T>) : SchemaBase<T>;
+//type SchemaField<T extends RequestField> = SchemaBase<T> | SchemaType;
+//type SchemaType = {
+//    [key: string]: SchemaField<any>;
+//}
+
+//type ReturnType<T extends SchemaBase<any>> = T extends (key: string, val: any) => infer R ? R : any;
+
+//type SchemaFieldType<T, S extends SchemaField<T>> = S extends SchemaType ? RequestType<S> : S extends SchemaBase<T> ? ReturnType<S> : never;
+//type RequestFromSchema<Schema extends SchemaType<any>> = Schema extends SchemaType<infer R> ? R : any;
+export type SchemaType<R extends object> = {
+    [P in keyof R]?: SchemaField<R[P]>;
+}
+/*function isSchemaBase_<T extends RequestBaseType | RequestType, S extends SchemaField<T>>(s: S): T extends RequestBaseType ? true : false {
+    if (_.isFunction(s)) {
+        return true as T extends RequestBaseType ? true : false;
+    }
+    return false as T extends RequestBaseType ? true : false;
+}*/
+function maybeGetSchemaType<T extends RequestField>(s: SchemaField<T>): T extends RequestType ? SchemaType<T> : undefined {
+    if (_.isPlainObject(s)) {
+        return s as unknown as T extends RequestType ? SchemaType<T> : undefined;
+    }
+    return undefined;
+}
+/*function isSchemaType<T extends RequestBaseType | RequestType>(s: SchemaField<T>): T extends RequestBaseType ? false : true {
+    const schemaBase = maybeGetSchemaBase<T>(s);
+    if (schemaBase !== undefined) {
+        return false as T extends RequestBaseType ? false : true;
+    }
+    return true as T extends RequestBaseType ? false : true;
+}*/
+
+function validateSchemaField<T extends RequestField>(schema: SchemaField<T>, key: string, val: any): T {
+    if (_.isFunction(schema)) {
+        return schema(key, val);
+    }
+    const schemaType = maybeGetSchemaType(schema);
+    if (schemaType !== undefined) {
+        return validateSchema(schemaType, val, key) as T;
+    }
+    throw Error("impossible for schema to be neither");
+}
+// validates the object recursively
+function validateSchema<Request extends object>(schema: SchemaType<Request>, obj: any, key: string = ""): Request {
+    if (!_.isPlainObject(obj)) {
+        throw Error("Object " + key + " must be an object");
+    }
+    _.forOwn(obj, (_, key) => {
+        if (!(key in schema)) {
+            throw Error("Extraneous field " + key);
+        }
+    });
+    return _.mapValues(schema, (s, f) => validateSchemaField(s, f, obj[f])) as Request;
+}
+export class API2<Request extends object, R2 extends object> {
+    constructor(
+        public path: string,
+        public requestSchema: SchemaType<Request>,
+        public responseSchema: SchemaType<R2>,
+        //public requestRevivers: {[k in keyof Request]?: Revivable<Request[k]>} = {},
+        //public responseRevivers: {[k in keyof Response]?: Revivable<Response[k]>} = {},
+        public method: "POST" | "PUT" | "DELETE" = "POST",
+    ) {}
+
+    /**
+     * Throws an error when the request does not match the schema.
+     */
+    public reviveRequest(request: string): Request {
+        return validateSchema(this.requestSchema, JSON.parse(request));
+    }
+
+    public reviveResponse(response: string): R2 {
+        return validateSchema(this.responseSchema, JSON.parse(response));
+    }
+}
+
+export type ApiRequest<A extends API2<any, any>> = A extends API2<infer R, any> ? R : any;
+export type ApiResponse<A extends API2<any, any>> = A extends API2<any, infer R> ? R : any;
+
 export const EmptyResponseValue = {};
 export type EmptyResponse = typeof EmptyResponseValue;
 
@@ -65,7 +266,7 @@ export type PaymentRequest = {
     youPay: boolean;
     isPayment: boolean;
     memo: string;
-    paymentFrame: FrameIndex;
+    frame: FrameIndex;
 };
 export const Payment = new API<PaymentRequest, EmptyResponse>('/api/payment', {
     'amount': reviveMoney,
@@ -85,23 +286,65 @@ export type AddTransactionRequest = {
         iPaid: boolean,
     },
 };
-export const AddTransaction = new API<AddTransactionRequest, Transaction>('/api/transaction', {
-    'amount': reviveMoney,
-    'date': reviveDate,
-    split: {
-        'myShare': reviveShare,
-        'theirShare': reviveShare,
-        'otherAmount': reviveMoney
+/*export const AddTransactionRequestSchema: SchemaType = {
+    frame: sNumber(),
+    amount: sMoney(),
+    description: sString(),
+    category: sNumber(),
+}*/
+const transactionSchema: SchemaType<Transaction> = {
+    id: sString(),
+    gid: sString(),
+    frame: sNumber(),
+    amount: sMoney(),
+    description: sString(),
+    date: sDate(),
+    category: sString(),
+    alive: sBoolean(),
+    split: sOptional({
+        id: sString(),
+        with: {
+            uid: sString(),
+            gid: sString(),
+            email: sString(),
+            name: sString(),
+        } as SchemaType<Friend>,
+        payer: sString(),
+        settled: sBoolean(),
+        myShare: sShare(),
+        theirShare: sShare(),
+        otherAmount: sMoney(),
+    }),
+}
+export type AddTransactionRequest2 = {
+    frame: FrameIndex,
+    amount: Money,
+    description: string,
+    date: Date,
+    category: CategoryId,
+    split?: {
+        with: string,
+        myShare: Share,
+        theirShare: Share,
+        otherAmount: Money,
+        iPaid: boolean,
     }
-}, {
-    amount: reviveMoney,
-    date: reviveDate,
-    split: {
-        theirShare: reviveShare,
-        myShare: reviveShare,
-        otherAmount: reviveMoney,
-    }
-});
+}
+const req: SchemaType<AddTransactionRequest2> = {
+    frame: sNumber(),
+    amount: sMoney(),
+    description: sString(),
+    date: sDate(),
+    category: sString(),
+    split: sOptional({
+        with: sString(),
+        myShare: sShare(),
+        theirShare: sShare(),
+        otherAmount: sMoney(),
+        iPaid: sBoolean(),
+    }),
+}
+export const AddTransaction = new API2('/api/transaction', req, transactionSchema);
 
 export type DeleteTransactionRequest = {id: TransactionId};
 export const DeleteTransaction = new API<DeleteTransactionRequest, EmptyResponse>('/api/transaction', {}, {}, 'DELETE');
@@ -169,28 +412,15 @@ export const Initialize = new API<InitializeRequest, InitializeResponse>('/api/i
             }
         })
     ),
-    debts: reviveValues(v => 
-        API.reviver('debts', v, {
-            debts: {
-                balance: reviveMoney,
-                payments: reviveArray((pmt) => 
-                    API.reviver('payments', pmt, {
-                        payments: {
-                            amount: reviveMoney,
-                            date: reviveDate,
-                        }
-                    })
-                )
-            }
-        })),
-    categories: reviveArray((cat: Category) =>
+    debts: reviveValues(v => new Money(v)),
+    categories: reviveArray((cat: Category) => 
         API.reviver('categories', cat, {
             categories: {
                 balance: reviveMoney,
                 budget: reviveMoney,
             }
         })
-    ),
+    )
 });
 
 export type AddCategoryRequest = {

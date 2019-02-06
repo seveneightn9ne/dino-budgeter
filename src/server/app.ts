@@ -68,7 +68,7 @@ api.registerHandler(app, Initialize, api.handle_init_get);
 api.registerHandler(app, Income, frame.handle_income_post);
 api.registerHandler(app, BudgetingMove, frame.handle_budgeting_move_post);
 
-api.registerHandler(app, AddTransaction, transactions.handle_transaction_post);
+api.registerHandler2(app, AddTransaction, transactions.handle_transaction_post);
 api.registerHandler(app, DeleteTransaction, transactions.handle_transaction_delete);
 api.registerHandler(app, TransactionDescription, transactions.handle_transaction_description_post);
 api.registerHandler(app, TransactionAmount, transactions.handle_transaction_amount_post);

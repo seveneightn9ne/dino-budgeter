@@ -94,7 +94,7 @@ export default class Friends extends React.Component<Props, State> {
 
     onSubmitInner = (e: React.FormEvent, email: string, uid: UserId, amountStr: string, youPay: boolean, memo: string, isPayment: boolean) => {
         e.preventDefault();
-        const paymentFrame = this.props.index;
+        const frame = this.props.index;
         let amount = new Money(amountStr);
         if (!amount.isValid()) {
             return;
@@ -102,7 +102,7 @@ export default class Friends extends React.Component<Props, State> {
         util.apiFetch({
             api: APIPayment,
             body: {
-                email, amount, youPay, isPayment, memo, paymentFrame,
+                email, amount, youPay, isPayment, memo, frame,
             },
             location: this.props.location,
             history: this.props.history,
@@ -112,7 +112,7 @@ export default class Friends extends React.Component<Props, State> {
                     type: 'payment',
                     payer: youPay ? this.props.me.uid : uid,
                     payee: youPay ? uid : this.props.me.uid,
-                    amount, memo, paymentFrame,
+                    amount, memo, frame,
                     date: new Date(),
                 }
                 this.props.onPayment(email, payment);
@@ -121,7 +121,7 @@ export default class Friends extends React.Component<Props, State> {
                     type: 'charge',
                     debtor: youPay ? this.props.me.uid : uid,
                     debtee: youPay ? uid : this.props.me.uid,
-                    amount, memo, paymentFrame,
+                    amount, memo, frame,
                     date: new Date(),
                 }
                 this.props.onPayment(email, charge);
@@ -159,12 +159,12 @@ export default class Friends extends React.Component<Props, State> {
     }
 
     loadMore = (f: UiFriend) => () => {
-        const payments = _.sortBy(this.props.debts[f.email].payments.filter(p => p.paymentFrame < this.state.latestFrame[f.uid]), 'frame');
+        const payments = _.sortBy(this.props.debts[f.email].payments.filter(p => p.frame < this.state.latestFrame[f.uid]), 'frame');
         if (payments.length ==  0) {
             console.error("This is impossible");
             return;
         }
-        this.setState({latestFrame: {...this.state.latestFrame, [f.uid]: payments[0].paymentFrame}});
+        this.setState({latestFrame: {...this.state.latestFrame, [f.uid]: payments[0].frame}});
     }
 
     displayName = (friend: UiFriend) => {
@@ -228,7 +228,7 @@ export default class Friends extends React.Component<Props, State> {
                     </div>;
             const payment = this.renderPayment(f);
             const charge = this.renderCharge(f);
-            const payments = f.debt.payments.filter(p => p.paymentFrame >= this.state.latestFrame[f.uid]).map(payment => {
+            const payments = f.debt.payments.filter(p => p.frame >= this.state.latestFrame[f.uid]).map(payment => {
                 const text = payment.type == 'payment' ? (payment.payer == this.props.me.uid ? 
                     `You paid ${displayName} ${payment.amount.formatted()}`:
                     `${displayName} paid you ${payment.amount.formatted()}`):

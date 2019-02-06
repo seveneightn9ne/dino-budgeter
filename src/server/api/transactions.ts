@@ -7,9 +7,9 @@ import db from "../db";
 import * as transactions from "../transactions";
 import * as user from "../user";
 import * as payments from "../payments";
-import { AddTransactionRequest, DeleteTransactionRequest, TransactionDescriptionRequest, TransactionAmountRequest, TransactionDateRequest, TransactionCategoryRequest, TransactionSplitRequest } from "../../shared/api";
+import { AddTransactionRequest2, DeleteTransactionRequest, TransactionDescriptionRequest, TransactionAmountRequest, TransactionDateRequest, TransactionCategoryRequest, TransactionSplitRequest } from "../../shared/api";
 
-export function handle_transaction_post(request: AddTransactionRequest, actor: User): Promise<Transaction | StatusCodeNoResponse> {
+export function handle_transaction_post(request: AddTransactionRequest2, actor: User): Promise<Transaction | StatusCodeNoResponse> {
     const other = request.split ? request.split.with : undefined;
     const payer = request.split ? request.split.iPaid ? actor.uid : other : undefined;
     if (!request.amount.isValid(false /** allowNegative */)) {

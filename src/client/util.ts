@@ -4,7 +4,6 @@ export * from "../shared/util";
 import _ from "lodash";
 import * as frames from "../shared/frames";
 import * as api from "../shared/api";
-import * as api2 from "../shared/api2";
 
 export const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
@@ -81,7 +80,7 @@ export function apiFetch<Request, Response>(options: {
     });
 }
 export function apiFetch2<Request extends object, Response extends object>(options: {
-    api: api2.API2<Request, Response>,
+    api: api.API2<Request, Response>,
     body?: Request,
     location?: Location,
     history?: History,

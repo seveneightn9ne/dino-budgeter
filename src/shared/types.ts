@@ -86,7 +86,7 @@ export interface Payment {
     amount: Money,
     date: Date,
     memo: string,
-    paymentFrame: FrameIndex,
+    frame: FrameIndex,
 }
 
 export interface Charge {
@@ -96,7 +96,7 @@ export interface Charge {
     amount: Money,
     date: Date,
     memo: string,
-    paymentFrame: FrameIndex,
+    frame: FrameIndex,
 }
 
 export class Share extends Money {

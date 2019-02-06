@@ -6,7 +6,6 @@ import { distributeTotal } from "../shared/transactions";
 import { Category, Friend, Share, Transaction, CategoryId } from "../shared/types";
 import * as util from "./util";
 import * as api from '../shared/api';
-import * as api2 from '../shared/api2';
 
 interface NewTxProps {
     onAddTransaction: (transaction: Transaction) => void;
@@ -293,7 +292,7 @@ export default class TxEntry extends React.Component<Props, TxEntryState> {
         } : undefined;
         // Saving a new transaction...
         util.apiFetch2({
-            api: api2.AddTransaction,
+            api: api.AddTransaction,
             body: {
                 frame: frame,
                 amount: amount,

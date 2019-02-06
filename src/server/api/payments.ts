@@ -10,7 +10,7 @@ export function handle_payment_post(request: PaymentRequest, actor: User): Promi
         return Promise.resolve(400 as StatusCodeNoResponse);
     }
     return db.tx(async t => {
-        const frame = request.paymentFrame;
+        const frame = request.frame;
         const friend = await user.getFriendByEmail(request.email, t);
         if (!friend || !await user.isFriend(actor.uid, friend.uid, t)) {
             return 400;
