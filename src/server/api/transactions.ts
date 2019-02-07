@@ -7,9 +7,9 @@ import db from "../db";
 import * as transactions from "../transactions";
 import * as user from "../user";
 import * as payments from "../payments";
-import { AddTransactionRequest2, DeleteTransactionRequest, TransactionDescriptionRequest, TransactionAmountRequest, TransactionDateRequest, TransactionCategoryRequest, TransactionSplitRequest } from "../../shared/api";
+import { ApiRequest, DeleteTransaction, TransactionAmount, TransactionCategory, TransactionDate, TransactionDescription, TransactionSplit, AddTransaction } from "../../shared/api";
 
-export function handle_transaction_post(request: AddTransactionRequest2, actor: User): Promise<Transaction | StatusCodeNoResponse> {
+export function handle_transaction_post(request: ApiRequest<typeof AddTransaction>, actor: User): Promise<Transaction | StatusCodeNoResponse> {
     const other = request.split ? request.split.with : undefined;
     const payer = request.split ? request.split.iPaid ? actor.uid : other : undefined;
     if (!request.amount.isValid(false /** allowNegative */)) {
@@ -92,7 +92,7 @@ function canEditShared(field: txField): boolean {
     return field != "amount";
 }
 
-export function handle_transaction_delete(request: DeleteTransactionRequest, actor: User): Promise<StatusCodeNoResponse> {
+export function handle_transaction_delete(request: ApiRequest<typeof DeleteTransaction>, actor: User): Promise<StatusCodeNoResponse> {
     return db.tx(async t => {
         if (!(await transactions.canUserEdit(request.id, actor.uid, t))) {
             // Maybe no auth? maybe no exists? maybe no id at all?
@@ -103,21 +103,21 @@ export function handle_transaction_delete(request: DeleteTransactionRequest, act
     });
 }
 
-export function handle_transaction_description_post(request: TransactionDescriptionRequest, actor: User): Promise<StatusCodeNoResponse> {
+export function handle_transaction_description_post(request: ApiRequest<typeof TransactionDescription>, actor: User): Promise<StatusCodeNoResponse> {
     return handle_transaction_update_post("description", request, actor, d => !!d);
 }
 
-export function handle_transaction_amount_post(request: TransactionAmountRequest, actor: User): Promise<StatusCodeNoResponse> {
+export function handle_transaction_amount_post(request: ApiRequest<typeof TransactionAmount>, actor: User): Promise<StatusCodeNoResponse> {
     return handle_transaction_update_post("amount", request, actor,
         amount => amount.isValid(),
         amount => amount.string());
 }
 
-export function handle_transaction_date_post(request: TransactionDateRequest, actor: User): Promise<StatusCodeNoResponse> {
+export function handle_transaction_date_post(request: ApiRequest<typeof TransactionDate>, actor: User): Promise<StatusCodeNoResponse> {
     return handle_transaction_update_post("date", request, actor);
 }
 
-export function handle_transaction_category_post(request: TransactionCategoryRequest, actor: User): Promise<StatusCodeNoResponse> {
+export function handle_transaction_category_post(request: ApiRequest<typeof TransactionCategory>, actor: User): Promise<StatusCodeNoResponse> {
     // TODO: validate that the category exists, is alive, is owned by the user, etc.
     return handle_transaction_update_post("category", request, actor, undefined, c => c || null);
 }
@@ -161,7 +161,7 @@ function handle_transaction_update_post<Request extends {id: TransactionId}, Fie
     });
 }
 
-export function handle_transaction_split_post(request: TransactionSplitRequest, actor: User): Promise<StatusCodeNoResponse> {
+export function handle_transaction_split_post(request: ApiRequest<typeof TransactionSplit>, actor: User): Promise<StatusCodeNoResponse> {
     const {tid, sid, total, myShare, theirShare} = request;
     if (!total.isValid(false) ||
         !myShare.isValid(false) ||

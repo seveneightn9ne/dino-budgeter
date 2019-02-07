@@ -2,14 +2,14 @@ import * as React from "react";
 import Money from "../../shared/Money";
 import { fromYyyymmdd, yyyymmdd } from "../util";
 import * as util from "../util";
-import { API, EmptyResponse } from "../../shared/api";
+import { API2, EmptyResponse } from "../../shared/api";
 import { Location, History } from "history";
 
-interface ClickToEditProps<Request, K extends keyof Request, V extends Request[K]> {
+interface ClickToEditProps<Request extends object, K extends keyof Request, V extends Request[K]> {
     value: V;
     onChange: (newVal: V) => void;
     className?: string;
-    api: API<Request, EmptyResponse>;
+    api: API2<Request, EmptyResponse>;
     postData?: Pick<Request, Exclude<keyof Request, K>>;
     postKey: K;
     open?: boolean;
@@ -17,11 +17,11 @@ interface ClickToEditProps<Request, K extends keyof Request, V extends Request[K
     history: History,
     onProvisionalChange?: (newVal: V) => void;
 }
-interface ClickToEditInputProps<Request, K extends keyof Request, V extends Request[K]> extends ClickToEditProps<Request, K, V> {
+interface ClickToEditInputProps<Request extends object, K extends keyof Request, V extends Request[K]> extends ClickToEditProps<Request, K, V> {
     size?: number;
 }
-type Value<Request, K extends keyof Request, V> = Request[K] extends V ? Request[K] : never;
-interface ClickToEditDropdownProps<Request, K extends keyof Request> extends ClickToEditProps<Request, K, Value<Request, K, string>> {
+type Value<Request extends object, K extends keyof Request, V> = Request[K] extends V ? Request[K] : any;
+interface ClickToEditDropdownProps<Request extends object, K extends keyof Request> extends ClickToEditProps<Request, K, Value<Request, K, string>> {
     values: Map<string, string>;
 }
 
@@ -31,7 +31,7 @@ interface ClickToEditState {
     newValueErr?: boolean;
 }
 
-abstract class ClickToEdit<Request, K extends keyof Request, V extends Request[K], P extends ClickToEditProps<Request, K, V>> extends React.Component<P, ClickToEditState> {
+abstract class ClickToEdit<Request extends object, K extends keyof Request, V extends Request[K], P extends ClickToEditProps<Request, K, V>> extends React.Component<P, ClickToEditState> {
 
     static defaultProps = {
         size: 4,
@@ -107,7 +107,7 @@ abstract class ClickToEdit<Request, K extends keyof Request, V extends Request[K
     }
 }
 
-abstract class ClickToEditInput<Request, K extends keyof Request, V extends Request[K]> extends ClickToEdit<Request, K, V, ClickToEditInputProps<Request, K, V>> {
+abstract class ClickToEditInput<Request extends object, K extends keyof Request, V extends Request[K]> extends ClickToEdit<Request, K, V, ClickToEditInputProps<Request, K, V>> {
     abstract type: string;
     abstract toInput(val: V): string;
     saveStyle = {display: "none"};
@@ -124,7 +124,7 @@ abstract class ClickToEditInput<Request, K extends keyof Request, V extends Requ
     }
 }
 
-export class ClickToEditText<Request, K extends keyof Request> extends ClickToEditInput<Request, K, Value<Request, K, string>> {
+export class ClickToEditText<Request extends object, K extends keyof Request> extends ClickToEditInput<Request, K, Value<Request, K, string>> {
     type = "text";
     validateChange(_val: string): boolean {
         return true;
@@ -142,7 +142,7 @@ export class ClickToEditText<Request, K extends keyof Request> extends ClickToEd
 
 //export const ClickToEditText = withRouter(ClickToEditTextBare);
 
-export class ClickToEditMoney<Request, K extends keyof Request> extends ClickToEditInput<Request, K, Value<Request, K, Money>> {
+export class ClickToEditMoney<Request extends object, K extends keyof Request> extends ClickToEditInput<Request, K, Value<Request, K, Money>> {
     type = "text";
     validateChange(val: Money): boolean {
         return val.isValid();
@@ -160,7 +160,7 @@ export class ClickToEditMoney<Request, K extends keyof Request> extends ClickToE
 
 //export const ClickToEditMoney = withRouter(ClickToEditMoneyBare);
 
-export class ClickToEditNumber<Request, K extends keyof Request> extends ClickToEditInput<Request, K, Value<Request, K, number>> {
+export class ClickToEditNumber<Request extends object, K extends keyof Request> extends ClickToEditInput<Request, K, Value<Request, K, number>> {
     type = "number";
     validateChange(val: number): boolean {
         return !isNaN(val);
@@ -180,7 +180,7 @@ export class ClickToEditNumber<Request, K extends keyof Request> extends ClickTo
 }
 //export const ClickToEditNumber = withRouter(ClickToEditNumberBare);
 
-export class ClickToEditDate<Request, K extends keyof Request> extends ClickToEditInput<Request, K, Value<Request, K, Date>> {
+export class ClickToEditDate<Request extends object, K extends keyof Request> extends ClickToEditInput<Request, K, Value<Request, K, Date>> {
     type = "date";
     validateChange(val: Date): boolean {
         return !isNaN(val.valueOf());
@@ -207,7 +207,7 @@ export class ClickToEditDate<Request, K extends keyof Request> extends ClickToEd
 
 
 //type CTEDP<R, K extends keyof R> = ClickToEditDropdownProps<R, K> & RouteComponentProps<ClickToEditDropdownProps<R, K>>;
-export class ClickToEditDropdown<Request, K extends keyof Request> extends ClickToEdit<Request, K, Value<Request, K, string>, ClickToEditDropdownProps<Request, K>> {
+export class ClickToEditDropdown<Request extends object, K extends keyof Request> extends ClickToEdit<Request, K, Value<Request, K, string>, ClickToEditDropdownProps<Request, K>> {
     saveStyle = {display: "none"};
     constructor(props: ClickToEditDropdownProps<Request, K>) {
         super(props);

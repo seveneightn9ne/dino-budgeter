@@ -2,10 +2,10 @@ import { StatusCodeNoResponse } from "../api";
 import db from "../db";
 import * as user from "../user";
 import * as payments from "../payments";
-import { PaymentRequest } from "../../shared/api";
+import { ApiRequest, Payment } from "../../shared/api";
 import { User } from "../../shared/types";
 
-export function handle_payment_post(request: PaymentRequest, actor: User): Promise<StatusCodeNoResponse> {
+export function handle_payment_post(request: ApiRequest<typeof Payment>, actor: User): Promise<StatusCodeNoResponse> {
     if (!request.amount.isValid()) {
         return Promise.resolve(400 as StatusCodeNoResponse);
     }

@@ -39,47 +39,7 @@ export function defaultTxDate(frame: FrameIndex): Date {
     return newTxDate;
 }
 
-export function apiFetch<Request, Response>(options: {
-    api: api.API<Request, Response>,
-    body?: Request,
-    location?: Location,
-    history?: History,
-}): Promise<Response> {
-    return fetch(options.api.path, {
-        method: options.api.method,
-        headers: {
-            "Accept": "application/json",
-            "Content-Type": "application/json"
-          },
-        body: options.body ? JSON.stringify(options.body) : undefined,
-    }).then(result => {
-        if (result.status == 204) {
-            // Assert that 204 corresponds to EmptyResponse.
-            // The server should have typechecking to verify
-            // that 204 is allowed only when Response is EmptyResponse.
-            return api.EmptyResponseValue as unknown as Response;
-        }
-        if (result.status == 401) {
-            // Note, discarding non-path bits of the location
-            const redir = options.location ? options.location.pathname : "";
-            const path = `/login?redirectTo=${redir}`;
-            if (options.history) {
-                options.history.push(path);
-                throw new Error(`Reauth required`);
-            } else {
-                window.location.href = path;
-            }
-        }
-        if (result.status != 200) {
-            throw result.status;
-        }
-        return result.text().then(t => {
-            const json: Response = JSON.parse(t, options.api.responseReviver);
-            return json;
-        });
-    });
-}
-export function apiFetch2<Request extends object, Response extends object>(options: {
+export function apiFetch<Request extends object, Response extends object>(options: {
     api: api.API2<Request, Response>,
     body?: Request,
     location?: Location,

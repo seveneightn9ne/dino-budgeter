@@ -7,7 +7,7 @@ import AIComponent from "./ai";
 import CategoryRow from "./categoryrow";
 import { ClickToEditMoney } from "./components/clicktoedit";
 import NewCategory from "./newcategory";
-import { Income } from "../shared/api";
+import { Income, ApiRequest } from "../shared/api";
 import { Location, History } from "history";
 
 interface Props {
@@ -60,7 +60,7 @@ export default class Categories extends React.Component<Props, State> {
         const ais = this.getAIs().map(ai => <AIComponent ai={ai} key={ai.message()} />);
         // income - spent = balance;
         // spent = income - balance;
-        const income = <ClickToEditMoney
+        const income = <ClickToEditMoney<ApiRequest<typeof Income>, 'income'>
             api={Income}
             size={6}
             value={this.props.frame.income}

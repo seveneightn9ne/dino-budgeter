@@ -2,10 +2,10 @@ import Money from "../../shared/Money";
 import { StatusCodeNoResponse } from "../api";
 import db from "../db";
 import * as user from "../user";
-import { IncomeRequest, BudgetingMoveRequest } from "../../shared/api";
+import { ApiRequest, Income, BudgetingMove } from "../../shared/api";
 import { User } from "../../shared/types";
 
-export function handle_income_post(request: IncomeRequest, actor: User): Promise<StatusCodeNoResponse> {
+export function handle_income_post(request: ApiRequest<typeof Income>, actor: User): Promise<StatusCodeNoResponse> {
     if (!request.income.isValid()) {
         return Promise.resolve(400 as StatusCodeNoResponse);
     }
@@ -17,7 +17,7 @@ export function handle_income_post(request: IncomeRequest, actor: User): Promise
     });
 }
 
-export function handle_budgeting_move_post(request: BudgetingMoveRequest, actor: User): Promise<StatusCodeNoResponse> {
+export function handle_budgeting_move_post(request: ApiRequest<typeof BudgetingMove>, actor: User): Promise<StatusCodeNoResponse> {
     if (!request.amount.isValid()) {
         return Promise.resolve(400 as StatusCodeNoResponse);
     }

@@ -25,6 +25,7 @@ export interface Category {
     ordering: number;
     budget: Money;
     balance?: Money;
+    ctime?: Date;
 }
 
 // Corresponds to `frames` db table joined on `categories`, plus `balance` and `spending`

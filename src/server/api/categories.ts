@@ -5,9 +5,9 @@ import { StatusCodeNoResponse } from "../api";
 import * as categories from "../categories";
 import db from "../db";
 import * as user from "../user";
-import { AddCategoryRequest, DeleteCategoryRequest, CategoryBudgetRequest, CategoryNameRequest } from "../../shared/api";
+import { ApiRequest, AddCategory, DeleteCategory, CategoryBudget, CategoryName } from "../../shared/api";
 
-export function handle_category_post(request: AddCategoryRequest, actor: User): Promise<Category | StatusCodeNoResponse> {
+export function handle_category_post(request: ApiRequest<typeof AddCategory>, actor: User): Promise<Category | StatusCodeNoResponse> {
     const c: Category = {
         frame: request.frame,
         name: request.name,
@@ -29,7 +29,7 @@ export function handle_category_post(request: AddCategoryRequest, actor: User): 
     });
 }
 
-export function handle_category_delete(request: DeleteCategoryRequest, actor: User): Promise<StatusCodeNoResponse> {
+export function handle_category_delete(request: ApiRequest<typeof DeleteCategory>, actor: User): Promise<StatusCodeNoResponse> {
     const {id, frame} = request;
     return db.tx(async t => {
         const row = await t.oneOrNone("select * from categories where id = $1 and frame = $2", [id, frame]);
@@ -47,7 +47,7 @@ export function handle_category_delete(request: DeleteCategoryRequest, actor: Us
     });
 }
 
-export function handle_category_budget_post(request: CategoryBudgetRequest, actor: User): Promise<StatusCodeNoResponse> {
+export function handle_category_budget_post(request: ApiRequest<typeof CategoryBudget>, actor: User): Promise<StatusCodeNoResponse> {
     const {id, frame, amount} = request;
     if (!amount.isValid(false /** allowNegative */)) {
         return Promise.resolve(400 as StatusCodeNoResponse);
@@ -62,7 +62,7 @@ export function handle_category_budget_post(request: CategoryBudgetRequest, acto
     });
 }
 
-export function handle_category_name_post(request: CategoryNameRequest, actor: User): Promise<StatusCodeNoResponse> {
+export function handle_category_name_post(request: ApiRequest<typeof CategoryName>, actor: User): Promise<StatusCodeNoResponse> {
     const {id, frame, name} = request;
     return db.tx(async t => {
         const gid = await user.getDefaultGroup(actor, t);

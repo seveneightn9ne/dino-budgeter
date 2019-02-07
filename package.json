@@ -46,7 +46,7 @@
   "devDependencies": {
     "awesome-typescript-loader": "^5.2.0",
     "source-map-loader": "^0.2.4",
-    "typescript": "^3.0.1",
+    "typescript": "^3.2.0",
     "webpack": "^4.16.5",
     "webpack-cli": "^3.1.0"
   },
@@ -55,7 +55,7 @@
     "build-server": "tsc",
     "build-client": "node_modules/.bin/webpack --mode=development",
     "build": "npm run build-server && npm run build-client",
-    "watch-server": "tsc -w",
+    "watch-server": "node_modules/.bin/tsc -w",
     "watch-serve": "find dist/server dist/shared | entr -r sh -c \"npm run serve\"",
     "watch-client": "node_modules/.bin/webpack --mode=development --watch",
     "lint": "tslint -c tslint.json -p tsconfig.json",

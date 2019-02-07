@@ -6,13 +6,13 @@ import db from "./db";
 import * as frames from "./frames";
 import * as transactions from "./transactions";
 import * as user from "./user";
-import * as shared_api from "../shared/api";
+import { ApiRequest, API2, Initialize } from "../shared/api";
 
 type Handler<Req, Res> = (req: Req, user: User) => Promise<Res | StatusCodeNoResponse>;
 
 // Wrap an async handler to be called synchronously
-function wrap2<Req extends object, Res extends object>(
-    api: shared_api.API2<Req, Res>, handler: Handler<Req, Res>): (req: ExpressRequest, res: ExpressResponse) => void {
+function wrap<Req extends object, Res extends object>(
+    api: API2<Req, Res>, handler: Handler<Req, Res>): (req: ExpressRequest, res: ExpressResponse) => void {
     return function(req: ExpressRequest, res: ExpressResponse) {
         const apiRequest = api.reviveRequest(req.body);
         handler(apiRequest, req.user).then(apiResponse => {
@@ -30,27 +30,12 @@ function wrap2<Req extends object, Res extends object>(
         });
     };
 };
-function wrap<Req, Res>(api: shared_api.API<Req, Res>, handler: Handler<Req, Res>): (req: ExpressRequest, res: ExpressResponse) => void {
-    return function(req: ExpressRequest, res: ExpressResponse) {
-        const apiRequest = JSON.parse(req.body, api.requestReviver);
-        handler(apiRequest, req.user).then(apiResponse => {
-            if (typeof(apiResponse) == "number") {
-                res.sendStatus(apiResponse);
-            } else {
-                res.status(200).send(apiResponse);
-            }
-        }).catch((err) => {
-            console.error("Error (caught)", err);
-            const status = 500;
-            res.status(status).send({
-                "error": "internal server error",
-            });
-        });
-    };
-};
+
 export type StatusCode = 200 | 204 | 400 | 401 | 403 | 404 | 500;
 export type StatusCodeNoResponse = Exclude<StatusCode, 200>;
-export function registerHandler<Req, Res = shared_api.EmptyResponse>(app: Express, api: shared_api.API<Req, Res>, handler: Handler<Req, Res>) {
+
+export function registerHandler<Req extends object, Res extends object>(
+    app: Express, api: API2<Req, Res>, handler: Handler<Req, Res>) {
     switch (api.method) {
         case 'POST':
             return app.post(api.path, ensureLogin.ensureLoggedIn("/api/auth-redirect"), wrap(api, handler));
@@ -63,21 +48,7 @@ export function registerHandler<Req, Res = shared_api.EmptyResponse>(app: Expres
     }
 }
 
-export function registerHandler2<Req extends object, Res extends object>(
-    app: Express, api: shared_api.API2<Req, Res>, handler: Handler<Req, Res>) {
-    switch (api.method) {
-        case 'POST':
-            return app.post(api.path, ensureLogin.ensureLoggedIn("/api/auth-redirect"), wrap2(api, handler));
-        case 'DELETE':
-            return app.delete(api.path, ensureLogin.ensureLoggedIn("/api/auth-redirect"), wrap2(api, handler));
-        case 'PUT':
-            return app.put(api.path, ensureLogin.ensureLoggedIn("/api/auth-redirect"), wrap2(api, handler));
-        default:
-            throw Error("api.method unknown: " + api.method);
-    }
-}
-
-export async function handle_init_get(request: shared_api.InitializeRequest, actor: User): Promise<shared_api.InitializeResponse>  {
+export async function handle_init_get(request: ApiRequest<typeof Initialize>, actor: User): Promise<Partial<InitState>>  {
     const resData: InitState = {};
     return db.tx(async t => {
         const fields = new Set(request.fields);

@@ -3,7 +3,7 @@ import { Request, Response } from "express";
 import { StatusCodeNoResponse } from "../api";
 import db from "../db";
 import * as user from "../user";
-import { FriendRequest, NameRequest } from "../../shared/api";
+import { FriendRequest, ApiRequest, Name } from "../../shared/api";
 import { Friend, User } from "../../shared/types";
 
 export const handle_auth_redirect_get = function(_req: Request, res: Response) {
@@ -49,7 +49,7 @@ export function handle_friend_delete(request: FriendRequest, actor: User): Promi
     });
 }
 
-export function handle_change_name_post(request: NameRequest, actor: User): Promise<StatusCodeNoResponse> {
+export function handle_change_name_post(request: ApiRequest<typeof Name>, actor: User): Promise<StatusCodeNoResponse> {
     return db.tx(async t => {
         await user.setName(actor.uid, request.name, t);
         return 204 as StatusCodeNoResponse;

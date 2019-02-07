@@ -291,7 +291,7 @@ export default class TxEntry extends React.Component<Props, TxEntryState> {
             iPaid: this.state.youPaid,
         } : undefined;
         // Saving a new transaction...
-        util.apiFetch2({
+        util.apiFetch({
             api: api.AddTransaction,
             body: {
                 frame: frame,
