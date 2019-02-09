@@ -1,5 +1,7 @@
 import Money from "./Money";
 import { Frame, FrameIndex, Transaction, TransactionId } from "./types";
+import * as frames from './frames';
+
 export interface AI {
     frame?: FrameIndex;
     message(): string;
@@ -107,15 +109,13 @@ export class DebtAI implements AI {
 export function getAIs(frame: Frame): AI[] {
     const ais: AI[] = [];
     const overspends: AI[] = [];
-    let totalBudgeted = Money.Zero;
     frame.categories.forEach(c => {
-        totalBudgeted = totalBudgeted.plus(c.budget);
-        // if (balance < 0) {
         if (c.balance.cmp(Money.Zero) == -1) {
             overspends.push(new OverspentCategory(frame.index, c.name, c.budget, c.balance.negate()));
         }
     });
-    const needsBudgeting = frame.balance.plus(frame.spending);
+    const totalBudgeted = frames.budgeted(frame);
+    const needsBudgeting = frames.totalToBudget(frame);
     const cmpIncome = totalBudgeted.cmp(needsBudgeting);
     if (cmpIncome == 1) {
         ais.push(new Overbudgeted(frame.index, totalBudgeted, needsBudgeting));

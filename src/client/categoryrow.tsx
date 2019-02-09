@@ -6,16 +6,18 @@ import { Category, CategoryId } from "../shared/types";
 import { ClickToEditDropdown, ClickToEditMoney, ClickToEditText } from "./components/clicktoedit";
 import { ControlledPoplet } from "./components/poplet";
 import * as util from "./util";
-import { DeleteCategory, CategoryBudget, CategoryName, BudgetingMove } from "../shared/api";
+import { ApiRequest, DeleteCategory, CategoryBudget, CategoryName, BudgetingMove } from "../shared/api";
 
 interface CategoryRowProps {
     category: Category;
     categories: Category[];
+    budgetLeftover: Money;
     onDeleteCategory: (id: CategoryId) => void;
     onChangeCategory: (newCategory: Category) => void;
 }
 type Props = CategoryRowProps & RouteComponentProps<CategoryRowProps>;
 interface CategoryRowState {
+    budgetLeftoverId: CategoryId;
     provisionalCoverFrom?: CategoryId;
     popletOpen: boolean;
 }
@@ -23,10 +25,14 @@ interface CategoryRowState {
 class CategoryRow extends React.Component<Props, CategoryRowState> {
     state: CategoryRowState = {
         popletOpen: false,
+        budgetLeftoverId: util.randomId(),
     };
 
     categoryMap(minBalance: Money): Map<string, string> {
         const map = new Map();
+        if (this.props.budgetLeftover.cmp(minBalance) >= 0) {
+            map.set(this.state.budgetLeftoverId, `Unbudgeted balance - ${this.props.budgetLeftover.formatted()}`);
+        }
         this.props.categories.forEach(c => {
             if (c.balance.cmp(minBalance) >= 0) {
                 map.set(c.id, `${c.name} - ${c.balance.formatted()}`);
@@ -65,12 +71,14 @@ class CategoryRow extends React.Component<Props, CategoryRowState> {
     }
 
     onCoverBalance(fromId: CategoryId) {
-        const that = this.props.categories.filter(c => c.id == fromId)[0];
-        const thatNew = {...that};
-        // This balance ought to be negative
-        thatNew.budget = thatNew.budget.plus(this.props.category.balance);
-        thatNew.balance = thatNew.balance.plus(this.props.category.balance);
-        this.props.onChangeCategory(thatNew);
+        if (fromId != this.state.budgetLeftoverId) {
+            const that = this.props.categories.filter(c => c.id == fromId)[0];
+            const thatNew = {...that};
+            // This balance ought to be negative
+            thatNew.budget = thatNew.budget.plus(this.props.category.balance);
+            thatNew.balance = thatNew.balance.plus(this.props.category.balance);
+            this.props.onChangeCategory(thatNew);
+        }
 
         const thisNew = {...this.props.category};
         thisNew.budget = thisNew.budget.minus(thisNew.balance);
@@ -128,13 +136,19 @@ class CategoryRow extends React.Component<Props, CategoryRowState> {
                 onRequestClose={this.closePoplet} onRequestOpen={this.openPoplet}
                 title={"Cover from another category"}>
                 Cover from {" "}
-                <ClickToEditDropdown open value=""
+                <ClickToEditDropdown<ApiRequest<typeof BudgetingMove>, 'from'> open zeroValue="Choose category..." value=""
                     api={BudgetingMove}
                     values={this.categoryMap(this.props.category.balance.negate())}
                     onChange={this.onCoverBalance.bind(this)}
                     postKey="from"
                     location={this.props.location}
                     history={this.props.history}
+                    postTransform={(id) => {
+                        if (id == this.state.budgetLeftoverId) {
+                            return "";
+                        }
+                        return id;
+                    }}
                     postData={{
                         to: this.props.category.id,
                         amount: this.props.category.balance.negate(),

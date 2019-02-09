@@ -9,6 +9,7 @@ import { ClickToEditMoney } from "./components/clicktoedit";
 import NewCategory from "./newcategory";
 import { Income, ApiRequest } from "../shared/api";
 import { Location, History } from "history";
+import * as frames from '../shared/frames';
 
 interface Props {
     month: number;
@@ -54,6 +55,7 @@ export default class Categories extends React.Component<Props, State> {
     render() {
         const cs = this.props.frame.categories.map(c =>
             <CategoryRow key={c.id} category={c} categories={this.props.frame.categories}
+                budgetLeftover={frames.unbudgeted(this.props.frame)}
                 onDeleteCategory={this.props.onDeleteCategory}
                 onChangeCategory={this.props.onChangeCategory} />
         );

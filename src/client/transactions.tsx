@@ -56,7 +56,6 @@ export default class Transactions extends React.Component<Props, State> {
 
     categoryMap(): Map<string, string> {
         const map = new Map();
-        map.set("", "Uncategorized");
         this.props.categories.forEach(c => {
             map.set(c.id, c.name);
         });
@@ -104,6 +103,7 @@ export default class Transactions extends React.Component<Props, State> {
             <ClickToEditDropdown
                 api={TransactionCategory}
                 value={tx.category || ""}
+                zeroValue="Uncategorized"
                 values={this.categoryMap()}
                 onChange={cid => this.props.onUpdateTransaction({...tx, category: cid})}
                 postKey="category"

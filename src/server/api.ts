@@ -14,7 +14,16 @@ type Handler<Req, Res> = (req: Req, user: User) => Promise<Res | StatusCodeNoRes
 function wrap<Req extends object, Res extends object>(
     api: API2<Req, Res>, handler: Handler<Req, Res>): (req: ExpressRequest, res: ExpressResponse) => void {
     return function(req: ExpressRequest, res: ExpressResponse) {
-        const apiRequest = api.reviveRequest(req.body);
+        let apiRequest;
+        try {
+            apiRequest = api.reviveRequest(req.body);
+        } catch (e) {
+            console.error("Parsing request failed", e);
+            res.status(400).send({
+                "error": "Parsing request failed",
+            });
+            return;
+        }
         handler(apiRequest, req.user).then(apiResponse => {
             if (typeof(apiResponse) == "number") {
                 res.sendStatus(apiResponse);

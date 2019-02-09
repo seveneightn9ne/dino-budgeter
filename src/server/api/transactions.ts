@@ -127,15 +127,11 @@ function handle_transaction_update_post<Request extends {id: TransactionId}, Fie
         request: Request,
         actor: User,
         isValid?: (val: Request[Field]) => boolean,
-        transform?: (val: Request[Field]) => string): Promise<StatusCodeNoResponse> {
+        transform?: (val: Request[Field]) => (Request[Field]|string)): Promise<StatusCodeNoResponse> {
     const value = request[field];
     if (!isValid) isValid = () => true;
     if (!transform) {
-        if (typeof value == "string") {
-            transform = (s) => s as typeof value;
-        } else {
-            throw Error("Must provide a transform for a non-string value in " + field);
-        }
+        transform = (s) => s;
     }
     if (!isValid(value)) {
         return Promise.resolve(400 as StatusCodeNoResponse);

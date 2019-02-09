@@ -22,7 +22,9 @@ interface ClickToEditInputProps<Request extends object, K extends keyof Request,
 }
 type Value<Request extends object, K extends keyof Request, V> = Request[K] extends V ? Request[K] : any;
 interface ClickToEditDropdownProps<Request extends object, K extends keyof Request> extends ClickToEditProps<Request, K, Value<Request, K, string>> {
+    zeroValue: string;
     values: Map<string, string>;
+    postTransform?: (val: string) => string;
 }
 
 interface ClickToEditState {
@@ -54,6 +56,10 @@ abstract class ClickToEdit<Request extends object, K extends keyof Request, V ex
     abstract saveStyle: React.CSSProperties;
     abstract getInitialValue(): string;
 
+    postTransform(v: V): V {
+        return v;
+    }
+
     edit(): void {
         this.setState({editing: true, newValue: this.getInitialValue()});
     }
@@ -81,7 +87,7 @@ abstract class ClickToEdit<Request extends object, K extends keyof Request, V ex
         const body: Request = {
             ...(this.props.postData as object)
         } as Request;
-        body[this.props.postKey] = newValue;
+        body[this.props.postKey] = this.postTransform(newValue);
         util.apiFetch({
             api: this.props.api,
             body,
@@ -165,9 +171,6 @@ export class ClickToEditNumber<Request extends object, K extends keyof Request> 
     validateChange(val: number): boolean {
         return !isNaN(val);
     }
-    postTransform(val: number): string {
-        return JSON.stringify(val);
-    }
     fromInput(val: string): Value<Request, K, number> {
         return Number(val) as Value<Request, K, number>;
     }
@@ -184,9 +187,6 @@ export class ClickToEditDate<Request extends object, K extends keyof Request> ex
     type = "date";
     validateChange(val: Date): boolean {
         return !isNaN(val.valueOf());
-    }
-    postTransform(val: Date): string {
-        return val.valueOf().toString();
     }
     fromInput(val: string): Value<Request, K, Date> {
         return fromYyyymmdd(val) as Value<Request, K, Date>;
@@ -214,7 +214,7 @@ export class ClickToEditDropdown<Request extends object, K extends keyof Request
         this.state = {...this.state, newValue: this.getInitialValue(props)};
     }
     getInitialValue(props = this.props) {
-        return props.value || props.values.keys().next().value;
+        return props.value || "";
     }
     blur(): void {
 
@@ -222,7 +222,10 @@ export class ClickToEditDropdown<Request extends object, K extends keyof Request
     validateChange(val: string): boolean {
         return this.props.values.get(val) != undefined;
     }
-    postTransform(val: string): string {
+    postTransform(val: Value<Request, K, string>): Value<Request, K, string> {
+        if (this.props.postTransform) {
+            return this.props.postTransform(val) as Value<Request, K, string>;
+        }
         return val;
     }
     fromInput(val: string): Value<Request, K, string> {
@@ -232,12 +235,17 @@ export class ClickToEditDropdown<Request extends object, K extends keyof Request
         return this.props.values.get(val);
     }
     onChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+        if (e.target.value == "") {
+            return;
+        }
         this.updateValue(e, () => {
             this.saveNewValue();
         });
     }
     renderInput() {
-        const options: JSX.Element[] = [];
+        const options: JSX.Element[] = [
+            <option key="" value="">{this.props.zeroValue}</option>
+        ];
         this.props.values.forEach((display, val) =>
             options.push(<option key={val} value={val}>{display}</option>));
         return <select autoFocus onChange={this.onChange} value={this.state.newValue}>
