@@ -113,6 +113,7 @@ export function handle_transaction_amount_post(request: ApiRequest<typeof Transa
 }
 
 export function handle_transaction_date_post(request: ApiRequest<typeof TransactionDate>, actor: User): Promise<Response<EmptyResponse>> {
+    // TODO: the transaction may have to move frames.
     return handle_transaction_update_post("date", request, actor);
 }
 
@@ -136,7 +137,7 @@ function handle_transaction_update_post<Request extends {id: TransactionId}, Fie
         const existing = await transactions.getTransaction(id, t);
         if (existing.gid != await user.getDefaultGroup(actor, t)) {
             return {
-                code: 401,
+                code: 403,
                 message: "The transaction is not in your group",
             } as ErrorResponse;
         }

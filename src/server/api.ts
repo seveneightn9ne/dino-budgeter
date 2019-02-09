@@ -6,11 +6,15 @@ import db from "./db";
 import * as frames from "./frames";
 import * as transactions from "./transactions";
 import * as user from "./user";
-import { ApiRequest, API2, Initialize } from "../shared/api";
+import { ApiRequest, API2, Initialize, emptySchema } from "../shared/api";
 
 export type ErrorResponse = {code: StatusCodeNoResponse, message: string};
-export type Response<Res> = Res | ErrorResponse | null;
+export type Response<Res> = ErrorResponse | null | (Res extends object ? Res : never);
 type Handler<Req, Res> = (req: Req, user: User) => Promise<Response<Res>>;
+
+function isErrorResponse(r: Response<any>): r is ErrorResponse {
+    return 'code' in r && 'message' in r;
+}
 
 // Wrap an async handler to be called synchronously
 function wrap<Req extends object, Res extends object>(
@@ -30,11 +34,11 @@ function wrap<Req extends object, Res extends object>(
             if (typeof(apiResponse) == "number") {
                 res.sendStatus(apiResponse);
             } else if (apiResponse == null) {
-                if (api.responseSchema != null) {
+                if (api.responseSchema != emptySchema) {
                     throw new Error("handler returned null, but " + api.path + " requires a response");
                 }
                 res.sendStatus(204);
-            } else if ('code' in apiResponse) {
+            } else if (isErrorResponse(apiResponse)) {
                 res.status(apiResponse.code).send({
                     "error": apiResponse.message,
                 });
@@ -52,7 +56,7 @@ function wrap<Req extends object, Res extends object>(
 };
 
 export type StatusCode = 200 | 204 | 400 | 401 | 403 | 404 | 500;
-export type StatusCodeNoResponse = Exclude<StatusCode, 200>;
+export type StatusCodeNoResponse = Exclude<StatusCode, 200 | 401>;
 
 export function registerHandler<Req extends object, Res extends object>(
     app: Express, api: API2<Req, Res>, handler: Handler<Req, Res>) {

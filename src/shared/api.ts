@@ -44,9 +44,12 @@ function sNull(): SchemaField<null> {
     }
 }
 
-function sBoolean(): SchemaField<boolean> {
+function sBoolean(opts?: {val?: boolean}): SchemaField<boolean> {
     const f: SchemaBase<boolean> = (key: string, val: any): boolean => {
         if (typeof val === "boolean") {
+            if (opts && opts.val !== undefined && val !== opts.val) {
+                throw new Error("Field " + key + " must be " + opts.val);
+            }
             return val;
         }
         throw new Error("Field " + key + " must be a boolean");
@@ -201,6 +204,9 @@ export class API2<Request extends object, R2 extends object|null> {
      * Throws an error when the request does not match the schema.
      */
     public reviveRequest(request: string): Request {
+        if (request == '') {
+            request = JSON.stringify(EmptyResponseValue);
+        }
         try {
             return validateSchema(this.requestSchema, JSON.parse(request));
         } catch (e) {
@@ -210,6 +216,9 @@ export class API2<Request extends object, R2 extends object|null> {
     }
 
     public reviveResponse(response: string): R2 {
+        if (response == '') {
+            response = JSON.stringify(EmptyResponseValue);
+        }
         try {
             return validateSchema(this.responseSchema, JSON.parse(response));
         } catch (e) {
@@ -222,9 +231,15 @@ export class API2<Request extends object, R2 extends object|null> {
 export type ApiRequest<A extends API2<any, any>> = A extends API2<infer R, any> ? R : any;
 export type ApiResponse<A extends API2<any, any>> = A extends API2<any, infer R> ? R : any;
 
-export type EmptyResponse = null;
-export const EmptyResponseValue: EmptyResponse = null;
-export const emptySchema: SchemaType<null> = null;
+export interface EmptyResponse {
+    isEmptyResponse: boolean;
+};
+export const EmptyResponseValue: EmptyResponse = {
+    isEmptyResponse: true,
+};
+export const emptySchema: SchemaType<EmptyResponse> = {
+    isEmptyResponse: sBoolean({val: true}),
+}
 
 /** Reusable Schemas */
 

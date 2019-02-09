@@ -53,7 +53,7 @@ export function apiFetch<Request extends object, Response extends object>(option
           },
         body: options.body ? JSON.stringify(options.body) : undefined,
     }).then(result => {
-        if (options.api.responseSchema == null && result.status == 204) {
+        if (options.api.responseSchema == api.emptySchema && result.status == 204) {
             return null as Response;
         }
         if (result.status == 204) {
@@ -81,7 +81,7 @@ export function apiFetch<Request extends object, Response extends object>(option
                 }
             });
         }
-        if (options.api.responseSchema == null) {
+        if (options.api.responseSchema == api.emptySchema) {
             throw new Error(`Unexpected response for ${options.api.path}`);
         }
         return result.text().then(t => options.api.reviveResponse(t));
