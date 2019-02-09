@@ -144,7 +144,7 @@ export type RequestType = {
 
 type SchemaBase<T> = (k: string, v: any) => T;
 type SchemaField<T> = T extends object ? (SchemaType<T> | SchemaBase<T>) : SchemaBase<T>;
-export type SchemaType<R extends object> = {
+export type SchemaType<R extends object> = R extends null ? null : {
     [P in keyof R]: SchemaField<R[P]>;
 }
 
@@ -269,7 +269,7 @@ const friendSchema: SchemaType<Friend> = {
     uid: sString(),
     gid: sString(),
     email: sString(),
-    name: sString(),
+    name: sOr(sString(), sNull()),
 };
 const transactionSchema: SchemaType<Transaction> = {
     id: sString(),

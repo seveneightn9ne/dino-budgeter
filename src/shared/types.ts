@@ -10,7 +10,7 @@ export type SplitId = string;
 // Corresponds to `users` db table
 export interface User {
     uid: UserId;
-    name: string;
+    name: string | null;
     email: string;
     password_hash: string;
 }
@@ -63,7 +63,7 @@ export interface Friend {
     uid: UserId;
     gid: GroupId;
     email: string;
-    name: string;
+    name: string | null;
 }
 
 export interface InitState {
