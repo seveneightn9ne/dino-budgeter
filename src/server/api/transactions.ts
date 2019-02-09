@@ -2,37 +2,33 @@ import _ from "lodash";
 import { distributeTotal } from "../../shared/transactions";
 import { CategoryId, Transaction, TransactionId, User } from "../../shared/types";
 import * as util from "../../shared/util";
-import { StatusCodeNoResponse } from "../api";
+import { Response, ErrorResponse } from "../api";
 import db from "../db";
 import * as transactions from "../transactions";
 import * as user from "../user";
 import * as payments from "../payments";
-import { ApiRequest, DeleteTransaction, TransactionAmount, TransactionCategory, TransactionDate, TransactionDescription, TransactionSplit, AddTransaction } from "../../shared/api";
+import { ApiRequest, EmptyResponse, DeleteTransaction, TransactionAmount, TransactionCategory, TransactionDate, TransactionDescription, TransactionSplit, AddTransaction } from "../../shared/api";
 
-export function handle_transaction_post(request: ApiRequest<typeof AddTransaction>, actor: User): Promise<Transaction | StatusCodeNoResponse> {
+export function handle_transaction_post(request: ApiRequest<typeof AddTransaction>, actor: User): Promise<Response<Transaction>> {
     const other = request.split ? request.split.with : undefined;
     const payer = request.split ? request.split.iPaid ? actor.uid : other : undefined;
-    if (!request.amount.isValid(false /** allowNegative */)) {
-        return Promise.resolve(400 as StatusCodeNoResponse);
-    }
     if (request.split) {
-        if (!request.split.otherAmount.isValid(false) ||
-            !request.split.myShare.isValid(false) ||
-            !request.split.theirShare.isValid(false)) {
-            console.log("Split validation failed");
-            return Promise.resolve(400 as StatusCodeNoResponse);
-        }
         const total = request.amount.plus(request.split.otherAmount);
         const [calcAmount, calcOtherAmount] = distributeTotal(total, request.split.myShare, request.split.theirShare);
         if (calcAmount.string() != request.amount.string() || calcOtherAmount.string() != request.split.otherAmount.string()) {
-            console.log("Calculated different values for split");
-            return Promise.resolve(400 as StatusCodeNoResponse);
+            return Promise.resolve({
+                code: 400,
+                message: 'Calculated different values for split',
+            } as ErrorResponse);
         }
     }
     const tx_id = util.randomId();
     return db.tx(async t => {
         if (other && !await user.isFriend(actor.uid, other, t)) {
-            return 400 as StatusCodeNoResponse;
+            return {
+                code: 400,
+                message: 'You can only split with a friend',
+            } as ErrorResponse;
         }
         const gid = await user.getDefaultGroup(actor, t);
         const query = "insert into transactions (id, gid, frame, amount, description, category, date) values ($1, $2, $3, $4, $5, $6, $7)";
@@ -92,60 +88,61 @@ function canEditShared(field: txField): boolean {
     return field != "amount";
 }
 
-export function handle_transaction_delete(request: ApiRequest<typeof DeleteTransaction>, actor: User): Promise<StatusCodeNoResponse> {
+export function handle_transaction_delete(request: ApiRequest<typeof DeleteTransaction>, actor: User): Promise<Response<EmptyResponse>> {
     return db.tx(async t => {
         if (!(await transactions.canUserEdit(request.id, actor.uid, t))) {
             // Maybe no auth? maybe no exists? maybe no id at all?
-            return 400;
+            return {
+                code: 400,
+                message: "You can't edit this transaction.",
+            } as ErrorResponse;
         }
         await transactions.deleteTransaction(request.id, t);
-        return 204 as StatusCodeNoResponse;
+        return null;
     });
 }
 
-export function handle_transaction_description_post(request: ApiRequest<typeof TransactionDescription>, actor: User): Promise<StatusCodeNoResponse> {
-    return handle_transaction_update_post("description", request, actor, d => !!d);
+export function handle_transaction_description_post(request: ApiRequest<typeof TransactionDescription>, actor: User): Promise<Response<EmptyResponse>> {
+    return handle_transaction_update_post("description", request, actor);
 }
 
-export function handle_transaction_amount_post(request: ApiRequest<typeof TransactionAmount>, actor: User): Promise<StatusCodeNoResponse> {
-    return handle_transaction_update_post("amount", request, actor,
-        amount => amount.isValid(),
-        amount => amount.string());
+export function handle_transaction_amount_post(request: ApiRequest<typeof TransactionAmount>, actor: User): Promise<Response<EmptyResponse>> {
+    return handle_transaction_update_post("amount", request, actor, amount => amount.string());
 }
 
-export function handle_transaction_date_post(request: ApiRequest<typeof TransactionDate>, actor: User): Promise<StatusCodeNoResponse> {
+export function handle_transaction_date_post(request: ApiRequest<typeof TransactionDate>, actor: User): Promise<Response<EmptyResponse>> {
     return handle_transaction_update_post("date", request, actor);
 }
 
-export function handle_transaction_category_post(request: ApiRequest<typeof TransactionCategory>, actor: User): Promise<StatusCodeNoResponse> {
+export function handle_transaction_category_post(request: ApiRequest<typeof TransactionCategory>, actor: User): Promise<Response<EmptyResponse>> {
     // TODO: validate that the category exists, is alive, is owned by the user, etc.
-    return handle_transaction_update_post("category", request, actor, undefined, c => c || null);
+    return handle_transaction_update_post("category", request, actor, c => c || null);
 }
 
 function handle_transaction_update_post<Request extends {id: TransactionId}, Field extends Exclude<keyof Request, 'id'> & txField>(
         field: Field,
         request: Request,
         actor: User,
-        isValid?: (val: Request[Field]) => boolean,
-        transform?: (val: Request[Field]) => (Request[Field]|string)): Promise<StatusCodeNoResponse> {
+        transform?: (val: Request[Field]) => (Request[Field]|string)): Promise<Response<EmptyResponse>> {
     const value = request[field];
-    if (!isValid) isValid = () => true;
     if (!transform) {
         transform = (s) => s;
-    }
-    if (!isValid(value)) {
-        return Promise.resolve(400 as StatusCodeNoResponse);
     }
     const updateLinked = isSharedField(field);
     const id = request.id;
     return db.tx(async t => {
         const existing = await transactions.getTransaction(id, t);
         if (existing.gid != await user.getDefaultGroup(actor, t)) {
-            return 401;
+            return {
+                code: 401,
+                message: "The transaction is not in your group",
+            } as ErrorResponse;
         }
         if (existing.split && !canEditShared(field)) {
-            console.log("Can't edit " + field + " on a shared transaction");
-            return 400;
+            return {
+                code: 400,
+                message: "Can't edit " + field + " on a shared transaction",
+            } as ErrorResponse;
         }
         const val = transform(value);
         const query = "update transactions set " + field + " = $1 where id = $2";
@@ -153,18 +150,12 @@ function handle_transaction_update_post<Request extends {id: TransactionId}, Fie
         if (updateLinked && existing.split) {
             await t.none(query, [val, await transactions.getOtherTid(id, existing.split.id, t)]);
         }
-        return 204 as StatusCodeNoResponse;
+        return null;
     });
 }
 
-export function handle_transaction_split_post(request: ApiRequest<typeof TransactionSplit>, actor: User): Promise<StatusCodeNoResponse> {
+export function handle_transaction_split_post(request: ApiRequest<typeof TransactionSplit>, actor: User): Promise<Response<EmptyResponse>> {
     const {tid, sid, total, myShare, theirShare} = request;
-    if (!total.isValid(false) ||
-        !myShare.isValid(false) ||
-        !theirShare.isValid(false) ||
-        !tid || !sid) {
-        return Promise.resolve(400 as StatusCodeNoResponse);
-    }
     const [myAmount, otherAmount] = distributeTotal(total, myShare, theirShare);
     return  db.tx(async t => {
         const otherTid = await transactions.getOtherTid(tid, sid, t);
@@ -191,6 +182,6 @@ export function handle_transaction_split_post(request: ApiRequest<typeof Transac
             t.none("update shared_transactions set payer = $1 where id = $2", [payer, sid]),
         ];
         await t.batch(work);
-        return 204 as StatusCodeNoResponse;
+        return null;
     });
 }

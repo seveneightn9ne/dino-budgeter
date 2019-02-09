@@ -53,11 +53,11 @@ export function apiFetch<Request extends object, Response extends object>(option
           },
         body: options.body ? JSON.stringify(options.body) : undefined,
     }).then(result => {
+        if (options.api.responseSchema == null && result.status == 204) {
+            return null as Response;
+        }
         if (result.status == 204) {
-            // Assert that 204 corresponds to EmptyResponse.
-            // The server should have typechecking to verify
-            // that 204 is allowed only when Response is EmptyResponse.
-            return api.EmptyResponseValue as unknown as Response;
+            throw new Error("Received a 204 but required a response for " + options.api.path);
         }
         if (result.status == 401) {
             // Note, discarding non-path bits of the location
@@ -71,7 +71,18 @@ export function apiFetch<Request extends object, Response extends object>(option
             }
         }
         if (result.status != 200) {
-            throw result.status;
+            result.json().catch(() => {
+                throw new Error(`API error ${result.status}`);
+            }).then(r => {
+                if (r.message) {
+                    throw new Error(`API error ${result.status}: ${r.message}`);
+                } else {
+                    throw new Error(`API error ${result.status}`);
+                }
+            });
+        }
+        if (options.api.responseSchema == null) {
+            throw new Error(`Unexpected response for ${options.api.path}`);
         }
         return result.text().then(t => options.api.reviveResponse(t));
     });

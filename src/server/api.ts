@@ -8,7 +8,9 @@ import * as transactions from "./transactions";
 import * as user from "./user";
 import { ApiRequest, API2, Initialize } from "../shared/api";
 
-type Handler<Req, Res> = (req: Req, user: User) => Promise<Res | StatusCodeNoResponse>;
+export type ErrorResponse = {code: StatusCodeNoResponse, message: string};
+export type Response<Res> = Res | ErrorResponse | null;
+type Handler<Req, Res> = (req: Req, user: User) => Promise<Response<Res>>;
 
 // Wrap an async handler to be called synchronously
 function wrap<Req extends object, Res extends object>(
@@ -27,6 +29,15 @@ function wrap<Req extends object, Res extends object>(
         handler(apiRequest, req.user).then(apiResponse => {
             if (typeof(apiResponse) == "number") {
                 res.sendStatus(apiResponse);
+            } else if (apiResponse == null) {
+                if (api.responseSchema != null) {
+                    throw new Error("handler returned null, but " + api.path + " requires a response");
+                }
+                res.sendStatus(204);
+            } else if ('code' in apiResponse) {
+                res.status(apiResponse.code).send({
+                    "error": apiResponse.message,
+                });
             } else {
                 res.status(200).send(apiResponse);
             }

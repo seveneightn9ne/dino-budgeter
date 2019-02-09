@@ -9,7 +9,7 @@ interface ClickToEditProps<Request extends object, K extends keyof Request, V ex
     value: V;
     onChange: (newVal: V) => void;
     className?: string;
-    api: API2<Request, EmptyResponse>;
+    api: API2<Request, EmptyResponse|{}>; // The |{} is a hack because typescript doesn't correctly infer the Response type of API2s with an emptySchema.
     postData?: Pick<Request, Exclude<keyof Request, K>>;
     postKey: K;
     open?: boolean;
@@ -232,6 +232,9 @@ export class ClickToEditDropdown<Request extends object, K extends keyof Request
         return val as Value<Request, K, string>;
     }
     formatDisplay(val: string): string {
+        if (val == "") {
+            return this.props.zeroValue;
+        }
         return this.props.values.get(val);
     }
     onChange = (e: React.ChangeEvent<HTMLSelectElement>) => {

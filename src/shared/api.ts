@@ -167,12 +167,18 @@ function validateSchemaField<T>(schema: SchemaField<T>, key: string, val: any): 
     }
     const schemaType = maybeGetSchemaType(schema);
     if (schemaType) {
-        return validateSchema(schemaType, val, key) as unknown as T;
+        return validateSchema(schemaType as unknown as SchemaType<T>, val, key) as unknown as T;
     }
     throw Error("impossible for schema to be neither");
 }
 // validates the object recursively
-function validateSchema<Request extends object>(schema: SchemaType<Request>, obj: any, key: string = ""): Request {
+function validateSchema<Request extends (object|null)>(schema: SchemaType<Request>, obj: any, key: string = ""): Request {
+    if (schema == null) {
+        if (obj != null) {
+            throw new Error("Object " + key + " must be null");
+        }
+        return null as Request;
+    }
     if (!_.isPlainObject(obj)) {
         throw Error("Object " + key + " must be an object");
     }
@@ -183,7 +189,7 @@ function validateSchema<Request extends object>(schema: SchemaType<Request>, obj
     });
     return _.mapValues(schema, (s, f) => validateSchemaField(s, keyConcat(key, f), obj[f])) as Request;
 }
-export class API2<Request extends object, R2 extends object> {
+export class API2<Request extends object, R2 extends object|null> {
     constructor(
         public path: string,
         public requestSchema: SchemaType<Request>,
@@ -216,14 +222,11 @@ export class API2<Request extends object, R2 extends object> {
 export type ApiRequest<A extends API2<any, any>> = A extends API2<infer R, any> ? R : any;
 export type ApiResponse<A extends API2<any, any>> = A extends API2<any, infer R> ? R : any;
 
-export const EmptyResponseValue = {};
-export type EmptyResponse = typeof EmptyResponseValue;
-export const emptySchema: SchemaType<{}> = {};
+export type EmptyResponse = null;
+export const EmptyResponseValue: EmptyResponse = null;
+export const emptySchema: SchemaType<null> = null;
 
-
-/**
- * Reusable Schemas
- */
+/** Reusable Schemas */
 
 const categorySchema: SchemaType<Category> = {
     id: sString(),
@@ -288,9 +291,7 @@ const transactionSchema: SchemaType<Transaction> = {
     }),
 }
 
-/**
- * API Endpoints
- */
+/** API Endpoints */
 
 export const Payment = new API2('/api/payment', {
     amount: sMoney(),
@@ -299,7 +300,7 @@ export const Payment = new API2('/api/payment', {
     isPayment: sBoolean(),
     memo: sString(),
     frame: sNumber(),
-}, {});
+}, emptySchema);
 
 export type AddTransactionRequest = {
     frame: FrameIndex,
@@ -331,15 +332,15 @@ export type AddTransactionRequest2 = {
 }
 const req: SchemaType<AddTransactionRequest2> = {
     frame: sNumber(),
-    amount: sMoney(),
+    amount: sMoney({nonNegative: true}),
     description: sString(),
     date: sDate(),
     category: sString(),
     split: sOptional({
         with: sString(),
-        myShare: sShare(),
-        theirShare: sShare(),
-        otherAmount: sMoney(),
+        myShare: sShare({nonNegative: true}),
+        theirShare: sShare({nonNegative: true}),
+        otherAmount: sMoney({nonNegative: true}),
         iPaid: sBoolean(),
     }),
 }
@@ -348,16 +349,16 @@ export const AddTransaction = new API2<AddTransactionRequest2, Transaction>('/ap
 export const DeleteTransaction = new API2('/api/transaction', {id: sString()}, emptySchema, 'DELETE');
 
 export const TransactionSplit = new API2('/api/transaction/split', {
-    tid: sString(),
-    sid: sString(),
-    total: sMoney(),
-    myShare: sShare(),
-    theirShare: sShare(),
+    tid: sString({nonEmpty: true}),
+    sid: sString({nonEmpty: true}),
+    total: sMoney({nonNegative: true}),
+    myShare: sShare({nonNegative: true}),
+    theirShare: sShare({nonNegative: true}),
     iPaid: sBoolean(),
 }, emptySchema);
 
 export const TransactionDescription = new API2('/api/transaction/description', {
-    description: sString(),
+    description: sString({nonEmpty: true}),
     id: sString(),
 }, emptySchema);
 
@@ -406,7 +407,7 @@ export const DeleteCategory = new API2('/api/category', {
 export const CategoryBudget = new API2('/api/category/budget', {
     id: sString(),
     frame: sNumber(),
-    amount: sMoney()
+    amount: sMoney({nonNegative: false})
 }, emptySchema);
 
 export const CategoryName = new API2('/api/category/name', {
