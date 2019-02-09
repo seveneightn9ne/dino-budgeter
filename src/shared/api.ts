@@ -144,7 +144,7 @@ export type RequestType = {
 
 type SchemaBase<T> = (k: string, v: any) => T;
 type SchemaField<T> = T extends object ? (SchemaType<T> | SchemaBase<T>) : SchemaBase<T>;
-export type SchemaType<R extends object> = R extends null ? null : {
+export type SchemaType<R extends object> = {
     [P in keyof R]: SchemaField<R[P]>;
 }
 
@@ -236,6 +236,7 @@ const categorySchema: SchemaType<Category> = {
     name: sString(),
     ordering: sNumber(),
     budget: sMoney(),
+    ghost: sBoolean(),
     balance: sOptional(sMoney()),
     ctime: sOptional(sDate()),
 }
@@ -243,6 +244,7 @@ const frameSchema: SchemaType<Frame> = {
     gid: sString(),
     index: sNumber(),
     income: sMoney(),
+    ghost: sBoolean(),
     categories: sOptional(sArray(categorySchema)),
     balance: sOptional(sMoney()),
     spending: sOptional(sMoney())

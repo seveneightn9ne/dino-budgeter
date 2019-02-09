@@ -7,6 +7,7 @@ import db from "../db";
 import * as transactions from "../transactions";
 import * as user from "../user";
 import * as payments from "../payments";
+import * as frames from "../frames";
 import { ApiRequest, EmptyResponse, DeleteTransaction, TransactionAmount, TransactionCategory, TransactionDate, TransactionDescription, TransactionSplit, AddTransaction } from "../../shared/api";
 
 export function handle_transaction_post(request: ApiRequest<typeof AddTransaction>, actor: User): Promise<Response<Transaction>> {
@@ -31,6 +32,7 @@ export function handle_transaction_post(request: ApiRequest<typeof AddTransactio
             } as ErrorResponse;
         }
         const gid = await user.getDefaultGroup(actor, t);
+        await frames.markNotGhost(gid, request.frame, t);
         const query = "insert into transactions (id, gid, frame, amount, description, category, date) values ($1, $2, $3, $4, $5, $6, $7)";
         await t.none(query,
             [tx_id, gid, request.frame, request.amount.string(), request.description, request.category || null, request.date]);

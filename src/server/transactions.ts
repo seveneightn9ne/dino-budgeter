@@ -136,10 +136,6 @@ export async function getSid(tid: TransactionId, t: pgPromise.ITask<{}>): Promis
     return row ? row.sid : null;
 }
 
-export async function settle(sid: SplitId, t: pgPromise.ITask<{}>): Promise<void> {
-    return await t.none("update shared_transactions set settled = true where id = $1", [sid]);
-}
-
 export async function getBalanceFromDb(tid: TransactionId, t: pgPromise.ITask<{}>): Promise<Money> {
     const row = await t.one(`select T.amount, M.uid, T2.amount as other_amount, M2.uid as other_uid, S.payer
         from transactions T

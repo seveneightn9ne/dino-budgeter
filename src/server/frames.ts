@@ -12,18 +12,18 @@ export function getOrCreateFrame(gid: GroupId, index: FrameIndex, t?: pgPromise.
 }
 
 async function getOrCreateFrameInner(gid: GroupId, index: FrameIndex, t: pgPromise.ITask<{}>): Promise<Frame> {
-    console.log("getorcreateframeinner");
-    const row = await t.oneOrNone("select * from frames where gid = $1 and index = $2", [gid, index]);
+    const row = await t.oneOrNone("select * from frames where gid = $1 and index = $2 and ghost = false", [gid, index]);
     if (row) {
-        console.log("frame exists");
         const frame = shared.fromSerialized(row);
         frame.categories = await getCategories(gid, index, t);
         frame.balance = await getBalance(gid, index, t);
         frame.spending = await getSpending(gid, index, t);
         return frame;
     }
+    // Delete any ghost if it exists
+    await deleteGhost(gid, index, t);
     console.log("creating new frame");
-    const frame: Frame = {gid, index, balance: Money.Zero, income: Money.Zero};
+    const frame: Frame = {gid, index, balance: Money.Zero, income: Money.Zero, ghost: true};
     frame.spending = await getSpending(gid, index, t);
     frame.balance = await getBalance(gid, index, t);
     const prevFrame = await getPreviousFrame(gid, index, t);
@@ -46,6 +46,7 @@ async function getOrCreateFrameInner(gid: GroupId, index: FrameIndex, t: pgPromi
                 frame: index,
                 alive: true,
                 id: id,
+                ghost: true,
                 ordering: i,
                 budget: Money.Zero,
                 balance: Money.Zero.minus(await categories.getSpending(id, index, t)),
@@ -53,13 +54,24 @@ async function getOrCreateFrameInner(gid: GroupId, index: FrameIndex, t: pgPromi
         }));
     }
     // Save the new frame and categories
-    await t.none("insert into frames (gid, index, income) values ($1, $2, $3)", [
+    await t.none("insert into frames (gid, index, income, ghost) values ($1, $2, $3, true)", [
         frame.gid, frame.index, frame.income.string()]);
-    console.log("creating categories");
     await t.batch(frame.categories.map(c =>
-            t.none("insert into categories (id, gid, frame, name, ordering, budget) values ($1, $2, $3, $4, $5, $6)", [
+            t.none("insert into categories (id, gid, frame, name, ordering, budget, ghost) values ($1, $2, $3, $4, $5, $6, true)", [
                 c.id, c.gid, c.frame, c.name, c.ordering, c.budget.string()])));
     return frame;
+}
+
+async function deleteGhost(gid: GroupId, index: FrameIndex, t: pgPromise.ITask<{}>) {
+    await t.none("delete from categories where gid = $1 and frame = $2 and ghost = true", [gid, index]);
+    return t.none("delete from frames where gid = $1 and index = $2 and ghost = true", [gid, index]);
+}
+
+export function markNotGhost(gid: GroupId, index: FrameIndex, t: pgPromise.ITask<{}>) {
+    return t.batch([
+        t.none("update frames set ghost = false where gid = $1 and index = $2", [gid, index]),
+        t.none("update categories set ghost = false where gid = $1 and frame = $2", [gid, index]),
+    ]);
 }
 
 export function getIncome(gid: GroupId, index: FrameIndex, t: pgPromise.ITask<{}>): Promise<Money> {

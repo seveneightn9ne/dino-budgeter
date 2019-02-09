@@ -24,6 +24,7 @@ export interface Category {
     name: string;
     ordering: number;
     budget: Money;
+    ghost: boolean;
     balance?: Money;
     ctime?: Date;
 }
@@ -33,6 +34,7 @@ export interface Frame {
     gid: GroupId;
     index: FrameIndex;
     income: Money;
+    ghost: boolean;
     categories?: Category[];
     balance?: Money;
     spending?: Money;

@@ -100,6 +100,13 @@ alter table payments add frame int not null;
 end if;
 end $$;
 
--- migration 10:
+-- migration 10: ghost frames
+do $$ begin
+if not exists(select * from information_schema.columns where table_name = 'frames' and column_name = 'ghost')
+then
+alter table frames add ghost bool not null default false;
+alter table categories add ghost bool not null default false;
+end if;
+end $$;
 
 commit;

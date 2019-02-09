@@ -47,6 +47,7 @@ create table frames (
   gid char(32) not null references groups,
   index int not null,
   income text not null,
+  ghost bool not null default false,
   primary key (gid, index)
 );
 
@@ -59,6 +60,7 @@ create table categories (
   ordering int not null,
   ctime timestamp not null default current_timestamp,
   budget text not null,
+  ghost bool not null default false,
   primary key (id, frame),
   foreign key (gid, frame) references frames
 );
