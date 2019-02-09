@@ -167,7 +167,7 @@ function validateSchemaField<T>(schema: SchemaField<T>, key: string, val: any): 
     }
     const schemaType = maybeGetSchemaType(schema);
     if (schemaType) {
-        return validateSchema(schemaType as unknown as SchemaType<T>, val, key) as unknown as T;
+        return validateSchema(schemaType, val, key) as unknown as T;
     }
     throw Error("impossible for schema to be neither");
 }
@@ -407,7 +407,7 @@ export const DeleteCategory = new API2('/api/category', {
 export const CategoryBudget = new API2('/api/category/budget', {
     id: sString(),
     frame: sNumber(),
-    amount: sMoney({nonNegative: false})
+    amount: sMoney({nonNegative: true})
 }, emptySchema);
 
 export const CategoryName = new API2('/api/category/name', {
