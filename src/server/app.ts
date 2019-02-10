@@ -29,17 +29,23 @@ app.use(validator());
 app.use(cookieParser.default());
 app.use(morgan("combined"));
 const pgSession = connectPgSimple(session);
-app.use(session({
+const sessionOptions: session.SessionOptions = {
   store: new pgSession({
     pgPromise: db,
   }),
   cookie: {
-    secure: false // TODO
+    maxAge: 30 * 24 * 60 * 60 * 1000 // 30 days in milliseconds
   },
-  resave: true, // TODO
+  rolling: true, // reset cookie expiration on each request
+  resave: true, // TODO: not needed if pgSession implements touch
   saveUninitialized: true,
-  secret: "TODO", // TODO
-}));
+  secret: [process.env.DINO_SESSION_SECRET, "TODO"],
+};
+if (app.get("env") == "production") {
+  app.set("trust proxy", 1); // 1 means the first hop before the proxy (nginx) is considered the client
+  sessionOptions.cookie.secure = true;
+}
+app.use(session(sessionOptions));
 app.use(passport.initialize());
 app.use(passport.session());
 

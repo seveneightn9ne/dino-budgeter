@@ -1,4 +1,4 @@
-import * as _ from "lodash";
+import _ from "lodash";
 import Money from "../shared/Money";
 import app from "./app";
 import db from "./db";
@@ -49,16 +49,20 @@ async function migrateAddFriendshipBalance() {
 
 migrateAddFriendshipBalance();
 
-/**
- * Start Express server.
- */
-const server = app.listen(app.get("port"), () => {
-  console.log(
-    "  App is running at http://localhost:%d in %s mode",
-    app.get("port"),
-    app.get("env")
-  );
-  console.log("  Press CTRL-C to stop\n");
-});
+let server = null;
+
+if (!process.env.DINO_SESSION_SECRET) {
+  console.error("DINO_SESSION_SECRET is required");
+} else {
+  server = app.listen(app.get("port"), () => {
+    console.log(
+      "  App is running at http://localhost:%d in %s mode",
+      app.get("port"),
+      app.get("env")
+    );
+    console.log("  Press CTRL-C to stop\n");
+  });
+}
+
 
 export default server;
