@@ -302,7 +302,6 @@ export default class TxEntry extends React.Component<Props, TxEntryState> {
     }
 
     selectOnFocus = (e: React.FocusEvent<HTMLInputElement>) => {
-        console.log("selecting " + e.currentTarget.className);
         e.currentTarget.select();
     }
 

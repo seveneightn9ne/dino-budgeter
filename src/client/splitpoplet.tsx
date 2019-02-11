@@ -64,7 +64,6 @@ export default class SplitPoplet extends React.Component<Props, State> {
     }
 
     selectOnFocus = (e: React.FocusEvent<HTMLInputElement>) => {
-        console.log("selecting " + e.currentTarget.className);
         e.currentTarget.select();
     }
 

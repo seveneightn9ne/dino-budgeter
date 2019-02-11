@@ -13,8 +13,8 @@ interface ControlledProps extends PopletProps {
     onRequestClose: () => void;
 }
 
-function stopPropagation(event: React.MouseEvent<HTMLElement>) {
-    event.stopPropagation;
+const stopPropagation = (event: React.MouseEvent<HTMLElement>) => {
+    event.stopPropagation();
 }
 
 export const ControlledPoplet: React.SFC<ControlledProps> = (props) => {
