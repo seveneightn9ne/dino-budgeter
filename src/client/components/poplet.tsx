@@ -1,4 +1,4 @@
-import * as React from "react";
+import React, {useState} from "react";
 
 interface PopletProps {
     text: React.ReactNode;
@@ -13,50 +13,44 @@ interface ControlledProps extends PopletProps {
     onRequestClose: () => void;
 }
 
-export class ControlledPoplet extends React.Component<ControlledProps, {}> {
-
-    clickInner = (event: React.MouseEvent<HTMLElement>) => {
-        event.stopPropagation();
-    }
-
-    render(): JSX.Element {
-        let className = "poplet";
-        if (this.props.className) className += " " + this.props.className;
-        const pop = <div className="poplet-background" onClick={this.props.onRequestClose}>
-            <div className={className} onClick={this.clickInner}>
-                <span className="close clickable fa-times fas" onClick={this.props.onRequestClose} />
-                {this.props.children}
-            </div>
-        </div>;
-        const clickable = this.props.clickable === false ? "" : "clickable"
-        return <span className={this.props.className}><span title={this.props.title} className={clickable} onClick={this.props.onRequestOpen}>
-            {this.props.text}</span>
-            {this.props.open ? pop : null}
-        </span>;
-
-    }
+function stopPropagation(event: React.MouseEvent<HTMLElement>) {
+    event.stopPropagation;
 }
 
-// Nobody uses this because everyone needs to close the poplet sometimes
-export class AutoPoplet extends React.Component<PopletProps, {open: boolean}> {
-    state = {
-        open: false,
+export const ControlledPoplet: React.SFC<ControlledProps> = (props) => {
+    let className = "poplet";
+    if (props.className) className += " " + props.className;
+    const pop = <div className="poplet-background" onClick={props.onRequestClose}>
+        <div className={className} onClick={stopPropagation}>
+            <span className="close clickable fa-times fas" onClick={props.onRequestClose} />
+            {props.children}
+        </div>
+    </div>;
+    const clickable = props.clickable === false ? "" : "clickable"
+    return <span className={props.className}><span title={props.title} className={clickable} onClick={props.onRequestOpen}>
+        {props.text}</span>
+        {props.open ? pop : null}
+    </span>;
+}
+
+
+export function useControlPoplet() {
+    const [isOpen, setIsOpen] = useState(null);
+  
+    return {
+        isOpen: isOpen,
+        open: () => setIsOpen(true),
+        close: () => setIsOpen(false)
     };
+  }
 
-    private close = () => {
-        this.setState({open: false});
-    }
-
-    private open = () => {
-        this.setState({open: true});
-    }
-
-    render(): JSX.Element {
-        return <ControlledPoplet 
-            {...this.props}
-            open={this.state.open}
-            onRequestClose={this.close}
-            onRequestOpen={this.open}
-        />
-    }
+// Nobody uses this because everyone needs to close the poplet sometimes
+export const AutoPoplet: React.SFC<PopletProps> = (props) => {
+    const {isOpen, open, close} = useControlPoplet();
+    return <ControlledPoplet 
+        {...props}
+        open={isOpen}
+        onRequestClose={close}
+        onRequestOpen={open}
+    />
 }
