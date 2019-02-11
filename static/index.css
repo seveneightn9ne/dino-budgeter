@@ -66,6 +66,9 @@ h1 {
 .framenav:hover {
     color: #512da8;
 }
+.framenav.left-edge {
+    padding-left: 0;
+}
 
 nav a {
     padding: 5px 20px;
@@ -526,6 +529,19 @@ input.center {
 /* account page */
 .account .button {
     margin-left: 0;
+}
+.fadecheck {
+    color: rgb(65, 202, 30);
+
+}
+.fadecheck.appear {
+    /*transition: opacity 0.5s linear;*/
+    opacity: 1;
+    transition: opacity 0.2s ease-in;
+}
+.fadecheck.hide {
+    opacity: 0;
+    transition: opacity 0.5s ease-in;
 }
 
 /*

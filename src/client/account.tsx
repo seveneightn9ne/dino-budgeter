@@ -2,6 +2,8 @@ import * as React from "react";
 import { Friend } from "../shared/types";
 import * as util from "./util";
 import { Name, AcceptFriend, RejectFriend, DeleteFriend } from "../shared/api";
+import {Link} from "react-router-dom";
+import { FadeCheck } from "./components/fadecheck";
 
 interface Props {}
 
@@ -17,6 +19,8 @@ interface NonInitializedState {
     addFriend: string;
     addFriendError?: string;
     name: string;
+    lastSave: number;
+    timers: number[];
 }
 
 interface State extends Partial<InitializedState>, NonInitializedState {}
@@ -27,6 +31,8 @@ export default class Account extends React.Component<Props, State> {
         initialized: false,
         addFriend: "",
         name: "",
+        lastSave: 0,
+        timers: [],
     };
 
     componentDidMount() {
@@ -52,10 +58,11 @@ export default class Account extends React.Component<Props, State> {
             api: Name,
             body: {name},
         }).then(() => {
-            this.setState({
-                me: {...this.state.me, name},
-                name: name || this.state.me.email,
-            });
+            this.setState(({me}) => ({
+                me: {...me, name},
+                name: name || me.email,
+                lastSave: Date.now(),
+            }));
         });
         e.preventDefault();
     }
@@ -155,16 +162,20 @@ export default class Account extends React.Component<Props, State> {
             </div>;
         }
         const defaultName = this.state.me ? this.state.me.name || this.state.me.email : '';
-        const nameCls = this.state.name === defaultName ? "button secondary inline" : "button inline"
+        const nameCls = this.state.name === defaultName ? "button secondary inline" : "button inline";
         return <div>
             <header><div className="inner">
-                <h1>Account Settings</h1>
+                <h1>
+                    <Link to={`/app`} className="fa-chevron-left fas framenav left-edge" />
+                    Account Settings
+                </h1>
             </div></header>
             <main className="account">
             <p>{this.state.me.email}</p>
             <form onSubmit={this.onSaveName}>
             <label>Name (shown to friends): <input type="text" value={this.state.name} onChange={util.cc(this, "name")} /></label>{' '}
             <input type="submit" value="Save" className={nameCls} />
+            <FadeCheck save={this.state.lastSave} />
             </form>
             {invites}
             <h2>Friends</h2>
