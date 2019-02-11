@@ -4,6 +4,7 @@ interface PopletProps {
     text: React.ReactNode;
     title?: string;
     className?: string;
+    clickable?: boolean;
 }
 
 interface ControlledProps extends PopletProps {
@@ -22,12 +23,13 @@ export class ControlledPoplet extends React.Component<ControlledProps, {}> {
         let className = "poplet";
         if (this.props.className) className += " " + this.props.className;
         const pop = <div className="poplet-background" onClick={this.props.onRequestClose}>
-            <div className={className} onClick={(e) => this.clickInner(e)}>
+            <div className={className} onClick={this.clickInner}>
                 <span className="close clickable fa-times fas" onClick={this.props.onRequestClose} />
                 {this.props.children}
             </div>
         </div>;
-        return <span className={this.props.className}><span title={this.props.title} className="clickable" onClick={this.props.onRequestOpen}>
+        const clickable = this.props.clickable === false ? "" : "clickable"
+        return <span className={this.props.className}><span title={this.props.title} className={clickable} onClick={this.props.onRequestOpen}>
             {this.props.text}</span>
             {this.props.open ? pop : null}
         </span>;
@@ -45,7 +47,7 @@ export class AutoPoplet extends React.Component<PopletProps, {open: boolean}> {
         this.setState({open: false});
     }
 
-    private open() {
+    private open = () => {
         this.setState({open: true});
     }
 

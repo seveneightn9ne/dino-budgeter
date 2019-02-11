@@ -335,6 +335,7 @@ form {
     align-items: center;
     padding: 10px;
     border-top: 1px solid #e9e3f9;
+    cursor: pointer;
 }
 .tx-mobile-stretch {
     flex-grow: 1;
@@ -457,6 +458,7 @@ footer .link {
     bottom: 0;
     right: 0;
     background-color: rgba(0, 0, 0, 0.8);
+    z-index: 2;
 }
 .poplet {
     width: 500px;
@@ -478,6 +480,12 @@ footer .link {
 }
 .poplet h2 {
     margin: 0;
+}
+@media (max-width: 599px) {
+    .poplet {
+        width: auto;
+        margin: 20px;
+    }
 }
 
 input:not([type=submit]):not([type=file]), select {

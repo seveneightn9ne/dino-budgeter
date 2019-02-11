@@ -11,7 +11,6 @@ import Categories from "./categories";
 import { DesktopOnly, MobileOnly } from "./components/media";
 import Friends from "./friends";
 import Transactions from "./transactions";
-import TxEntry from "./txentry";
 import * as util from "./util";
 import { Income } from "../shared/api";
 
@@ -31,7 +30,6 @@ interface FrameState {
         balance: Money, 
         payments: (Payment|Charge)[],
     }};
-    modal?: Transaction;
 }
 
 /** /app/:month/:year */
@@ -197,7 +195,7 @@ export default class Frame extends React.Component<FrameProps & RouteComponentPr
                 payments: debts[t.split.with.email].payments,
             }
         }
-        this.setState({transactions, frame: newFrame, debts, modal: undefined});
+        this.setState({transactions, frame: newFrame, debts});
     }
 
     onDeleteTransaction(id: TransactionId) {
@@ -219,7 +217,7 @@ export default class Frame extends React.Component<FrameProps & RouteComponentPr
             };
             this.setState({debts});
         }
-        this.setState({transactions, frame, debts, modal: undefined});
+        this.setState({transactions, frame, debts});
     }
 
     onChangeIncome(event: React.ChangeEvent<HTMLInputElement>): void {
@@ -276,16 +274,6 @@ export default class Frame extends React.Component<FrameProps & RouteComponentPr
             return null;
         }
 
-        if (this.state.modal) {
-            return <div className="transactions editing">
-                <h1>Edit Transaction <span className="close clickable fa-times fas" onClick={() => this.setState({modal: undefined})} /></h1>
-                <TxEntry categories={this.state.frame.categories} friends={this.state.friends}
-                    location={this.props.location} history={this.props.history}
-                    transaction={this.state.modal} onUpdateTransaction={this.onUpdateTransaction.bind(this)}
-                    onDeleteTransaction={(t: Transaction) => this.onDeleteTransaction(t.id)} />
-            </div>;
-        }
-
         if (this.state.frame.income.cmp(Money.Zero) == 0 && this.state.frame.index >= this.todayFrame()) {
             const className = this.state.setIncomeErr ? "error" : "";
             return <div className="splash">
@@ -315,7 +303,6 @@ export default class Frame extends React.Component<FrameProps & RouteComponentPr
                 onUpdateTransaction={this.onUpdateTransaction.bind(this)}
                 onDeleteTransaction={this.onDeleteTransaction.bind(this)}
                 onAddTransaction={this.onAddTransaction.bind(this)}
-                onEditTransaction={(t) => this.setState({modal: t})}
                 month={this.month()} year={this.year()} frame={this.state.frame}
                 newTxDate={this.newTxDate()} gid={this.state.frame.gid}
                 categories={this.state.frame.categories}

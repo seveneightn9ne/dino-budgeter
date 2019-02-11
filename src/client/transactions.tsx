@@ -24,7 +24,6 @@ interface Props {
     onUpdateTransaction: (txn: Transaction) => void;
     onDeleteTransaction: (id: TransactionId) => void;
     onAddTransaction: (txn: Transaction) => void;
-    onEditTransaction: (txn: Transaction) => void;
     location: Location;
     history: History;
 }
@@ -127,7 +126,9 @@ export default class Transactions extends React.Component<Props, State> {
             </td></tr>);
 
         const rowsMobile = _.sortBy(this.props.transactions, ["date"]).reverse().map((tx) =>
-            <MobileTransactionRow key={tx.id} tx={tx} onEditTransaction={this.props.onEditTransaction}
+            <MobileTransactionRow key={tx.id} tx={tx} onUpdateTransaction={this.props.onUpdateTransaction}
+                onDeleteTransaction={this.props.onDeleteTransaction} categories={this.props.categories}
+                friends={this.props.friends} location={this.props.location} history={this.props.history}
                 categoryName={this.categoryName.bind(this)} />);
 
         return <div className="transactions">
@@ -151,14 +152,27 @@ export default class Transactions extends React.Component<Props, State> {
 
 interface MobileRowProps {
     tx: Transaction;
-    onEditTransaction: (tx: Transaction) => void;
+    categories: Category[];
+    friends: Friend[];
+    location: Location;
+    history: History;
+    onUpdateTransaction: (tx: Transaction) => void;
+    onDeleteTransaction: (tid: TransactionId) => void;
     categoryName: (cid: CategoryId) => string;
 }
-class MobileTransactionRow extends React.PureComponent<MobileRowProps, {}> {
+class MobileTransactionRow extends React.PureComponent<MobileRowProps, {open: boolean}> {
+    state = {open: false};
+    open = () => this.setState({open: true});
+    close = () => this.setState({open: false});
+
+    onSave = (tx: Transaction) => {
+        this.setState({open: false});
+        this.props.onUpdateTransaction(tx);
+    }
     render() {
         const tx = this.props.tx;
         const monthName = util.MONTHS[tx.date.getMonth()].substr(0, 3);
-        return <div key={tx.id} onClick={() => this.props.onEditTransaction(tx)} className="hoverable tx-mobile-row">
+        const row = <div key={tx.id} className="hoverable tx-mobile-row">
             <div className="tx-mobile-date">
                 <div className="tx-mobile-month">{monthName}</div>
                 <div className="tx-mobile-day">{tx.date.getDate()}</div>
@@ -172,5 +186,14 @@ class MobileTransactionRow extends React.PureComponent<MobileRowProps, {}> {
                 <span className="tx-mobile-amount">{tx.amount.formatted()}</span>
             </div>
         </div>;
+        return <ControlledPoplet text={row} clickable={false} open={this.state.open} onRequestClose={this.close} onRequestOpen={this.open}>
+            <div className="transactions editing">
+                <h2>Edit Transaction</h2>
+                <TxEntry categories={this.props.categories} friends={this.props.friends}
+                    location={this.props.location} history={this.props.history}
+                    transaction={this.props.tx} onUpdateTransaction={this.onSave}
+                    onDeleteTransaction={(t: Transaction) => this.props.onDeleteTransaction(t.id)} />
+            </div>
+        </ControlledPoplet>
     }
 }
