@@ -1,4 +1,3 @@
-import { History, Location } from "history";
 import * as _ from "lodash";
 import * as React from "react";
 import { getTransactionAIs } from "../shared/ai";
@@ -24,8 +23,6 @@ interface Props {
     onUpdateTransaction: (txn: Transaction) => void;
     onDeleteTransaction: (id: TransactionId) => void;
     onAddTransaction: (txn: Transaction) => void;
-    location: Location;
-    history: History;
 }
 
 type State = {
@@ -41,8 +38,6 @@ export default class Transactions extends React.Component<Props, State> {
         util.apiFetch({
             api: DeleteTransaction,
             body: {id},
-            location: this.props.location,
-            history: this.props.history,
         }).then(() => {
             this.props.onDeleteTransaction(id);
         });
@@ -83,8 +78,6 @@ export default class Transactions extends React.Component<Props, State> {
                 onChange={date =>
                     this.props.onUpdateTransaction({...tx, date})}
                 postKey="date"
-                location={this.props.location}
-                history={this.props.history}
                 postData={{id: tx.id}}
             /></td>
             <td className="stretch"><ClickToEditText
@@ -94,8 +87,6 @@ export default class Transactions extends React.Component<Props, State> {
                 onChange={description =>
                     this.props.onUpdateTransaction({...tx, description})}
                 postKey="description"
-                location={this.props.location}
-                history={this.props.history}
                 postData={{id: tx.id}}
             /></td>
             <td className={tx.category ? "category" : "category highlighted"}>
@@ -107,8 +98,6 @@ export default class Transactions extends React.Component<Props, State> {
                 onChange={cid => this.props.onUpdateTransaction({...tx, category: cid})}
                 postKey="category"
                 postData={{id: tx.id}}
-                location={this.props.location}
-                history={this.props.history}
             /></td>
             <td className="amount">{tx.split ? tx.amount.formatted() :
                 <ClickToEditMoney
@@ -118,8 +107,6 @@ export default class Transactions extends React.Component<Props, State> {
                         this.props.onUpdateTransaction({...tx, amount})}
                     postKey="amount"
                     postData={{id: tx.id}}
-                    location={this.props.location}
-                    history={this.props.history}
             />}</td>
             <td className="split">
                 {tx.split ? <SplitPoplet transaction={tx} onUpdateTransaction={this.props.onUpdateTransaction} /> : null}
@@ -128,8 +115,7 @@ export default class Transactions extends React.Component<Props, State> {
         const rowsMobile = _.sortBy(this.props.transactions, ["date"]).reverse().map((tx) =>
             <MobileTransactionRow key={tx.id} tx={tx} onUpdateTransaction={this.props.onUpdateTransaction}
                 onDeleteTransaction={this.props.onDeleteTransaction} categories={this.props.categories}
-                friends={this.props.friends} location={this.props.location} history={this.props.history}
-                categoryName={this.categoryName.bind(this)} />);
+                friends={this.props.friends} categoryName={this.categoryName.bind(this)} />);
 
         return <div className="transactions">
             {ais}
@@ -140,8 +126,7 @@ export default class Transactions extends React.Component<Props, State> {
                     <ControlledPoplet open={this.state.popletOpen} onRequestClose={this.closePoplet} onRequestOpen={this.openPoplet}
                         text={<span><span className="fa-plus-circle fas"></span> Transaction</span>}>
                         <TxEntry onAddTransaction={this.onAddTransaction.bind(this)} defaultDate={this.props.newTxDate}
-                            categories={this.props.categories} friends={this.props.friends}
-                            location={this.props.location} history={this.props.history} />
+                            categories={this.props.categories} friends={this.props.friends} />
                     </ControlledPoplet></td></tr>
                     {rowsDesktop}
                 </tbody></table>
@@ -154,8 +139,6 @@ interface MobileRowProps {
     tx: Transaction;
     categories: Category[];
     friends: Friend[];
-    location: Location;
-    history: History;
     onUpdateTransaction: (tx: Transaction) => void;
     onDeleteTransaction: (tid: TransactionId) => void;
     categoryName: (cid: CategoryId) => string;
@@ -190,7 +173,6 @@ class MobileTransactionRow extends React.PureComponent<MobileRowProps, {open: bo
             <div className="transactions editing">
                 <h2>Edit Transaction</h2>
                 <TxEntry categories={this.props.categories} friends={this.props.friends}
-                    location={this.props.location} history={this.props.history}
                     transaction={this.props.tx} onUpdateTransaction={this.onSave}
                     onDeleteTransaction={(t: Transaction) => this.props.onDeleteTransaction(t.id)} />
             </div>

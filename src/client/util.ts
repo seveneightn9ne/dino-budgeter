@@ -1,4 +1,4 @@
-import { History, Location } from "history";
+import { createBrowserHistory } from "history";
 import { FrameIndex, InitState } from "../shared/types";
 export * from "../shared/util";
 import _ from "lodash";
@@ -6,6 +6,8 @@ import * as frames from "../shared/frames";
 import * as api from "../shared/api";
 
 export const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+
+export const history = createBrowserHistory();
 
 export function yyyymmdd(date: Date): string {
     const y = "" + date.getFullYear();
@@ -42,8 +44,6 @@ export function defaultTxDate(frame: FrameIndex): Date {
 export function apiFetch<Request extends object, Response extends object>(options: {
     api: api.API2<Request, Response>,
     body?: Request,
-    location?: Location,
-    history?: History,
 }): Promise<Response> {
     return fetch(options.api.path, {
         method: options.api.method,
@@ -61,14 +61,10 @@ export function apiFetch<Request extends object, Response extends object>(option
         }
         if (result.status == 401) {
             // Note, discarding non-path bits of the location
-            const redir = options.location ? options.location.pathname : "";
+            const redir = history.location.pathname;
             const path = `/login?redirectTo=${redir}`;
-            if (options.history) {
-                options.history.push(path);
-                throw new Error(`Reauth required`);
-            } else {
-                window.location.href = path;
-            }
+            history.push(path);
+            throw new Error(`Reauth required`);
         }
         if (result.status != 200) {
             result.json().catch(() => {
@@ -96,8 +92,6 @@ export function initializeState<S extends {initialized: boolean}, W extends (key
             index,
             fields: wants as (keyof InitState)[],
         },
-        location: self.props.location,
-        history: self.props.history,
     }).then(response => {
         return new Promise((resolve) => {
             //console.log(response);

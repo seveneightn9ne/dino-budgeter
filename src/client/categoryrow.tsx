@@ -1,5 +1,4 @@
 import * as React from "react";
-import { RouteComponentProps, withRouter } from "react-router";
 import * as categories from "../shared/categories";
 import Money from "../shared/Money";
 import { Category, CategoryId } from "../shared/types";
@@ -15,14 +14,13 @@ interface CategoryRowProps {
     onDeleteCategory: (id: CategoryId) => void;
     onChangeCategory: (newCategory: Category) => void;
 }
-type Props = CategoryRowProps & RouteComponentProps<CategoryRowProps>;
 interface CategoryRowState {
     budgetLeftoverId: CategoryId;
     provisionalCoverFrom?: CategoryId;
     popletOpen: boolean;
 }
 
-class CategoryRow extends React.Component<Props, CategoryRowState> {
+export default class CategoryRow extends React.Component<CategoryRowProps, CategoryRowState> {
     state: CategoryRowState = {
         popletOpen: false,
         budgetLeftoverId: util.randomId(),
@@ -48,8 +46,6 @@ class CategoryRow extends React.Component<Props, CategoryRowState> {
                 id: this.props.category.id,
                 frame: this.props.category.frame,
             },
-            location: this.props.location,
-            history: this.props.history,
         }).then(() => {
             this.props.onDeleteCategory(this.props.category.id);
         });
@@ -110,8 +106,6 @@ class CategoryRow extends React.Component<Props, CategoryRowState> {
             postData={{
                 id: this.props.category.id,
                 frame: this.props.category.frame}}
-            location={this.props.location}
-            history={this.props.history}
             postKey="amount" />;
         const name = <ClickToEditText
                 size={40}
@@ -121,8 +115,6 @@ class CategoryRow extends React.Component<Props, CategoryRowState> {
                 postData={{
                     id: this.props.category.id,
                     frame: this.props.category.frame}}
-                location={this.props.location}
-                history={this.props.history}
                 postKey="name" />;
         const spending = this.props.category.balance.minus(this.props.category.budget).negate();
         const spendingCls = spending.cmp(Money.Zero) == 0 ? "zero" : "";
@@ -141,8 +133,6 @@ class CategoryRow extends React.Component<Props, CategoryRowState> {
                     values={this.categoryMap(this.props.category.balance.negate())}
                     onChange={this.onCoverBalance.bind(this)}
                     postKey="from"
-                    location={this.props.location}
-                    history={this.props.history}
                     postTransform={(id) => {
                         if (id == this.state.budgetLeftoverId) {
                             return "";
@@ -165,5 +155,3 @@ class CategoryRow extends React.Component<Props, CategoryRowState> {
         </tr>;
     }
 }
-
-export default withRouter(CategoryRow);

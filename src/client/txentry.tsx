@@ -1,4 +1,3 @@
-import { History, Location } from "history";
 import * as React from "react";
 import { index } from "../shared/frames";
 import Money from "../shared/Money";
@@ -12,8 +11,6 @@ interface NewTxProps {
     categories: Category[];
     friends: Friend[];
     defaultDate: Date;
-    location: Location;
-    history: History;
 }
 
 interface UpdateTxProps {
@@ -22,8 +19,6 @@ interface UpdateTxProps {
     transaction: Transaction;
     onUpdateTransaction: (transaction: Transaction) => void;
     onDeleteTransaction: (transaction: Transaction) => void;
-    location: Location;
-    history: History;
 }
 
 type Props = (NewTxProps | UpdateTxProps);
@@ -116,8 +111,6 @@ export default class TxEntry extends React.Component<Props, TxEntryState> {
         util.apiFetch({
             api: api.DeleteTransaction,
             body: {id: t.id},
-            location: this.props.location,
-            history: this.props.history,
         }).then(() => {
             isUpdate(this.props) && this.props.onDeleteTransaction(t);
         });
@@ -216,8 +209,6 @@ export default class TxEntry extends React.Component<Props, TxEntryState> {
                 total, myShare, theirShare,
                 iPaid: this.state.youPaid,
             },
-            location: this.props.location,
-            history: this.props.history,
         });
     }
 
@@ -246,8 +237,6 @@ export default class TxEntry extends React.Component<Props, TxEntryState> {
                 date: data.date,
                 id: newTransaction.id,
             },
-            location: this.props.location,
-            history: this.props.history,
         });
     }
 
@@ -262,8 +251,6 @@ export default class TxEntry extends React.Component<Props, TxEntryState> {
                 category: data.category,
                 id: newTransaction.id,
             },
-            location: this.props.location,
-            history: this.props.history,
         });
     }
 
@@ -277,8 +264,6 @@ export default class TxEntry extends React.Component<Props, TxEntryState> {
             body: {
                 amount: data.amount, id: newTransaction.id,
             },
-            location: this.props.location,
-            history: this.props.history,
         });
     }
 
@@ -301,8 +286,6 @@ export default class TxEntry extends React.Component<Props, TxEntryState> {
                 category: category,
                 split: split,
             },
-            location: this.props.location,
-            history: this.props.history,
         }).then((transaction) => {
             // Not clearing date & category
             this.setState({amount: "", description: "", splitting: false, splitWith: this.defaultSplitWith(),

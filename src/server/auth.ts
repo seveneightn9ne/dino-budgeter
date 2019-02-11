@@ -34,10 +34,13 @@ passport.use(new LocalStrategy(
   }
 ));
 
-// TODO - successRedirect to the `redirect` parameter
-export const handle_login_post = passport.authenticate("local", {
-    successRedirect: "/app",
-    failureRedirect: "/login/error"});
+export const handle_login_post = function(req: Request, res: Response) {
+    const successRedirect = req.body.redirect || "/app";
+    console.log(successRedirect);
+    passport.authenticate("local", {
+        successRedirect,
+        failureRedirect: "/login/error"})(req, res);
+}
 
 export const handle_signup_post = function(req: Request, res: Response) {
     req.checkBody("username").isEmail();

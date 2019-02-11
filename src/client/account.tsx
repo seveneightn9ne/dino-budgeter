@@ -1,13 +1,9 @@
-import { History, Location } from "history";
 import * as React from "react";
 import { Friend } from "../shared/types";
 import * as util from "./util";
 import { Name, AcceptFriend, RejectFriend, DeleteFriend } from "../shared/api";
 
-interface Props {
-    history: History;
-    location: Location;
-}
+interface Props {}
 
 interface InitializedState {
     me: Friend;
@@ -55,8 +51,6 @@ export default class Account extends React.Component<Props, State> {
         util.apiFetch({
             api: Name,
             body: {name},
-            location: this.props.location,
-            history: this.props.history,
         }).then(() => {
             this.setState({
                 me: {...this.state.me, name},
@@ -74,8 +68,6 @@ export default class Account extends React.Component<Props, State> {
         util.apiFetch({
             api: AcceptFriend,
             body: {email},
-            location: this.props.location,
-            history: this.props.history,
         }).then((friend) => {
             if (wasInvited) {
                 // Invite -> Friend
@@ -103,8 +95,6 @@ export default class Account extends React.Component<Props, State> {
         util.apiFetch({
             api: RejectFriend,
             body: {email},
-            location: this.props.location,
-            history: this.props.history,
         }).then(() => {
             const newInvites = this.state.invites.filter(i => i.email != email);
             const newFriends = this.state.friends.filter(f => f.email != email);
@@ -121,8 +111,6 @@ export default class Account extends React.Component<Props, State> {
         util.apiFetch({
             api: DeleteFriend,
             body: {email},
-            location: this.props.location,
-            history: this.props.history,
         }).then(() => {
             const newInvites = this.state.invites.filter(i => i.email != email);
             const newFriends = this.state.friends.filter(f => f.email != email);

@@ -1,8 +1,9 @@
 import * as React from "react";
 import * as ReactDOM from "react-dom";
-import { BrowserRouter, Link, Route, RouteComponentProps, Switch } from "react-router-dom";
+import { Router, Link, Route, RouteComponentProps, Switch } from "react-router-dom";
 import App from "./app";
 import NoRoute from "./noroute";
+import {history} from './util';
 
 const Home = () => <main className="home">
     <h1>Dino Budgeter</h1>
@@ -65,8 +66,8 @@ class Index extends React.Component {
 }
 
 ReactDOM.render(
-    <BrowserRouter>
+    <Router history={history}>
         <Index />
-    </BrowserRouter>,
+    </Router>,
     document.getElementById("root") as HTMLElement
 );

@@ -26,6 +26,7 @@ export default class SplitPoplet extends React.Component<Props, State> {
     constructor(props: Props) {
         super(props);
         this.state = initialState(props.transaction);
+        console.log(this.context);
     }
 
     handleSubmit(event: React.FormEvent): void {

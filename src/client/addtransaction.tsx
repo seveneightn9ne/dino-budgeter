@@ -1,4 +1,3 @@
-import { History, Location } from "history";
 import * as React from "react";
 import { Redirect } from "react-router";
 import { index } from "../shared/frames";
@@ -6,10 +5,7 @@ import { Category, Friend, Transaction } from "../shared/types";
 import TxEntry from "./txentry";
 import * as util from "./util";
 
-interface Props {
-    history: History;
-    location: Location;
-}
+interface Props {}
 
 interface State {
     initialized: boolean;
@@ -47,8 +43,6 @@ export default class AddTransaction extends React.Component<Props, State> {
             <TxEntry onAddTransaction={this.onAddTransaction.bind(this)}
             defaultDate={new Date()}
             friends={this.state.friends || []}
-            categories={this.state.categories || []}
-            location={this.props.location}
-            history={this.props.history} /></div>;
+            categories={this.state.categories || []} /></div>;
     }
 }

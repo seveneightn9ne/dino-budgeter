@@ -8,7 +8,6 @@ import CategoryRow from "./categoryrow";
 import { ClickToEditMoney } from "./components/clicktoedit";
 import NewCategory from "./newcategory";
 import { Income, ApiRequest } from "../shared/api";
-import { Location, History } from "history";
 import * as frames from '../shared/frames';
 
 interface Props {
@@ -19,8 +18,6 @@ interface Props {
     onChangeCategory: (c: Category) => void;
     onDeleteCategory: (c: CategoryId) => void;
     onNewIncome: (newIncome: Money) => void;
-    location: Location,
-    history: History,
 }
 interface State {
     budgeted?: Money;
@@ -68,8 +65,6 @@ export default class Categories extends React.Component<Props, State> {
             value={this.props.frame.income}
             onChange={this.props.onNewIncome}
             postData={{frame: this.props.frame.index}}
-            location={this.props.location}
-            history={this.props.history}
             postKey="income"
         />;
         let rollover = null;

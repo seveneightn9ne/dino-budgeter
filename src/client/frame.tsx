@@ -1,4 +1,4 @@
-import * as _ from "lodash";
+import _ from "lodash";
 import * as React from "react";
 import { Redirect, Route, RouteComponentProps, Switch } from "react-router";
 import { Link, NavLink } from "react-router-dom";
@@ -33,7 +33,7 @@ interface FrameState {
 }
 
 /** /app/:month/:year */
-export default class Frame extends React.Component<FrameProps & RouteComponentProps<FrameProps>, FrameState> {
+export default class Frame extends React.Component<FrameProps, FrameState> {
 
     state: FrameState = {
         initialized: false,
@@ -237,8 +237,6 @@ export default class Frame extends React.Component<FrameProps & RouteComponentPr
                 frame: this.state.frame.index,
                 income: setIncome,
             },
-            location: this.props.location,
-            history: this.props.history,
         }).then(() => {
             const newFrame = {...this.state.frame};
             newFrame.balance = frames.updateBalanceWithIncome(newFrame.balance, newFrame.income, setIncome);
@@ -292,8 +290,6 @@ export default class Frame extends React.Component<FrameProps & RouteComponentPr
             onAddCategory={this.onAddCategory.bind(this)}
             onChangeCategory={this.onChangeCategory.bind(this)}
             onDeleteCategory={this.onDeleteCategory.bind(this)}
-            location={this.props.location}
-            history={this.props.history}
             onNewIncome={this.onNewIncome.bind(this)} />;
 
         const appPrefix = `/app/${this.month() + 1}/${this.year()}`;
@@ -306,12 +302,10 @@ export default class Frame extends React.Component<FrameProps & RouteComponentPr
                 month={this.month()} year={this.year()} frame={this.state.frame}
                 newTxDate={this.newTxDate()} gid={this.state.frame.gid}
                 categories={this.state.frame.categories}
-                friends={this.state.friends}
-                location={this.props.location} history={this.props.history} />;
+                friends={this.state.friends} />;
 
         const debts = <Friends debts={this.state.debts} friends={this.state.friends} me={this.state.me} index={this.index()}
-            pendingFriends={this.state.pendingFriends} invites={this.state.invites} onPayment={this.onPayment}
-            location={this.props.location} history={this.props.history} />;
+            pendingFriends={this.state.pendingFriends} invites={this.state.invites} onPayment={this.onPayment} />;
 
         const prevButton = <Link to={`/app/${this.prevMonth() + 1}/${this.prevYear()}`} className="fa-chevron-left fas framenav" />;
         const nextButton = <Link to={`/app/${this.nextMonth() + 1}/${this.nextYear()}`} className="fa-chevron-right fas framenav" />;

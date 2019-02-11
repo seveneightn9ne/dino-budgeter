@@ -3,7 +3,6 @@ import Money from "../../shared/Money";
 import { fromYyyymmdd, yyyymmdd } from "../util";
 import * as util from "../util";
 import { API2, EmptyResponse } from "../../shared/api";
-import { Location, History } from "history";
 
 interface ClickToEditProps<Request extends object, K extends keyof Request, V extends Request[K]> {
     value: V;
@@ -13,8 +12,6 @@ interface ClickToEditProps<Request extends object, K extends keyof Request, V ex
     postData?: Pick<Request, Exclude<keyof Request, K>>;
     postKey: K;
     open?: boolean;
-    location: Location,
-    history: History,
     onProvisionalChange?: (newVal: V) => void;
 }
 interface ClickToEditInputProps<Request extends object, K extends keyof Request, V extends Request[K]> extends ClickToEditProps<Request, K, V> {
@@ -91,8 +88,6 @@ abstract class ClickToEdit<Request extends object, K extends keyof Request, V ex
         util.apiFetch({
             api: this.props.api,
             body,
-            history: this.props.history,
-            location: this.props.location,
         }).then(() => {
             this.props.onChange(newValue);
             this.endEdit();

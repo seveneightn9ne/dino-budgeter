@@ -1,5 +1,4 @@
 import * as React from "react";
-import { RouteComponentProps, withRouter } from "react-router";
 import { Category, FrameIndex } from "../shared/types";
 import * as util from "./util";
 import KeyPress from "./components/keypress";
@@ -14,7 +13,7 @@ interface NewCategoryState {
     value: string;
 }
 
-class NewCategory extends KeyPress<RouteComponentProps<NewCategoryProps> & NewCategoryProps, NewCategoryState> {
+export default class NewCategory extends KeyPress<NewCategoryProps & NewCategoryProps, NewCategoryState> {
 
     state = {expanded: false, value: ""};
 
@@ -39,8 +38,6 @@ class NewCategory extends KeyPress<RouteComponentProps<NewCategoryProps> & NewCa
                 frame: this.props.frame,
                 name: this.state.value,
             },
-            location: this.props.location,
-            history: this.props.history,
         }).then(response => {
             this.props.onAddCategory(response);
             this.setState({expanded: false, value: ""});
@@ -64,5 +61,3 @@ class NewCategory extends KeyPress<RouteComponentProps<NewCategoryProps> & NewCa
         </form>;
     }
 }
-
-export default withRouter(NewCategory);

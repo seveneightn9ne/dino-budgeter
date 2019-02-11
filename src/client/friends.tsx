@@ -1,4 +1,3 @@
-import { History, Location } from "history";
 import _ from "lodash";
 import * as React from "react";
 import Money from "../shared/Money";
@@ -17,8 +16,6 @@ interface Props {
         balance: Money,
         payments: (Payment|Charge)[],
     }};
-    location: Location;
-    history: History;
     onPayment: (email: string, pmt: Payment|Charge) => void;
 }
 
@@ -104,8 +101,6 @@ export default class Friends extends React.Component<Props, State> {
             body: {
                 email, amount, youPay, isPayment, memo, frame,
             },
-            location: this.props.location,
-            history: this.props.history,
         }).then(() => {
             if (isPayment) {
                 const payment: Payment = {
