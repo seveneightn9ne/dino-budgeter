@@ -38,8 +38,8 @@
     "passport-local": "^1.0.0",
     "pg-promise": "^8.4.6",
     "randomstring": "^1.1.5",
-    "react": "^16.4.2",
-    "react-dom": "^16.4.2",
+    "react": "^16.8.0",
+    "react-dom": "^16.8.0",
     "react-media": "^1.8.0",
     "react-router-dom": "^4.3.1"
   },
