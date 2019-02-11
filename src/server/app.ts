@@ -1,7 +1,6 @@
 import * as bodyParser from "body-parser";
 import * as ensureLogin from "connect-ensure-login";
 import connectPgSimple from "connect-pg-simple";
-import * as cookieParser from "cookie-parser";
 import express from "express";
 import { Request, Response } from "express";
 import session from "express-session";
@@ -26,7 +25,6 @@ app.use(bodyParser.text({
 }));
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(validator());
-app.use(cookieParser.default());
 app.use(morgan("combined"));
 const pgSession = connectPgSimple(session);
 const sessionOptions: session.SessionOptions = {
