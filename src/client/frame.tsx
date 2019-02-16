@@ -191,47 +191,53 @@ export default class Frame extends React.Component<FrameProps, FrameState> {
         return history.length - 1 - frameIndexDelta;
     }
 
-    onUpdateTransaction(t: Transaction) {
-        const oldTransaction = this.state.transactions.filter(otherT => otherT.id == t.id)[0];
-        let newFrame = this.state.frame;
-        if (oldTransaction.category != t.category) {
-            const newCategories = this.state.frame.categories.map(c => {
-                // Remove the old transaction amount from the old category
-                if (c.id == oldTransaction.category) {
-                    return { ...c, balance: c.balance.plus(oldTransaction.amount) };
-                }
-                // Add the new transaction amount to the new category
-                if (c.id == t.category) {
-                    return { ...c, balance: c.balance.minus(t.amount) };
-                }
-                return c;
-            });
-            newFrame = { ...this.state.frame, categories: newCategories };
-        } else if (t.category && oldTransaction.amount != t.amount) {
-            // Update the category balance
-            const newCategories = this.state.frame.categories.map(c => {
-                if (c.id == t.category) {
-                    return { ...c, balance: c.balance.plus(oldTransaction.amount).minus(t.amount) };
-                }
-                return c;
-            });
-            newFrame = { ...this.state.frame, categories: newCategories };
-        }
-        const transactions = this.state.transactions.map(otherT => {
-            if (t.id == otherT.id) {
-                return t;
+    private onUpdateTransaction(t: Transaction) {
+        this.setState(({ transactions, frame, me, debts }) => {
+            const oldTransaction = transactions.filter((otherT) => otherT.id === t.id)[0];
+            let newFrame = frame;
+            if (oldTransaction.category !== t.category) {
+                const newCategories = frame.categories.map((c) => {
+                    // Remove the old transaction amount from the old category
+                    if (c.id === oldTransaction.category) {
+                        return { ...c, balance: c.balance.plus(oldTransaction.amount) };
+                    }
+                    // Add the new transaction amount to the new category
+                    if (c.id === t.category) {
+                        return { ...c, balance: c.balance.minus(t.amount) };
+                    }
+                    return c;
+                });
+                newFrame = { ...frame, categories: newCategories };
+            } else if (t.category && oldTransaction.amount !== t.amount) {
+                // Update the category balance
+                const newCategories = frame.categories.map((c) => {
+                    if (c.id === t.category) {
+                        return { ...c, balance: c.balance.plus(oldTransaction.amount).minus(t.amount) };
+                    }
+                    return c;
+                });
+                newFrame = { ...frame, categories: newCategories };
             }
-            return otherT;
+            const newTransactions = transactions.map((otherT) => {
+                if (t.id === otherT.id) {
+                    return t;
+                }
+                return otherT;
+            });
+            const newDebts = { ...debts };
+            if (t.split) {
+                const prevBalance = debts[t.split.with.email].balance || Money.Zero;
+                debts[t.split.with.email] = {
+                    balance: prevBalance.plus(getBalanceDelta(me.uid, oldTransaction, t)),
+                    payments: debts[t.split.with.email].payments,
+                }
+            }
+            return {
+                transactions: newTransactions,
+                frame: newFrame,
+                debts: newDebts,
+            };
         });
-        const debts = { ...this.state.debts };
-        if (t.split) {
-            const prevBalance = debts[t.split.with.email].balance || Money.Zero;
-            debts[t.split.with.email] = {
-                balance: prevBalance.plus(getBalanceDelta(this.state.me.uid, oldTransaction, t)),
-                payments: debts[t.split.with.email].payments,
-            }
-        }
-        this.setState({ transactions, frame: newFrame, debts });
     }
 
     // Note: you can only delete a transaction that's for the current frame.

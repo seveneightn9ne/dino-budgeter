@@ -38,7 +38,7 @@ export const Histogram: React.SFC<{
             pct = "0";
         }
         return pct;
-    }
+    };
 
     const grams = data.map(({ budget, spending }, i) => {
         let color = "green";
@@ -68,4 +68,4 @@ export const Histogram: React.SFC<{
     return <div className={`histogram ${className || ""}`}>
         {grams}
     </div>;
-}
+};
