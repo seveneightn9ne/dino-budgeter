@@ -753,7 +753,7 @@ input.center {
 .progress-bar {
     border: 1px solid #e9e3f9;
     position: relative;
-    overflow: hidden;
+    /*overflow: hidden;*/
 }
 
 .progress-bar .progress {
@@ -779,9 +779,9 @@ input.center {
     visibility: hidden;
 }
 
-.progress-bar:hover .progress-text {
+/*.progress-bar:hover .progress-text {
     visibility: visible;
-}
+}*/
 
 .progress-gauge {
     border: 0px solid black;
@@ -794,28 +794,24 @@ input.center {
     padding-bottom: 0;
 }
 
-.progress-bar:hover {
+/*.progress-bar:hover {
     overflow: visible;
-}
-
-/*
-        return <div className="histogram-item" key={`${amount.formatted()}-${monthName(i)}`}>
-            <div className="histogram-bar-total" style={{ height: height - 20 }}>
-                <div className="histogram-bar-filled" style={{ height: `${heightPct}%` }} />
-            </div>
-            <div className="histogram-label">
-                {monthName(i)}
-            </div>
-        </div>;
-    });
-
-    return <div className={`histogram ${className || ""}`}>*/
+}*/
 
 .histogram-bar-filled {
     background-color: #7c4dff;
     width: 100%;
     position: absolute;
     bottom: 0;
+    min-height: 2px;
+}
+
+.histogram-bar-filled.green {
+    background-color: #7be84c;
+}
+
+.histogram-bar-filled.red {
+    background-color: #ce3000;
 }
 
 .histogram-bar-total {
@@ -824,11 +820,24 @@ input.center {
     margin: 0 auto;
 }
 
-.histogram-item {
-    padding: 20px;
+.histogram-bars {
+    display: flex;
+    width: 100px;
+}
+
+.histogram-label {
+    text-align: center;
+}
+
+.histogram-label-amount {
+    font-size: 14px;
 }
 
 .histogram {
     display: flex;
-    justify-content: space-between;
+    justify-content: space-around;
+}
+
+h3 {
+    font-weight: normal;
 }

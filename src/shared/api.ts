@@ -409,7 +409,9 @@ export const Initialize = new API2('/api/init', {
     friends: sOptional(sArray(friendSchema)),
     pendingFriends: sOptional(sArray(friendSchema)),
     invites: sOptional(sArray(friendSchema)),
-    history: sOptional(sValues(sArray(sMoney()))),
+    history: sOptional(sValues(sArray({
+        budget: sMoney(), spending: sMoney(),
+    }))),
 } as SchemaType<InitState>);
 
 export const AddCategory = new API2<{ frame: number, name: string }, Category>('/api/category', {

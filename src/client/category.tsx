@@ -3,16 +3,16 @@ import { Link, Redirect, RouteComponentProps } from "react-router-dom";
 import { CategoryName } from "../shared/api";
 import Money from "../shared/Money";
 import { Category, CategoryId, Frame as FrameType, Transaction, TransactionId } from "../shared/types";
-import { Blob, BlobOp } from "./components/blob";
 import { ClickToEditText } from "./components/clicktoedit";
 import { Histogram } from "./components/histogram";
+import { MobileQuery } from "./components/media";
 import { ProgressBar } from "./components/progressbar";
 import Transactions from "./transactions";
 
 interface Props extends RouteComponentProps<{ month: string, year: string, id: string, name: string }> {
     frame: FrameType;
     transactions: Transaction[];
-    categoryHistory: Money[];
+    categoryHistory: Array<{ budget: Money, spending: Money }>;
     onChangeCategory: (c: Category) => void;
     onDeleteCategory: (c: CategoryId) => void;
     onUpdateTransaction: (t: Transaction) => void;
@@ -40,6 +40,13 @@ const CategoryPage: React.SFC<Props> = (props) => {
         return <Redirect to={`/app/${month}/${year}/categories/${id}/${category.name}`} />;
     }
 
+    const histogramWithSize = (s: number) => <Histogram
+        month={Number(props.match.params.month) - 1}
+        data={props.categoryHistory.slice(props.categoryHistory.length - s)}
+        height={200}
+        className="category-page-histogram"
+    />;
+
     return (<div>
         <h2>
             <Link
@@ -60,6 +67,8 @@ const CategoryPage: React.SFC<Props> = (props) => {
                 postKey="name"
             />
         </h2>
+
+        {/*
         <div className="blobs">
             <Blob title="Budgeted" amount={category.budget.formatted()} />
             <BlobOp op="-" />
@@ -67,7 +76,9 @@ const CategoryPage: React.SFC<Props> = (props) => {
             <BlobOp op="=" />
             <Blob title="Balance" amount={category.balance.formatted()} bold={true} />
         </div>
+        */}
 
+        <h3>Spending this month: {spending.formatted()} / {category.budget.formatted()}</h3>
         <ProgressBar
             amount={spending}
             total={category.budget}
@@ -76,12 +87,8 @@ const CategoryPage: React.SFC<Props> = (props) => {
             className="category-page-progress"
         />
 
-        <Histogram
-            month={Number(props.match.params.month) - 1}
-            data={props.categoryHistory}
-            height={200}
-            className="category-page-histogram"
-        />
+        <h3>Spending history</h3>
+        <MobileQuery desktop={histogramWithSize(6)} mobile={histogramWithSize(3)} />
 
         {props.transactions.length === 0 ? "There are no transactions this month." :
             <div>

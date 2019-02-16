@@ -82,7 +82,12 @@ export interface InitState {
         },
     };
     me?: Friend;
-    history?: { [categoryId: string]: Money[] };
+    history?: {
+        [categoryId: string]: Array<{
+            budget: Money,
+            spending: Money,
+        }>,
+    };
 }
 
 export interface Payment {
