@@ -6,6 +6,7 @@ import Money from "../shared/Money";
 import { Category, CategoryId } from "../shared/types";
 import { ClickToEditDropdown, ClickToEditMoney } from "./components/clicktoedit";
 import { ControlledPoplet } from "./components/poplet";
+import { ProgressBar } from "./components/progressbar";
 import * as util from "./util";
 
 interface CategoryRowProps {
@@ -150,9 +151,17 @@ export default class CategoryRow extends React.Component<CategoryRowProps, Categ
                     }} />
             </ControlledPoplet> : this.props.category.balance.formatted();
 
+        const progressBar = <ProgressBar
+            amount={spending}
+            total={this.props.category.budget}
+            frame={this.props.category.frame}
+            height={10}
+        />;
+
         return <tr key={this.props.category.id} className="hoverable category-row" onClick={this.onClick}>
             <td className="del"><span className="deleteCr clickable fa-times fas" onClick={this.delete} /></td>
             <td className="stretch">{this.props.category.name}</td>
+            <td className="progress-td">{progressBar}</td>
             <td className={"amount " + budgetCls}>{budget}</td>
             <td className={"amount " + spendingCls}>{spending.formatted()}</td>
             <td className={"amount balance " + balanceCls}><span className="formatted">{balance}</span></td>

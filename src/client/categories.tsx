@@ -99,7 +99,14 @@ export default class Categories extends React.Component<Props, State> {
                 </div>
                 {ais}
                 <table className="categories" cellPadding={0} cellSpacing={0} ><tbody>
-                    <tr><th /><th className="stretch">Category</th><th>Budget</th><th>Spending</th><th>Balance</th></tr>
+                    <tr>
+                        <th />
+                        <th className="stretch">Category</th>
+                        <th className="progress-td" />
+                        <th>Budget</th>
+                        <th>Spending</th>
+                        <th>Balance</th>
+                    </tr>
                     <tr><td /><td colSpan={4}>
                         <NewCategory frame={this.props.frame.index} onAddCategory={this.props.onAddCategory} />
                     </td></tr>

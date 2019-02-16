@@ -33,10 +33,11 @@ export const ProgressBar: React.SFC<{
             left: `${gaugePct}%`,
             borderLeftWidth: 2,
         };
+        const width = props.height > 10 ? 2 : 1;
         if (gaugePct > 50) {
             style = {
                 right: `${100 - gaugePct}%`,
-                borderRightWidth: 2,
+                borderRightWidth: width,
             };
         }
         if (className === "green" && gaugePct < Number(pct)) {

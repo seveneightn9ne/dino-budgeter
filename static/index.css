@@ -325,6 +325,10 @@ tr.hoverable:hover {
     width: 16px;
 }
 
+.progress-td {
+    width: 100px;
+}
+
 td.amount {
     width: 100px;
 }
@@ -747,6 +751,10 @@ input.center {
     .category-page {
         padding: 0 10px;
     }
+    .progress-td {
+        width: 0px;
+        display: none;
+    }
 }
 
 .category-page-progress {
@@ -764,6 +772,7 @@ input.center {
     height: 100%;
     overflow: visible;
     white-space: nowrap;
+    min-width: 2px;
 }
 
 .progress-bar.green .progress {
@@ -800,6 +809,18 @@ input.center {
 /*.progress-bar:hover {
     overflow: visible;
 }*/
+
+.progress-td .progress-bar {
+    overflow: hidden;
+}
+
+.progress-td .progress-gauge {
+    border-color: #555;
+}
+
+.progress-td .progress-bar:hover {
+    overflow: visible;
+}
 
 .histogram-bar-filled {
     background-color: #7c4dff;
