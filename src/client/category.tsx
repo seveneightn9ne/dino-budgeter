@@ -41,7 +41,7 @@ const CategoryPage: React.SFC<Props> = (props) => {
         return <Redirect to={`/app/${month}/${year}/categories/${id}/${category.name}`} />;
     }
 
-    return (<div>
+    return (<div className="category-page">
         <h2>
             <Link
                 to={`/app/${props.match.params.month}/${props.match.params.year}/categories`}
@@ -94,7 +94,7 @@ const CategoryPage: React.SFC<Props> = (props) => {
         <h3>Spending history</h3>
         <MobileQuery desktop={histogramWithSize(props, 6)} mobile={histogramWithSize(props, 3)} />
 
-        {props.transactions.length === 0 ? "There are no transactions this month." :
+        {props.transactions.length === 0 ? <h3>There are no transactions this month.</h3> :
             <div>
                 <h3>Transactions</h3>
                 <Transactions

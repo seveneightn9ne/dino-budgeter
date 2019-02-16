@@ -1,10 +1,10 @@
 import * as React from "react";
+import * as api from '../shared/api';
 import { index } from "../shared/frames";
 import Money from "../shared/Money";
 import { distributeTotal } from "../shared/transactions";
-import { Category, Friend, Share, Transaction, CategoryId } from "../shared/types";
+import { Category, CategoryId, Friend, Share, Transaction } from "../shared/types";
 import * as util from "./util";
-import * as api from '../shared/api';
 
 interface NewTxProps {
     onAddTransaction: (transaction: Transaction) => void;
@@ -113,7 +113,7 @@ export default class TxEntry extends React.Component<Props, TxEntryState> {
     delete(t: Transaction): boolean {
         util.apiFetch({
             api: api.DeleteTransaction,
-            body: {id: t.id},
+            body: { id: t.id },
         }).then(() => {
             isUpdate(this.props) && this.props.onDeleteTransaction(t);
         });
@@ -137,7 +137,7 @@ export default class TxEntry extends React.Component<Props, TxEntryState> {
         let amount = new Money(this.state.amount);
         const total = new Money(this.state.amount);
         if (!amount.isValid(false /* allowNegative */)) {
-            this.setState({error: true});
+            this.setState({ error: true });
             return false;
         }
         const category = this.state.category;
@@ -150,16 +150,16 @@ export default class TxEntry extends React.Component<Props, TxEntryState> {
             myShare = new Share(this.state.yourShare);
             theirShare = new Share(this.state.theirShare);
             if (!myShare.isValid(false) || !theirShare.isValid(false)) {
-                this.setState({error: true});
+                this.setState({ error: true });
                 return false;
             }
             [amount, otherAmount] = distributeTotal(amount, myShare, theirShare);
         }
-        return {amount, total, category, date, frame, myShare, theirShare, otherAmount};
+        return { amount, total, category, date, frame, myShare, theirShare, otherAmount };
     }
 
     submitForUpdate(props: UpdateTxProps, data: SubmitData) {
-        const newTransaction = {...props.transaction};
+        const newTransaction = { ...props.transaction };
         // Updating an existing transaction...
         const initialState = this.initializeState(props);
         const work: Promise<any>[] = [];
@@ -184,19 +184,20 @@ export default class TxEntry extends React.Component<Props, TxEntryState> {
     }
 
     submitUpdateSplit = (props: UpdateTxProps, initialState: TxEntryState, newTransaction: Transaction, data: SubmitData) => {
-        const {myShare, theirShare, amount, otherAmount, total} = data;
+        const { myShare, theirShare, amount, otherAmount, total } = data;
 
         if (!(props.transaction.split &&
             (this.state.amount != initialState.amount
-            || this.state.theirShare != initialState.theirShare
-            || this.state.yourShare != initialState.yourShare
-            || this.state.youPaid != initialState.youPaid))) {
-            
+                || this.state.theirShare != initialState.theirShare
+                || this.state.yourShare != initialState.yourShare
+                || this.state.youPaid != initialState.youPaid))) {
+
             return null;
         }
 
         // Update newTransaction
-        newTransaction.split = {...newTransaction.split,
+        newTransaction.split = {
+            ...newTransaction.split,
             myShare, theirShare, otherAmount,
             // XXX: using "0" because I don't know my own uid.
             payer: this.state.youPaid ? "0" : newTransaction.split.with.uid,
@@ -271,7 +272,7 @@ export default class TxEntry extends React.Component<Props, TxEntryState> {
     }
 
     submitForAdd = (props: NewTxProps, data: SubmitData) => {
-        const {amount, frame, category, date, myShare, theirShare, otherAmount} = data;
+        const { amount, frame, category, date, myShare, theirShare, otherAmount } = data;
         const onAddTransaction = props.onAddTransaction;
         const split = this.state.splitting ? {
             with: this.state.splitWith,
@@ -291,17 +292,19 @@ export default class TxEntry extends React.Component<Props, TxEntryState> {
             },
         }).then((transaction) => {
             // Not clearing date & category
-            this.setState({amount: "", description: "", splitting: false, splitWith: this.defaultSplitWith(),
-                yourShare: "1", theirShare: "1", youPaid: true});
+            this.setState({
+                amount: "", description: "", splitting: false, splitWith: this.defaultSplitWith(),
+                yourShare: "1", theirShare: "1", youPaid: true
+            });
             onAddTransaction(transaction);
         });
     }
 
     openSplitSection = () => {
-        this.setState({splitting: true});
+        this.setState({ splitting: true });
     }
     closeSplitSection = () => {
-        this.setState({splitting: false});
+        this.setState({ splitting: false });
     }
 
     selectOnFocus = (e: React.FocusEvent<HTMLInputElement>) => {
@@ -309,15 +312,15 @@ export default class TxEntry extends React.Component<Props, TxEntryState> {
     }
 
     onPayerChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        this.setState({youPaid: e.target.value === "0"});
+        this.setState({ youPaid: e.target.value === "0" });
     }
 
     renderSplitSection = () => {
         // You can remove a split iff it's a new transaction.
         const closeButton = isUpdate(this.props) ? null : <span className="close clickable fa-times fas" onClick={this.closeSplitSection} />;
         return <div>
-            <label>Split with: 
-                {isUpdate(this.props) ? this.props.transaction.split.with : 
+            <label>Split with:
+                {isUpdate(this.props) ? (this.props.transaction.split.with.name || this.props.transaction.split.with.email) :
                     <select onChange={util.cc(this, "splitWith")} value={this.state.splitWith}>
                         {this.props.friends.map(f => <option key={f.uid}>{f.email}</option>)}
                     </select>
@@ -330,7 +333,7 @@ export default class TxEntry extends React.Component<Props, TxEntryState> {
             <label className="half">
                 Their share: <input type="text" value={this.state.theirShare} onChange={util.cc(this, "theirShare")} size={1} className="center" onFocus={this.selectOnFocus} />
             </label>
-            <div className="section" style={{clear: "both"}}>
+            <div className="section" style={{ clear: "both" }}>
                 <label className="nostyle"><input type="radio" name="payer" value="0" checked={this.state.youPaid}
                     onChange={this.onPayerChange} /> You paid</label>
                 <label className="nostyle"><input type="radio" name="payer" value="1" checked={!this.state.youPaid}
@@ -338,7 +341,7 @@ export default class TxEntry extends React.Component<Props, TxEntryState> {
             </div>
         </div>;
     }
-    
+
     render(): JSX.Element {
         const options = this.props.categories.map(c => {
             return <option key={c.id} value={c.id}>{c.name}</option>;
@@ -361,8 +364,8 @@ export default class TxEntry extends React.Component<Props, TxEntryState> {
                 </select></label>
                 {splitting}
                 <label><input className="button nomargin" type="submit" value="Save" />
-                {isUpdate(this.props) ? <button className="button"
-                    onClick={() => isUpdate(this.props) && this.delete(this.props.transaction)}>Delete</button> : null}</label>
+                    {isUpdate(this.props) ? <button className="button"
+                        onClick={() => isUpdate(this.props) && this.delete(this.props.transaction)}>Delete</button> : null}</label>
             </form>
         </div>;
     }

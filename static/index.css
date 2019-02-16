@@ -744,6 +744,9 @@ input.center {
         display: flex;
         justify-content: space-evenly;
     }
+    .category-page {
+        padding: 0 10px;
+    }
 }
 
 .category-page-progress {
