@@ -1,14 +1,14 @@
-import _ from "lodash";
+import { AddTransaction, ApiRequest, DeleteTransaction, EmptyResponse, TransactionAmount, TransactionCategory, TransactionDate, TransactionDescription, TransactionSplit } from "../../shared/api";
+import { index } from "../../shared/frames";
 import { distributeTotal } from "../../shared/transactions";
 import { CategoryId, Transaction, TransactionId, User } from "../../shared/types";
 import * as util from "../../shared/util";
-import { Response, ErrorResponse } from "../api";
+import { ErrorResponse, Response } from "../api";
 import db from "../db";
+import * as frames from "../frames";
+import * as payments from "../payments";
 import * as transactions from "../transactions";
 import * as user from "../user";
-import * as payments from "../payments";
-import * as frames from "../frames";
-import { ApiRequest, EmptyResponse, DeleteTransaction, TransactionAmount, TransactionCategory, TransactionDate, TransactionDescription, TransactionSplit, AddTransaction } from "../../shared/api";
 
 export function handle_transaction_post(request: ApiRequest<typeof AddTransaction>, actor: User): Promise<Response<Transaction>> {
     const other = request.split ? request.split.with : undefined;
@@ -84,7 +84,7 @@ export function handle_transaction_post(request: ApiRequest<typeof AddTransactio
 
 type txField = "amount" | "date" | "description" | "category";
 function isSharedField(field: txField): boolean {
-    return field == "date" || field == "description";
+    return field === "date" || field === "description";
 }
 function canEditShared(field: txField): boolean {
     return field != "amount";
@@ -104,38 +104,44 @@ export function handle_transaction_delete(request: ApiRequest<typeof DeleteTrans
     });
 }
 
-export function handle_transaction_description_post(request: ApiRequest<typeof TransactionDescription>, actor: User): Promise<Response<EmptyResponse>> {
+export function handle_transaction_description_post(
+    request: ApiRequest<typeof TransactionDescription>, actor: User): Promise<Response<EmptyResponse>> {
     return handle_transaction_update_post("description", request, actor);
 }
 
-export function handle_transaction_amount_post(request: ApiRequest<typeof TransactionAmount>, actor: User): Promise<Response<EmptyResponse>> {
-    return handle_transaction_update_post("amount", request, actor, amount => amount.string());
+export function handle_transaction_amount_post(
+    request: ApiRequest<typeof TransactionAmount>, actor: User): Promise<Response<EmptyResponse>> {
+    return handle_transaction_update_post("amount", request, actor, (amount) => amount.string());
 }
 
-export function handle_transaction_date_post(request: ApiRequest<typeof TransactionDate>, actor: User): Promise<Response<EmptyResponse>> {
-    // TODO: the transaction may have to move frames.
+export function handle_transaction_date_post(
+    request: ApiRequest<typeof TransactionDate>, actor: User): Promise<Response<EmptyResponse>> {
     return handle_transaction_update_post("date", request, actor);
 }
 
-export function handle_transaction_category_post(request: ApiRequest<typeof TransactionCategory>, actor: User): Promise<Response<EmptyResponse>> {
+export function handle_transaction_category_post(
+    request: ApiRequest<typeof TransactionCategory>, actor: User): Promise<Response<EmptyResponse>> {
     // TODO: validate that the category exists, is alive, is owned by the user, etc.
-    return handle_transaction_update_post("category", request, actor, c => c || null);
+    return handle_transaction_update_post("category", request, actor, (c) => c || null);
 }
 
-function handle_transaction_update_post<Request extends {id: TransactionId}, Field extends Exclude<keyof Request, 'id'> & txField>(
-        field: Field,
-        request: Request,
-        actor: User,
-        transform?: (val: Request[Field]) => (Request[Field]|string)): Promise<Response<EmptyResponse>> {
+function handle_transaction_update_post<
+    Request extends { id: TransactionId },
+    Field extends Exclude<keyof Request, "id"> & txField
+>(
+    field: Field,
+    request: Request,
+    actor: User,
+    transform?: (val: Request[Field]) => (Request[Field] | string)): Promise<Response<EmptyResponse>> {
     const value = request[field];
     if (!transform) {
         transform = (s) => s;
     }
     const updateLinked = isSharedField(field);
     const id = request.id;
-    return db.tx(async t => {
+    return db.tx(async (t) => {
         const existing = await transactions.getTransaction(id, t);
-        if (existing.gid != await user.getDefaultGroup(actor, t)) {
+        if (existing.gid !== await user.getDefaultGroup(actor, t)) {
             return {
                 code: 403,
                 message: "The transaction is not in your group",
@@ -153,14 +159,22 @@ function handle_transaction_update_post<Request extends {id: TransactionId}, Fie
         if (updateLinked && existing.split) {
             await t.none(query, [val, await transactions.getOtherTid(id, existing.split.id, t)]);
         }
+        // Update the frame with the date
+        if (field === "date") {
+            if (!(val instanceof Date)) {
+                throw new Error("How can I update date when it's not a date");
+            }
+            const newFrame = index(val.getMonth(), val.getFullYear());
+            await t.none("update transactions set frame = $1 where id = $2", [newFrame, id]);
+        }
         return null;
     });
 }
 
 export function handle_transaction_split_post(request: ApiRequest<typeof TransactionSplit>, actor: User): Promise<Response<EmptyResponse>> {
-    const {tid, sid, total, myShare, theirShare} = request;
+    const { tid, sid, total, myShare, theirShare } = request;
     const [myAmount, otherAmount] = distributeTotal(total, myShare, theirShare);
-    return  db.tx(async t => {
+    return db.tx(async t => {
         const otherTid = await transactions.getOtherTid(tid, sid, t);
         const otherUid = await transactions.getUser(otherTid, t);
         const payer = request.iPaid ? actor.uid : otherUid;
