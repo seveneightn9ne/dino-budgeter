@@ -45,9 +45,9 @@ export default class Frame extends React.Component<FrameProps, FrameState> {
         }
         return newTxDate;
     }
-    prevMonth = () => (this.month() - 1) % 12;
+    prevMonth = () => (this.month() === 0) ? 11 : (this.month() - 1);
     prevYear = () => (this.prevMonth() == 11) ? this.year() - 1 : this.year();
-    nextMonth = () => (this.month() + 1) % 12;
+    nextMonth = () => (this.month() === 11) ? 0 : (this.month() + 1);
     nextYear = () => (this.nextMonth() == 0) ? this.year() + 1 : this.year();
 
     todayFrame(): FrameIndex {
