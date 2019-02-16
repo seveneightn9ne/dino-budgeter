@@ -15,7 +15,6 @@ interface NewTxProps {
 
 interface UpdateTxProps {
     categories: Category[];
-    friends: Friend[];
     transaction: Transaction;
     onUpdateTransaction: (transaction: Transaction) => void;
     onDeleteTransaction: (transaction: Transaction) => void;
@@ -95,7 +94,7 @@ export default class TxEntry extends React.Component<Props, TxEntryState> {
         if (isUpdate(prevProps) && isUpdate(this.props) && prevProps.transaction != this.props.transaction) {
             // New transaction - recompute all state
             this.setState(this.initializeState(this.props));
-        } else if (prevProps.friends != this.props.friends && this.state.splitWith == "") {
+        } else if (!isUpdate(prevProps) && !isUpdate(this.props) && prevProps.friends != this.props.friends && this.state.splitWith == "") {
             // Friends have loaded - recompute default split now that we have friends
             this.setState({
                 splitWith: this.defaultSplitWith(),
@@ -104,6 +103,10 @@ export default class TxEntry extends React.Component<Props, TxEntryState> {
     }
 
     defaultSplitWith() {
+        if (isUpdate(this.props)) {
+            const split = this.props.transaction.split;
+            return split ? split.with.uid : "";
+        }
         return this.props.friends.length > 0 ? this.props.friends[0].uid : "";
     }
 
@@ -314,9 +317,11 @@ export default class TxEntry extends React.Component<Props, TxEntryState> {
         const closeButton = isUpdate(this.props) ? null : <span className="close clickable fa-times fas" onClick={this.closeSplitSection} />;
         return <div>
             <label>Split with: 
-                <select onChange={util.cc(this, "splitWith")} value={this.state.splitWith}>
-                    {this.props.friends.map(f => <option key={f.uid}>{f.email}</option>)}
-                </select>
+                {isUpdate(this.props) ? this.props.transaction.split.with : 
+                    <select onChange={util.cc(this, "splitWith")} value={this.state.splitWith}>
+                        {this.props.friends.map(f => <option key={f.uid}>{f.email}</option>)}
+                    </select>
+                }
                 {closeButton}
             </label>
             <label className="first half">

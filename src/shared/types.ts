@@ -75,11 +75,14 @@ export interface InitState {
     pendingFriends?: Friend[];
     invites?: Friend[];
     transactions?: Transaction[];
-    debts?: {[email: string]: {
-        balance: Money,
-        payments: (Payment | Charge)[],
-    }};
+    debts?: {
+        [email: string]: {
+            balance: Money,
+            payments: Array<Payment | Charge>,
+        },
+    };
     me?: Friend;
+    history?: { [categoryId: string]: Money[] };
 }
 
 export interface Payment {

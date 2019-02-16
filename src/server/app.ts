@@ -1,23 +1,22 @@
 import * as bodyParser from "body-parser";
 import * as ensureLogin from "connect-ensure-login";
 import connectPgSimple from "connect-pg-simple";
-import express from "express";
-import { Request, Response } from "express";
+import express, { Request, Response } from "express";
 import session from "express-session";
 import validator from "express-validator";
 import morgan from "morgan";
 import passport from "passport";
 import path from "path";
 import serveStatic from "serve-static";
+import { AcceptFriend, AddCategory, AddTransaction, BudgetingMove, CategoryBudget, CategoryName, DeleteCategory, DeleteFriend, DeleteTransaction, Income, Initialize, Name, Payment, RejectFriend, TransactionAmount, TransactionCategory, TransactionDate, TransactionDescription, TransactionSplit } from '../shared/api';
 import * as api from "./api";
 import * as categories from "./api/categories";
 import * as frame from "./api/frame";
+import * as payments from "./api/payments";
 import * as transactions from "./api/transactions";
 import * as user from "./api/user";
-import * as payments from "./api/payments";
 import * as auth from "./auth";
 import db from "./db";
-import { AcceptFriend, Initialize, RejectFriend, DeleteFriend, Name, Payment, Income, BudgetingMove, AddTransaction, DeleteTransaction, TransactionDescription, TransactionAmount, TransactionDate, TransactionCategory, TransactionSplit, AddCategory, DeleteCategory, CategoryBudget, CategoryName } from '../shared/api';
 
 const app = express();
 app.use(bodyParser.text({
@@ -59,7 +58,7 @@ app.post("/signup", auth.handle_signup_post);
 /**
  * API Routes. They require login.
  */
-app.get("/api/auth-redirect",      user.handle_auth_redirect_get);
+app.get("/api/auth-redirect", user.handle_auth_redirect_get);
 
 api.registerHandler(app, AcceptFriend, user.handle_add_friend_post);
 api.registerHandler(app, RejectFriend, user.handle_reject_friend_post);
@@ -91,7 +90,9 @@ app.use(serveStatic(path.join(__dirname, "../client")));
 app.use(serveStatic(path.join(__dirname, "../../node_modules/react/umd")));
 app.use(serveStatic(path.join(__dirname, "../../node_modules/react-dom/umd")));
 app.use(serveStatic(path.join(__dirname, "../../static/RobotoMono")));
+app.use(serveStatic(path.join(__dirname, "../../static/fontawesome")));
 app.get("/index.css", serveStatic(path.join(__dirname, "../../static/")));
+app.get("/fontawesome-all.css", serveStatic(path.join(__dirname, "../../static/")));
 
 const reactMode = app.get("env") == "development" ? "development" : "production.min";
 app.get("/react.js", (_, res) =>

@@ -3,33 +3,24 @@ import * as React from "react";
 import { Redirect, Route, RouteComponentProps, Switch } from "react-router";
 import { Link, NavLink } from "react-router-dom";
 import { AI, getAIs } from "../shared/ai";
+import { Income } from "../shared/api";
 import * as frames from "../shared/frames";
 import Money from "../shared/Money";
 import { getBalanceDelta } from "../shared/transactions";
-import { Category, CategoryId, Frame as FrameType, FrameIndex, Friend, Transaction, TransactionId, Payment, Charge } from "../shared/types";
+import { Category, CategoryId, Charge, FrameIndex, InitState, Payment, Transaction, TransactionId } from "../shared/types";
 import Categories from "./categories";
+import CategoryPage from "./category";
 import { DesktopOnly, MobileOnly } from "./components/media";
 import Friends from "./friends";
 import Transactions from "./transactions";
 import * as util from "./util";
-import { Income } from "../shared/api";
 
-type FrameProps = RouteComponentProps<{month: string, year: string}>;
-interface FrameState {
+type FrameProps = RouteComponentProps<{ month: string, year: string }>;
+interface FrameState extends InitState {
     initialized: boolean;
-    me?: Friend;
-    frame?: FrameType;
     budgeted?: Money;
     setIncome: string;
     setIncomeErr?: boolean;
-    transactions?: Transaction[];
-    invites?: Friend[];
-    friends?: Friend[];
-    pendingFriends?: Friend[];
-    debts?: {[email: string]: {
-        balance: Money, 
-        payments: (Payment|Charge)[],
-    }};
 }
 
 /** /app/:month/:year */
@@ -41,18 +32,18 @@ export default class Frame extends React.Component<FrameProps, FrameState> {
     };
 
     month = (props = this.props) => Number(props.match.params.month) - 1;
-    year = (props = this.props) =>  Number(props.match.params.year);
+    year = (props = this.props) => Number(props.match.params.year);
     monthName = () => util.MONTHS[this.month()];
     index = (props = this.props) => frames.index(this.month(props), this.year(props));
     newTxDate = () => {
-      const newTxDate = new Date();
-      if (newTxDate.getFullYear() != this.year() || newTxDate.getMonth() != this.month()) {
-        // frame is not the current frame
-        newTxDate.setFullYear(this.year());
-        newTxDate.setMonth(this.month());
-        newTxDate.setDate(1);
-      }
-      return newTxDate;
+        const newTxDate = new Date();
+        if (newTxDate.getFullYear() != this.year() || newTxDate.getMonth() != this.month()) {
+            // frame is not the current frame
+            newTxDate.setFullYear(this.year());
+            newTxDate.setMonth(this.month());
+            newTxDate.setDate(1);
+        }
+        return newTxDate;
     }
     prevMonth = () => (this.month() - 1) % 12;
     prevYear = () => (this.prevMonth() == 11) ? this.year() - 1 : this.year();
@@ -90,29 +81,30 @@ export default class Frame extends React.Component<FrameProps, FrameState> {
 
     initializeFrame(props = this.props): Promise<void> {
         const index = this.index(props);
-        return util.initializeState(this, index, "frame", "transactions", "invites", "friends", "debts", "pendingFriends", "me").then(() => {
-            this.setState({budgeted: this.calculateBudgeted(this.state.frame.categories)});
-        });
+        return util.initializeState(this, index,
+            "frame", "transactions", "invites", "friends", "debts", "pendingFriends", "me", "history").then(() => {
+                this.setState({ budgeted: this.calculateBudgeted(this.state.frame.categories) });
+            });
     }
 
     onAddCategory(category: Category) {
-        const newFrame = {...this.state.frame};
+        const newFrame = { ...this.state.frame };
         const newCategories = [...this.state.frame.categories];
         newCategories.push(category);
         newFrame.categories = newCategories;
-        this.setState({frame: newFrame});
+        this.setState({ frame: newFrame });
     }
 
     onDeleteCategory(id: CategoryId) {
-        const newFrame = {...this.state.frame};
+        const newFrame = { ...this.state.frame };
         const newCategories = this.state.frame.categories.filter(c => c.id != id);
         newFrame.categories = newCategories;
         const budgeted = this.calculateBudgeted(newCategories);
-        this.setState({frame: newFrame, budgeted});
+        this.setState({ frame: newFrame, budgeted });
     }
 
     onChangeCategory(newCategory: Category) {
-        const newFrame = {...this.state.frame};
+        const newFrame = { ...this.state.frame };
         const newCategories: Category[] = this.state.frame.categories.map(c => {
             if (c.id == newCategory.id) {
                 return newCategory;
@@ -122,18 +114,18 @@ export default class Frame extends React.Component<FrameProps, FrameState> {
         });
         newFrame.categories = newCategories;
         const budgeted = this.calculateBudgeted(newCategories);
-        this.setState({frame: newFrame, budgeted});
+        this.setState({ frame: newFrame, budgeted });
     }
 
     onAddTransaction(t: Transaction) {
-        const newFrame = {...this.state.frame};
+        const newFrame = { ...this.state.frame };
         if (t.frame == this.state.frame.index) {
             newFrame.balance = this.state.frame.balance.minus(t.amount);
             newFrame.spending = this.state.frame.spending.plus(t.amount);
             newFrame.categories = newFrame.categories.map(c => {
                 if (c.id == t.category) {
                     const newBalance = c.balance.minus(t.amount);
-                    return {...c, balance: newBalance};
+                    return { ...c, balance: newBalance };
                 }
                 return c;
             });
@@ -141,7 +133,7 @@ export default class Frame extends React.Component<FrameProps, FrameState> {
             newFrame.balance = this.state.frame.balance.minus(t.amount);
         }
         const transactions = [...this.state.transactions, t];
-        const debts = {...this.state.debts};
+        const debts = { ...this.state.debts };
         if (t.split) {
             const prevBalance = debts[t.split.with.email].balance || Money.Zero;
             debts[t.split.with.email] = {
@@ -162,24 +154,24 @@ export default class Frame extends React.Component<FrameProps, FrameState> {
             const newCategories = this.state.frame.categories.map(c => {
                 // Remove the old transaction amount from the old category
                 if (c.id == oldTransaction.category) {
-                    return {...c, balance: c.balance.plus(oldTransaction.amount)};
+                    return { ...c, balance: c.balance.plus(oldTransaction.amount) };
                 }
                 // Add the new transaction amount to the new category
                 if (c.id == t.category) {
-                    return {...c, balance: c.balance.minus(t.amount)};
+                    return { ...c, balance: c.balance.minus(t.amount) };
                 }
                 return c;
             });
-            newFrame = {...this.state.frame, categories: newCategories};
+            newFrame = { ...this.state.frame, categories: newCategories };
         } else if (t.category && oldTransaction.amount != t.amount) {
             // Update the category balance
             const newCategories = this.state.frame.categories.map(c => {
                 if (c.id == t.category) {
-                    return {...c, balance: c.balance.plus(oldTransaction.amount).minus(t.amount)};
+                    return { ...c, balance: c.balance.plus(oldTransaction.amount).minus(t.amount) };
                 }
                 return c;
             });
-            newFrame = {...this.state.frame, categories: newCategories};
+            newFrame = { ...this.state.frame, categories: newCategories };
         }
         const transactions = this.state.transactions.map(otherT => {
             if (t.id == otherT.id) {
@@ -187,7 +179,7 @@ export default class Frame extends React.Component<FrameProps, FrameState> {
             }
             return otherT;
         });
-        const debts = {...this.state.debts};
+        const debts = { ...this.state.debts };
         if (t.split) {
             const prevBalance = debts[t.split.with.email].balance || Money.Zero;
             debts[t.split.with.email] = {
@@ -195,39 +187,41 @@ export default class Frame extends React.Component<FrameProps, FrameState> {
                 payments: debts[t.split.with.email].payments,
             }
         }
-        this.setState({transactions, frame: newFrame, debts});
+        this.setState({ transactions, frame: newFrame, debts });
     }
 
     onDeleteTransaction(id: TransactionId) {
         const transaction = this.state.transactions.filter(otherT => otherT.id == id)[0];
         const transactions = this.state.transactions.filter(t => t.id != id);
-        const frame = {...this.state.frame, categories:
-            this.state.frame.categories.map(category => {
-                if (transaction.category == category.id) {
-                    return {...category, balance: category.balance.plus(transaction.amount)};
-                }
-                return category;
-            })};
-        const debts = {...this.state.debts};
+        const frame = {
+            ...this.state.frame, categories:
+                this.state.frame.categories.map(category => {
+                    if (transaction.category == category.id) {
+                        return { ...category, balance: category.balance.plus(transaction.amount) };
+                    }
+                    return category;
+                })
+        };
+        const debts = { ...this.state.debts };
         if (transaction.split) {
             const prevBalance = debts[transaction.split.with.email].balance || Money.Zero;
             debts[transaction.split.with.email] = {
                 balance: prevBalance.plus(getBalanceDelta(this.state.me.uid, transaction, null)),
                 payments: debts[transaction.split.with.email].payments,
             };
-            this.setState({debts});
+            this.setState({ debts });
         }
-        this.setState({transactions, frame, debts});
+        this.setState({ transactions, frame, debts });
     }
 
     onChangeIncome(event: React.ChangeEvent<HTMLInputElement>): void {
-        this.setState({setIncome: event.target.value, setIncomeErr: false});
+        this.setState({ setIncome: event.target.value, setIncomeErr: false });
     }
 
     onSetIncome(event: React.FormEvent) {
         const setIncome = new Money(this.state.setIncome);
         if (!setIncome.isValid(false /* allowNegative */)) {
-            this.setState({setIncomeErr: true});
+            this.setState({ setIncomeErr: true });
             event.preventDefault();
             return;
         }
@@ -238,33 +232,45 @@ export default class Frame extends React.Component<FrameProps, FrameState> {
                 income: setIncome,
             },
         }).then(() => {
-            const newFrame = {...this.state.frame};
+            const newFrame = { ...this.state.frame };
             newFrame.balance = frames.updateBalanceWithIncome(newFrame.balance, newFrame.income, setIncome);
             newFrame.income = setIncome;
-            this.setState({frame: newFrame});
+            this.setState({ frame: newFrame });
         });
         event.preventDefault();
     }
 
     onNewIncome(setIncome: Money) {
-        const newFrame = {...this.state.frame};
+        const newFrame = { ...this.state.frame };
         newFrame.balance = frames.updateBalanceWithIncome(newFrame.balance, newFrame.income, setIncome);
         newFrame.income = setIncome;
-        this.setState({frame: newFrame});
+        this.setState({ frame: newFrame });
     }
 
-    onPayment = (email: string, pmt: Charge|Payment) => {
+    onPayment = (email: string, pmt: Charge | Payment) => {
         let diffToBalance = pmt.amount.plus(Money.Zero);
-        if (pmt.type =='charge') {
+        if (pmt.type == 'charge') {
             diffToBalance = diffToBalance.negate();
         }
-        if ((pmt.type == 'charge' && pmt.debtor !== this.state.me.uid) || 
+        if ((pmt.type == 'charge' && pmt.debtor !== this.state.me.uid) ||
             (pmt.type == 'payment' && pmt.payer !== this.state.me.uid)) {
             diffToBalance = diffToBalance.negate();
         }
         const newBalance = this.state.debts[email].balance.minus(diffToBalance);
         const newPayments = [pmt, ...this.state.debts[email].payments];
-        this.setState({debts: {...this.state.debts, [email]: {balance: newBalance, payments: newPayments}}});
+        this.setState({ debts: { ...this.state.debts, [email]: { balance: newBalance, payments: newPayments } } });
+    }
+
+    linkToMonth = (month: number, year: number, className: string) => {
+        const prefixLink = `/app/${month + 1}/${year}`;
+        return <Route
+            path="/app/:month/:year"
+            // tslint:disable jsx-no-lambda
+            render={(props) => {
+                const suffix = props.location.pathname.split("/").slice(4).join("/");
+                return <Link to={`${prefixLink}/${suffix}`} className={className} />;
+            }}
+        />;
     }
 
     render() {
@@ -285,13 +291,6 @@ export default class Frame extends React.Component<FrameProps, FrameState> {
             </div>;
         }
 
-        const categories = <Categories month={this.month()} year={this.year()}
-            frame={this.state.frame}
-            onAddCategory={this.onAddCategory.bind(this)}
-            onChangeCategory={this.onChangeCategory.bind(this)}
-            onDeleteCategory={this.onDeleteCategory.bind(this)}
-            onNewIncome={this.onNewIncome.bind(this)} />;
-
         const appPrefix = `/app/${this.month() + 1}/${this.year()}`;
 
         const transactions = (this.state.transactions == undefined) ? null :
@@ -299,23 +298,23 @@ export default class Frame extends React.Component<FrameProps, FrameState> {
                 onUpdateTransaction={this.onUpdateTransaction.bind(this)}
                 onDeleteTransaction={this.onDeleteTransaction.bind(this)}
                 onAddTransaction={this.onAddTransaction.bind(this)}
-                month={this.month()} year={this.year()} frame={this.state.frame}
-                newTxDate={this.newTxDate()} gid={this.state.frame.gid}
+                frame={this.state.frame}
+                newTxDate={this.newTxDate()}
                 categories={this.state.frame.categories}
                 friends={this.state.friends} />;
 
         const debts = <Friends debts={this.state.debts} friends={this.state.friends} me={this.state.me} index={this.index()}
             pendingFriends={this.state.pendingFriends} invites={this.state.invites} onPayment={this.onPayment} />;
 
-        const prevButton = <Link to={`/app/${this.prevMonth() + 1}/${this.prevYear()}`} className="fa-chevron-left fas framenav" />;
-        const nextButton = <Link to={`/app/${this.nextMonth() + 1}/${this.nextYear()}`} className="fa-chevron-right fas framenav" />;
+        const prevButton = this.linkToMonth(this.prevMonth(), this.prevYear(), "fa-chevron-left fas framenav");
+        const nextButton = this.linkToMonth(this.nextMonth(), this.nextYear(), "fa-chevron-right fas framenav");
         const inviteBadge = this.state.invites.length > 0 ? <span title="Friend Requests" className="badge">{this.state.invites.length}</span> : null;
         const nav = <DesktopOnly><nav>
             <NavLink to={`${appPrefix}/categories`} activeClassName="active">Categories</NavLink>
             <NavLink to={`${appPrefix}/transactions`} activeClassName="active">Transactions</NavLink>
             {this.state.friends.length > 0 || _.size(this.state.debts) > 0 ?
                 <NavLink to={`${appPrefix}/debts`} activeClassName="active">Friends</NavLink>
-            : null}
+                : null}
             <NavLink className="right" to={`/app/account`} activeClassName="active">Account{inviteBadge}</NavLink>
         </nav></DesktopOnly>;
         return <div>
@@ -324,13 +323,42 @@ export default class Frame extends React.Component<FrameProps, FrameState> {
                 {nav}
             </div></header>
             <main>
-            <Switch>
-                <Redirect exact from="/app/:month/:year" to="/app/:month/:year/categories" />
-                <Route path={"/app/:month/:year/categories"} render={() => categories} />
-                <Route path={"/app/:month/:year/transactions"} render={() => transactions} />
-                <Route path={"/app/:month/:year/debts"} render={() => debts} />
-                <Route path={"/app/add-transaction"} render={() => null} />
-            </Switch>
+                <Switch>
+                    <Redirect exact from="/app/:month/:year" to="/app/:month/:year/categories" />
+                    <Route path={"/app/:month/:year/categories"}>
+                        <Switch>
+                            <Route
+                                path={"/app/:month/:year/categories/:id/:name"}
+                                // tslint:disable jsx-no-lambda
+                                render={(props) =>
+                                    <CategoryPage
+                                        frame={this.state.frame}
+                                        transactions={this.state.transactions.filter((t) =>
+                                            t.category === props.match.params.id)}
+                                        categoryHistory={this.state.history[props.match.params.id]}
+                                        onChangeCategory={this.onChangeCategory.bind(this)}
+                                        onDeleteCategory={this.onDeleteCategory.bind(this)}
+                                        onUpdateTransaction={this.onUpdateTransaction.bind(this)}
+                                        onDeleteTransaction={this.onDeleteTransaction.bind(this)}
+                                        {...props}
+                                    />}
+                            />
+                            <Route render={(props) =>
+                                <Categories
+                                    {...props} month={this.month()} year={this.year()}
+                                    frame={this.state.frame}
+                                    onAddCategory={this.onAddCategory.bind(this)}
+                                    onChangeCategory={this.onChangeCategory.bind(this)}
+                                    onDeleteCategory={this.onDeleteCategory.bind(this)}
+                                    onNewIncome={this.onNewIncome.bind(this)}
+                                />}
+                            />
+                        </Switch>
+                    </Route>
+                    <Route path={"/app/:month/:year/transactions"} render={() => transactions} />
+                    <Route path={"/app/:month/:year/debts"} render={() => debts} />
+                    <Route path={"/app/add-transaction"} render={() => null} />
+                </Switch>
             </main>
             <MobileOnly>
                 <footer>
@@ -341,7 +369,7 @@ export default class Frame extends React.Component<FrameProps, FrameState> {
                     <Link to={`${appPrefix}/transactions`} className="link">Transactions</Link>
                     {this.state.friends.length > 0 || _.size(this.state.debts) > 0 ?
                         <Link to={`${appPrefix}/debts`} className="link">Friends</Link>
-                    : null}
+                        : null}
                 </footer>
             </MobileOnly>
         </div>;

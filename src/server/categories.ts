@@ -1,8 +1,8 @@
 import pgPromise from "pg-promise";
+import { fromSerialized } from "../shared/categories";
 import Money from "../shared/Money";
 import { Category, CategoryId, FrameIndex, GroupId } from "../shared/types";
 export * from "../shared/categories";
-import { fromSerialized } from "../shared/categories";
 
 export const DEFAULT_CATEGORIES = [
     "Rent",
@@ -45,4 +45,19 @@ export function getBudget(id: CategoryId, frame: FrameIndex, t: pgPromise.ITask<
 export async function getCategories(gid: GroupId, frame: FrameIndex, t: pgPromise.ITask<{}>): Promise<Category[]> {
     const rows = await t.manyOrNone("select * from categories where gid = $1 and frame = $2 and alive = true", [gid, frame]);
     return rows.map(fromSerialized);
+}
+
+export async function getHistory(gid: GroupId, frame: FrameIndex, t: pgPromise.ITask<{}>):
+    Promise<{ [c: string]: Money[] }> {
+    const minFrame = frame - 6;
+    const categories = await getCategories(gid, frame, t);
+    const history: { [c: string]: Money[] } = {};
+    await t.batch(categories.map(async (c) => {
+        history[c.id] = [];
+        for (let historyFrame = minFrame; historyFrame <= frame; historyFrame++) {
+            const spending = await getSpending(c.id, historyFrame, t);
+            history[c.id].push(spending);
+        }
+    }));
+    return history;
 }

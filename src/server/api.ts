@@ -1,14 +1,14 @@
-import { Request as ExpressRequest, Response as ExpressResponse, Express } from "express";
-import { GroupId, InitState, User } from "../shared/types";
 import * as ensureLogin from "connect-ensure-login";
+import { Express, Request as ExpressRequest, Response as ExpressResponse } from "express";
+import { API2, ApiRequest, emptySchema, Initialize } from "../shared/api";
+import { GroupId, InitState, User } from "../shared/types";
 import * as categories from "./categories";
 import db from "./db";
 import * as frames from "./frames";
 import * as transactions from "./transactions";
 import * as user from "./user";
-import { ApiRequest, API2, Initialize, emptySchema } from "../shared/api";
 
-export type ErrorResponse = {code: StatusCodeNoResponse, message: string};
+export type ErrorResponse = { code: StatusCodeNoResponse, message: string };
 export type Response<Res> = ErrorResponse | null | (Res extends object ? Res : never);
 type Handler<Req, Res> = (req: Req, user: User) => Promise<Response<Res>>;
 
@@ -19,7 +19,7 @@ function isErrorResponse(r: Response<any>): r is ErrorResponse {
 // Wrap an async handler to be called synchronously
 function wrap<Req extends object, Res extends object>(
     api: API2<Req, Res>, handler: Handler<Req, Res>): (req: ExpressRequest, res: ExpressResponse) => void {
-    return function(req: ExpressRequest, res: ExpressResponse) {
+    return function (req: ExpressRequest, res: ExpressResponse) {
         let apiRequest;
         try {
             apiRequest = api.reviveRequest(req.body);
@@ -31,7 +31,7 @@ function wrap<Req extends object, Res extends object>(
             return;
         }
         handler(apiRequest, req.user).then(apiResponse => {
-            if (typeof(apiResponse) == "number") {
+            if (typeof (apiResponse) == "number") {
                 res.sendStatus(apiResponse);
             } else if (apiResponse == null) {
                 if (api.responseSchema != emptySchema) {
@@ -72,7 +72,7 @@ export function registerHandler<Req extends object, Res extends object>(
     }
 }
 
-export async function handle_init_get(request: ApiRequest<typeof Initialize>, actor: User): Promise<Partial<InitState>>  {
+export async function handle_init_get(request: ApiRequest<typeof Initialize>, actor: User): Promise<Partial<InitState>> {
     const resData: InitState = {};
     return db.tx(async t => {
         const fields = new Set(request.fields);
@@ -109,6 +109,9 @@ export async function handle_init_get(request: ApiRequest<typeof Initialize>, ac
                 name: actor.name,
                 gid: await gid(),
             };
+        }
+        if (fields.has('history')) {
+            resData.history = await categories.getHistory(await gid(), request.index, t);
         }
         return resData;
     });

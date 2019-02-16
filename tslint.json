@@ -1,60 +1,23 @@
 {
+    "extends": [
+        "tslint:latest",
+        "tslint-react",
+        "tslint-react-hooks"
+    ],
     "rules": {
-        "class-name": true,
-        "comment-format": [
+        "object-literal-sort-keys": false,
+        "no-console": false,
+        "no-empty": [
             true,
-            "check-space"
+            "allow-empty-functions"
         ],
-        "indent": [
-            true,
-            "spaces"
-        ],
-        "one-line": [
-            true,
-            "check-open-brace",
-            "check-whitespace"
-        ],
-        "no-var-keyword": true,
-        "quotemark": [
-            true,
-            "double",
-            "avoid-escape"
-        ],
-        "semicolon": [
-            true,
-            "always",
-            "ignore-bound-class-methods"
-        ],
-        "whitespace": [
-            true,
-            "check-branch",
-            "check-decl",
-            "check-operator",
-            "check-module",
-            "check-separator",
-            "check-type"
-        ],
-        "typedef-whitespace": [
-            true,
-            {
-                "call-signature": "nospace",
-                "index-signature": "nospace",
-                "parameter": "nospace",
-                "property-declaration": "nospace",
-                "variable-declaration": "nospace"
-            },
-            {
-                "call-signature": "onespace",
-                "index-signature": "onespace",
-                "parameter": "onespace",
-                "property-declaration": "onespace",
-                "variable-declaration": "onespace"
-            }
-        ],
-        "no-internal-module": true,
-        "no-trailing-whitespace": true,
-        "prefer-const": true,
-        "jsdoc-format": true,
-        "ordered-imports": true
+        "interface-name": false,
+        "ordered-imports": true,
+        "no-invalid-this": true,
+        "jsx-no-multiline-js": false,
+        "jsx-wrap-multiline": false,
+        "max-classes-per-file": false,
+        "member-ordering": false,
+        "no-object-literal-type-assertion": false
     }
 }

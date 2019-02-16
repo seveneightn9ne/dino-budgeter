@@ -6,28 +6,34 @@ DarkerPurple: #2f156b;
 LightPurple: #e9e3f9;
 LightishPurple: #b499fc;
 Text: #444444;
+Yellow: #FFEB3B;
 
 **/
+
 @font-face {
-    font-family: 'RobotoMono'; 
-    src: url('/RobotoMono-Regular.ttf'); 
+    font-family: 'RobotoMono';
+    src: url('/RobotoMono-Regular.ttf');
 }
+
 @font-face {
-    font-family: 'RobotoMono'; 
-    src: url('/RobotoMono-Bold.ttf'); 
+    font-family: 'RobotoMono';
+    src: url('/RobotoMono-Bold.ttf');
     font-weight: bold;
 }
+
 @font-face {
-    font-family: 'RobotoMono'; 
-    src: url('/RobotoMono-Italic.ttf'); 
+    font-family: 'RobotoMono';
+    src: url('/RobotoMono-Italic.ttf');
     font-style: italic;
 }
+
 @font-face {
-    font-family: 'RobotoMono'; 
+    font-family: 'RobotoMono';
     src: url('/RobotoMono-BoldItalic.ttf');
     font-weight: bold;
-    font-style: italic; 
+    font-style: italic;
 }
+
 body {
     background-color: white;
     color: #444444;
@@ -35,6 +41,7 @@ body {
     font-family: RobotoMono;
     margin: 0;
 }
+
 main {
     max-width: 1000px;
     margin: 20px auto;
@@ -63,11 +70,25 @@ h1 {
     vertical-align: middle;
     padding: 0 20px;
 }
+
 .framenav:hover {
     color: #512da8;
 }
+
 .framenav.left-edge {
     padding-left: 0;
+}
+
+.catnav {
+    font-size: 16px;
+    text-decoration: none;
+    vertical-align: middle;
+    padding-right: 15px;
+    color: inherit;
+}
+
+.catnav:hover {
+    color: black;
 }
 
 nav a {
@@ -85,7 +106,7 @@ nav a {
 nav a.active {
     background-color: #ffffff;
     color: #444444;
-    border-bottom-color:white;
+    border-bottom-color: white;
 }
 
 nav a:hover {
@@ -98,6 +119,7 @@ nav a.right {
     background-color: transparent;
     border: none;
 }
+
 .badge {
     background-color: #FFEB3B;
     color: #512da8;
@@ -110,7 +132,6 @@ nav a.right {
     top: -5px;
     text-align: center;
     line-height: 1.5;
-
 }
 
 input.error {
@@ -120,6 +141,7 @@ input.error {
 .clickable {
     cursor: pointer;
 }
+
 .clickable:hover {
     text-decoration: underline;
 }
@@ -129,19 +151,23 @@ input.error {
     text-align: right;
     width: 100%;
 }
+
 .deleteCr:hover {
     color: #7c4dff;
     text-decoration: none;
 }
+
 tr:hover .deleteCr {
     visibility: visible;
 }
+
 a.button, span.button {
     /* not buttons so need to set default font explicitly */
     font-family: sans-serif;
     font-size: 90%;
     cursor: pointer;
 }
+
 .button {
     background-image: linear-gradient(#7c4dff, #512da8);
     color: white;
@@ -152,24 +178,29 @@ a.button, span.button {
     border-style: none;
     cursor: pointer;
 }
+
 .button.nomargin {
     margin: 0;
 }
+
 .button.secondary {
     background-image: linear-gradient(#ffffff, #e9e3f9);
     color: #2f156b;
     border: 1px solid #b499fc;
     padding: 9px 19px;
 }
+
 form.oneline .button, .button.inline {
     padding: 5px 20px;
     margin-left: 8px;
 }
+
 form.oneline .button.secondary, .button.inline.secondary {
     padding: 4px 19px;
 }
 
 /* Categories Page */
+
 .blobs {
     display: flex;
     align-items: stretch;
@@ -185,6 +216,7 @@ form.oneline .button.secondary, .button.inline.secondary {
     text-align: center;
     flex-grow: 1;
 }
+
 .blob .title {
     font-size: 14px;
 }
@@ -221,7 +253,7 @@ a.spent:hover {
     padding: 0 10px;
 }
 
-.ai > .right {
+.ai>.right {
     float: right;
     padding-right: 10px;
 }
@@ -234,10 +266,12 @@ table {
     margin: 20px 0;
     border-collapse: collapse;
 }
+
 tr {
     background-color: white;
     border-bottom: 1px solid #e9e3f9;
 }
+
 th {
     text-align: left;
     font-weight: normal;
@@ -247,76 +281,118 @@ th {
     padding-top: 20px;
     border: none;
 }
+
 .new-category .fas {
     font-size: 12px;
     margin-top: -3px;
 }
+
 .new-category:hover {
     text-decoration: none;
     color: #000000;
 }
+
 .new-category-close {
     margin-right: 5px;
     color: #aaaaaa;
 }
+
 .new-category-close:hover {
     color: #000000;
 }
+
 td {
     padding: 4px;
 }
+
 td.zero {
     color: #aaaaaa;
 }
+
 tr.hoverable:hover {
     background-color: #eeeeee;
 }
+
+.category-row {
+    cursor: pointer;
+}
+
 .stretch {
     max-width: 100%;
 }
+
 .del {
     width: 16px;
 }
+
 td.amount {
     width: 100px;
 }
+
 td.date {
     width: 100px;
     white-space: nowrap;
 }
+
 td.category {
     width: 100px;
     white-space: nowrap;
 }
+
 td.split {
     width: 60px;
 }
-td.split > span > .clickable {
+
+td.split>span>.clickable {
     font-size: 14px;
     font-style: italic;
 }
+
 form {
     margin: 0;
+}
+
+h2 .cte {
+    display: inline;
 }
 
 .cte input {
     height: 18px;
 }
+
+h2 .cte input {
+    height: auto;
+    font-size: 1em;
+    font-weight: bold;
+    margin-top: -1px;
+    margin-bottom: -3px;
+}
+
 .cte select {
     height: 24px;
 }
+
 .cte input[type=submit] {
     height: 24px;
     width: 70px;
 }
+
+.editable {
+    cursor: text;
+}
+
 /* Give space for the hover icon */
+
 .editable {
     padding-right: 20px;
 }
+
 .editable:hover {
     padding-right: 0;
 }
+
 /* Show pencil on hover */
+
 .editable:hover::after {
     display: inline-block;
     font-style: normal;
@@ -332,7 +408,16 @@ form {
     font-size: 14px;
 }
 
+/* womp, absolute sizing rip */
+
+h2 .editable:hover::after {
+    font-size: 70%;
+    padding-left: 10px;
+    margin-top: -3px;
+}
+
 /* mobile transactions list */
+
 .tx-mobile-row {
     display: flex;
     align-items: center;
@@ -340,29 +425,35 @@ form {
     border-top: 1px solid #e9e3f9;
     cursor: pointer;
 }
+
 .tx-mobile-stretch {
     flex-grow: 1;
     align-self: stretch;
     font-size: 14px;
 }
+
 .tx-mobile-category {
     font-style: italic;
     font-size: 12px;
     padding-bottom: 5px;
 }
+
 .tx-mobile-date {
     padding-right: 20px;
     font-size: 14px;
 }
+
 .tx-mobile-day {
     font-size: 24px;
     text-align: center;
 }
+
 .tx-mobile-row .fa-user-friends {
     padding-right: 10px;
 }
 
 /* poplet forms */
+
 .poplet label, .poplet .section, .fullpage label, .fullpage .section {
     display: block;
     background-color: white;
@@ -380,6 +471,7 @@ form {
     box-sizing: border-box;
     float: left;
 }
+
 .poplet label.first.half, .fullpage label.first.half {
     border-right: 1px solid #eeeeee;
 }
@@ -387,8 +479,10 @@ form {
 .poplet label .close, .fullpage label .close {
     font-size: 24px;
     float: right;
-    margin-top: 3px; /* would rather center it vertically */
+    margin-top: 3px;
+    /* would rather center it vertically */
 }
+
 .poplet label .close:hover, .fullpage label.close:hover {
     text-decoration: none;
     color: #000;
@@ -398,6 +492,7 @@ form {
     padding: 20px;
     border-bottom: 1px solid #e9e3f9;
 }
+
 h1 .close {
     float: right;
     color: #7c4dff;
@@ -417,6 +512,7 @@ h1 .close {
 }
 
 /* footer */
+
 footer {
     position: fixed;
     left: 0px;
@@ -427,6 +523,7 @@ footer {
     width: 100%;
     border-top: 1px solid #e9e3f9;
 }
+
 .add-transaction-button {
     display: inline-block;
     text-decoration: none;
@@ -434,6 +531,7 @@ footer {
     text-align: center;
     margin-left: 10px;
 }
+
 .add-transaction-button .icon {
     font-size: 48px;
     height: 48px;
@@ -445,6 +543,7 @@ footer {
     padding: 4px;
     border-top: 1px solid #e9e3f9;
 }
+
 footer .link {
     text-decoration: none;
     color: #512da8;
@@ -454,6 +553,7 @@ footer .link {
 }
 
 /* poplet */
+
 .poplet-background {
     position: fixed;
     top: 0;
@@ -463,6 +563,7 @@ footer .link {
     background-color: rgba(0, 0, 0, 0.8);
     z-index: 2;
 }
+
 .poplet {
     width: 500px;
     margin: 70px auto;
@@ -471,19 +572,23 @@ footer .link {
     border: 1px solid #eeeeee;
     position: relative;
 }
-.poplet > .close {
+
+.poplet>.close {
     position: absolute;
     top: 24px;
     right: 24px;
     font-size: 24px;
 }
-.poplet > .close:hover {
+
+.poplet>.close:hover {
     text-decoration: none;
     color: #000;
 }
+
 .poplet h2 {
     margin: 0;
 }
+
 @media (max-width: 599px) {
     .poplet {
         width: auto;
@@ -499,7 +604,8 @@ input:not([type=submit]):not([type=file]), select {
     background-color: inherit;
 }
 
-select { /* Remove the system dropdown arrow */
+select {
+    /* Remove the system dropdown arrow */
     appearance: none;
     -webkit-appearance: none;
 }
@@ -509,36 +615,43 @@ input.center {
 }
 
 /* home, signup, login page */
+
 .login form {
     width: 300px;
     margin: 20px 0;
     font-size: 16px;
 }
-.login form > div {
+
+.login form>div {
     margin-bottom: 20px;
 }
+
 .login .button {
     margin: 40px 0;
     display: block;
     width: 150px;
 }
+
 .home div {
     margin-top: 20px;
 }
 
 /* account page */
+
 .account .button {
     margin-left: 0;
 }
+
 .fadecheck {
     color: rgb(65, 202, 30);
-
 }
+
 .fadecheck.appear {
     /*transition: opacity 0.5s linear;*/
     opacity: 1;
     transition: opacity 0.2s ease-in;
 }
+
 .fadecheck.hide {
     opacity: 0;
     transition: opacity 0.5s ease-in;
@@ -576,39 +689,50 @@ input.center {
 */
 
 /* Friends page */
+
 .friend-row {
     display: flex;
     padding: 10px;
     margin: 10px;
     align-items: center;
 }
-.friend-row > div {
+
+.friend-row>div {
     margin: 0 10px;
 }
+
 .friend-collapse {
     margin-left: -15px;
 }
+
 .friend-email {
     font-size: 12px;
 }
+
 .friend-debt {
     padding: 0 20px;
 }
+
 .friend-name {
     font-size: 18px;
 }
+
 .friend-actions {
     font-size: 14px;
 }
+
 .friend-table-container {
     padding-left: 55px;
 }
+
 .friend-table {
     margin-top: -30px;
 }
+
 .friend-more {
     margin-left: 55px;
 }
+
 @media (max-width: 599px) {
     .friend-row {
         display: block;
@@ -620,4 +744,91 @@ input.center {
         display: flex;
         justify-content: space-evenly;
     }
+}
+
+.category-page-progress {
+    margin: 30px 0;
+}
+
+.progress-bar {
+    border: 1px solid #e9e3f9;
+    position: relative;
+    overflow: hidden;
+}
+
+.progress-bar .progress {
+    background-color: #7be84c;
+    height: 100%;
+    overflow: visible;
+    white-space: nowrap;
+}
+
+.progress-bar.green .progress {
+    background-color: #7be84c;
+}
+
+.progress-bar.yellow .progress {
+    background-color: #FFEB3B;
+}
+
+.progress-bar.red .progress {
+    background-color: #ce3000;
+}
+
+.progress-text {
+    visibility: hidden;
+}
+
+.progress-bar:hover .progress-text {
+    visibility: visible;
+}
+
+.progress-gauge {
+    border: 0px solid black;
+    position: absolute;
+    font-size: 10px;
+    width: auto;
+    top: 0;
+    height: 15px;
+    padding: 3px;
+    padding-bottom: 0;
+}
+
+.progress-bar:hover {
+    overflow: visible;
+}
+
+/*
+        return <div className="histogram-item" key={`${amount.formatted()}-${monthName(i)}`}>
+            <div className="histogram-bar-total" style={{ height: height - 20 }}>
+                <div className="histogram-bar-filled" style={{ height: `${heightPct}%` }} />
+            </div>
+            <div className="histogram-label">
+                {monthName(i)}
+            </div>
+        </div>;
+    });
+
+    return <div className={`histogram ${className || ""}`}>*/
+
+.histogram-bar-filled {
+    background-color: #7c4dff;
+    width: 100%;
+    position: absolute;
+    bottom: 0;
+}
+
+.histogram-bar-total {
+    width: 50px;
+    position: relative;
+    margin: 0 auto;
+}
+
+.histogram-item {
+    padding: 20px;
+}
+
+.histogram {
+    display: flex;
+    justify-content: space-between;
 }

@@ -1,7 +1,8 @@
 import * as _ from "lodash";
 import * as React from "react";
 import { getTransactionAIs } from "../shared/ai";
-import { Category, CategoryId, Frame, Friend, GroupId, Transaction, TransactionId } from "../shared/types";
+import { DeleteTransaction, TransactionAmount, TransactionCategory, TransactionDate, TransactionDescription } from "../shared/api";
+import { Category, CategoryId, Frame, Friend, Transaction, TransactionId } from "../shared/types";
 import AIComponent from "./ai";
 import { ClickToEditDate, ClickToEditDropdown, ClickToEditMoney, ClickToEditText } from "./components/clicktoedit";
 import { MobileQuery } from "./components/media";
@@ -9,125 +10,148 @@ import { ControlledPoplet } from "./components/poplet";
 import SplitPoplet from "./splitpoplet";
 import TxEntry from "./txentry";
 import * as util from "./util";
-import { DeleteTransaction, TransactionDate, TransactionDescription, TransactionCategory, TransactionAmount } from "../shared/api";
 
-interface Props {
-    month: number;
-    year: number;
+interface BaseProps {
     frame: Frame;
     transactions: Transaction[];
     categories: Category[];
-    friends: Friend[];
-    newTxDate: Date;
-    gid: GroupId;
     onUpdateTransaction: (txn: Transaction) => void;
     onDeleteTransaction: (id: TransactionId) => void;
+}
+
+interface PropsForPage extends BaseProps {
+    newTxDate: Date;
+    friends: Friend[];
     onAddTransaction: (txn: Transaction) => void;
 }
 
-type State = {
+interface PropsForCategory extends BaseProps {
+    disableAdd: true;
+    disableEdit: boolean;
+}
+
+type Props = PropsForPage | PropsForCategory;
+
+interface State {
     popletOpen: boolean;
-};
+}
 
 export default class Transactions extends React.Component<Props, State> {
-    state = {
+    public state = {
         popletOpen: false,
-    }
+    };
 
-    delete(id: TransactionId): boolean {
+    private delete = (id: TransactionId, event: React.MouseEvent): boolean => {
+        event.stopPropagation();
+        if (this.disableEdit()) {
+            return;
+        }
         util.apiFetch({
             api: DeleteTransaction,
-            body: {id},
+            body: { id },
         }).then(() => {
             this.props.onDeleteTransaction(id);
         });
         return true;
     }
 
-    categoryName(cid: CategoryId): string {
+    private disableEdit = (): boolean => {
+        return "disableEdit" in this.props && this.props.disableEdit;
+    }
+
+    private categoryName(cid: CategoryId): string {
         return this.categoryMap().get(cid);
     }
 
-    categoryMap(): Map<string, string> {
+    private categoryMap(): Map<string, string> {
         const map = new Map();
-        this.props.categories.forEach(c => {
+        this.props.categories.forEach((c) => {
             map.set(c.id, c.name);
         });
         return map;
     }
 
-    onAddTransaction(t: Transaction) {
-        this.props.onAddTransaction(t);
-        this.closePoplet();
+    private onAddTransaction(t: Transaction) {
+        if (!("disableAdd" in this.props)) {
+            this.props.onAddTransaction(t);
+            this.closePoplet();
+        }
     }
 
-    closePoplet = () => this.setState({popletOpen: false});
-    openPoplet = () => this.setState({popletOpen: true});
+    private closePoplet = () => this.setState({ popletOpen: false });
+    private openPoplet = () => this.setState({ popletOpen: true });
 
-    render() {
+    public render() {
         const ais = getTransactionAIs(
             this.props.frame, this.props.transactions).map(ai =>
-            <AIComponent ai={ai} key={ai.message()} />);
+                <AIComponent ai={ai} key={ai.message()} />);
+
+        const editable = !this.disableEdit();
 
         const rowsDesktop = _.sortBy(this.props.transactions, ["date"]).reverse().map((tx) => <tr className="hoverable" key={tx.id}>
             <td className="del">
-                <span className="deleteCr clickable fa-times fas" onClick={() => this.delete(tx.id)}></span>
+                <span className="deleteCr clickable fa-times fas" onClick={(e) => this.delete(tx.id, e)}></span>
             </td>
             <td className="date"><ClickToEditDate value={tx.date}
+                editable={editable}
                 api={TransactionDate}
                 onChange={date =>
-                    this.props.onUpdateTransaction({...tx, date})}
+                    this.props.onUpdateTransaction({ ...tx, date })}
                 postKey="date"
-                postData={{id: tx.id}}
+                postData={{ id: tx.id }}
             /></td>
             <td className="stretch"><ClickToEditText
+                editable={editable}
                 api={TransactionDescription}
                 value={tx.description}
                 size={20}
                 onChange={description =>
-                    this.props.onUpdateTransaction({...tx, description})}
+                    this.props.onUpdateTransaction({ ...tx, description })}
                 postKey="description"
-                postData={{id: tx.id}}
+                postData={{ id: tx.id }}
             /></td>
             <td className={tx.category ? "category" : "category highlighted"}>
-            <ClickToEditDropdown
-                api={TransactionCategory}
-                value={tx.category || ""}
-                zeroValue="Uncategorized"
-                values={this.categoryMap()}
-                onChange={cid => this.props.onUpdateTransaction({...tx, category: cid})}
-                postKey="category"
-                postData={{id: tx.id}}
-            /></td>
+                <ClickToEditDropdown
+                    editable={editable}
+                    api={TransactionCategory}
+                    value={tx.category || ""}
+                    zeroValue="Uncategorized"
+                    values={this.categoryMap()}
+                    onChange={cid => this.props.onUpdateTransaction({ ...tx, category: cid })}
+                    postKey="category"
+                    postData={{ id: tx.id }}
+                /></td>
             <td className="amount">{tx.split ? tx.amount.formatted() :
                 <ClickToEditMoney
+                    editable={editable}
                     api={TransactionAmount}
                     value={tx.amount}
                     onChange={amount =>
-                        this.props.onUpdateTransaction({...tx, amount})}
+                        this.props.onUpdateTransaction({ ...tx, amount })}
                     postKey="amount"
-                    postData={{id: tx.id}}
-            />}</td>
+                    postData={{ id: tx.id }}
+                />}</td>
             <td className="split">
                 {tx.split ? <SplitPoplet transaction={tx} onUpdateTransaction={this.props.onUpdateTransaction} /> : null}
             </td></tr>);
 
         const rowsMobile = _.sortBy(this.props.transactions, ["date"]).reverse().map((tx) =>
-            <MobileTransactionRow key={tx.id} tx={tx} onUpdateTransaction={this.props.onUpdateTransaction}
+            <MobileTransactionRow editable={editable} key={tx.id} tx={tx} onUpdateTransaction={this.props.onUpdateTransaction}
                 onDeleteTransaction={this.props.onDeleteTransaction} categories={this.props.categories}
-                friends={this.props.friends} categoryName={this.categoryName.bind(this)} />);
+                categoryName={this.categoryName.bind(this)} />);
 
         return <div className="transactions">
             {ais}
             <MobileQuery desktop={
                 <table><tbody>
                     <tr><th></th><th>Date</th><th>Description</th><th>Category</th><th>Amount</th><th></th></tr>
-                    <tr><td></td><td colSpan={5}>
-                    <ControlledPoplet open={this.state.popletOpen} onRequestClose={this.closePoplet} onRequestOpen={this.openPoplet}
-                        text={<span><span className="fa-plus-circle fas"></span> Transaction</span>}>
-                        <TxEntry onAddTransaction={this.onAddTransaction.bind(this)} defaultDate={this.props.newTxDate}
-                            categories={this.props.categories} friends={this.props.friends} />
-                    </ControlledPoplet></td></tr>
+                    {'disableAdd' in this.props ? null :
+                        <tr><td></td><td colSpan={5}>
+                            <ControlledPoplet open={this.state.popletOpen} onRequestClose={this.closePoplet} onRequestOpen={this.openPoplet}
+                                text={<span><span className="fa-plus-circle fas"></span> Transaction</span>}>
+                                <TxEntry onAddTransaction={this.onAddTransaction.bind(this)} defaultDate={this.props.newTxDate}
+                                    categories={this.props.categories} friends={this.props.friends} />
+                            </ControlledPoplet></td></tr>}
                     {rowsDesktop}
                 </tbody></table>
             } mobile={rowsMobile} />
@@ -138,18 +162,22 @@ export default class Transactions extends React.Component<Props, State> {
 interface MobileRowProps {
     tx: Transaction;
     categories: Category[];
-    friends: Friend[];
+    editable: boolean;
     onUpdateTransaction: (tx: Transaction) => void;
     onDeleteTransaction: (tid: TransactionId) => void;
     categoryName: (cid: CategoryId) => string;
 }
-class MobileTransactionRow extends React.PureComponent<MobileRowProps, {open: boolean}> {
-    state = {open: false};
-    open = () => this.setState({open: true});
-    close = () => this.setState({open: false});
+class MobileTransactionRow extends React.PureComponent<MobileRowProps, { open: boolean }> {
+    state = { open: false };
+    open = () => {
+        if (this.props.editable) {
+            this.setState({ open: true });
+        }
+    }
+    close = () => this.setState({ open: false });
 
     onSave = (tx: Transaction) => {
-        this.setState({open: false});
+        this.setState({ open: false });
         this.props.onUpdateTransaction(tx);
     }
     render() {
@@ -161,7 +189,9 @@ class MobileTransactionRow extends React.PureComponent<MobileRowProps, {open: bo
                 <div className="tx-mobile-day">{tx.date.getDate()}</div>
             </div>
             <div className="tx-mobile-stretch">
-                <div className="tx-mobile-category">{this.props.categoryName(tx.category) || <span className="highlighted">Uncategorized</span>}</div>
+                <div className="tx-mobile-category">
+                    {this.props.categoryName(tx.category) || <span className="highlighted">Uncategorized</span>}
+                </div>
                 <div className="tx-mobile-desc">{tx.description}</div>
             </div>
             <div className="tx-mobile-right">
@@ -169,10 +199,16 @@ class MobileTransactionRow extends React.PureComponent<MobileRowProps, {open: bo
                 <span className="tx-mobile-amount">{tx.amount.formatted()}</span>
             </div>
         </div>;
-        return <ControlledPoplet text={row} clickable={false} open={this.state.open} onRequestClose={this.close} onRequestOpen={this.open}>
+        return <ControlledPoplet
+            text={row}
+            clickable={false}
+            open={this.state.open}
+            onRequestClose={this.close}
+            onRequestOpen={this.open}
+        >
             <div className="transactions editing">
                 <h2>Edit Transaction</h2>
-                <TxEntry categories={this.props.categories} friends={this.props.friends}
+                <TxEntry categories={this.props.categories}
                     transaction={this.props.tx} onUpdateTransaction={this.onSave}
                     onDeleteTransaction={(t: Transaction) => this.props.onDeleteTransaction(t.id)} />
             </div>

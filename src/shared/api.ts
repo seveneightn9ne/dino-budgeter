@@ -1,6 +1,6 @@
-import Money from "./Money";
 import _ from "lodash";
-import { Payment as PaymentType, Charge, Frame, Share, CategoryId, FrameIndex, Transaction, InitState, Category, Friend } from "./types";
+import Money from "./Money";
+import { Category, CategoryId, Charge, Frame, FrameIndex, Friend, InitState, Payment as PaymentType, Share, Transaction } from "./types";
 
 function sNumber(): SchemaField<number> {
     return (key: string, val: any): number => {
@@ -11,8 +11,8 @@ function sNumber(): SchemaField<number> {
     }
 }
 
-function sString(opts: {nonEmpty?: boolean} = {}): SchemaField<string> {
-    const {nonEmpty} = opts;
+function sString(opts: { nonEmpty?: boolean } = {}): SchemaField<string> {
+    const { nonEmpty } = opts;
     return (key: string, val: any): string => {
         if (typeof val === "string") {
             if (nonEmpty && val.length == 0) {
@@ -44,7 +44,7 @@ function sNull(): SchemaField<null> {
     }
 }
 
-function sBoolean(opts?: {val?: boolean}): SchemaField<boolean> {
+function sBoolean(opts?: { val?: boolean }): SchemaField<boolean> {
     const f: SchemaBase<boolean> = (key: string, val: any): boolean => {
         if (typeof val === "boolean") {
             if (opts && opts.val !== undefined && val !== opts.val) {
@@ -67,8 +67,8 @@ function sDate(): SchemaField<Date> {
     }
 }
 
-function sMoney(opts: {nonNegative?: boolean} = {}): SchemaField<Money> {
-    const {nonNegative} = opts;
+function sMoney(opts: { nonNegative?: boolean } = {}): SchemaField<Money> {
+    const { nonNegative } = opts;
     return (key: string, val: any): Money => {
         const money = new Money(val);
         if (money.isValid(!nonNegative)) {
@@ -78,8 +78,8 @@ function sMoney(opts: {nonNegative?: boolean} = {}): SchemaField<Money> {
     }
 }
 
-function sShare(opts: {nonNegative?: boolean} = {}): SchemaField<Share> {
-    const {nonNegative} = opts;
+function sShare(opts: { nonNegative?: boolean } = {}): SchemaField<Share> {
+    const { nonNegative } = opts;
     return (key: string, val: any): Share => {
         const share = new Share(val);
         if (share.isValid(!nonNegative)) {
@@ -98,8 +98,8 @@ function sOptional<T extends RequestField>(schema: SchemaField<T>): SchemaBase<T
     }
 }
 
-function sValues<T extends RequestField>(schema: SchemaField<T>): SchemaBase<{[k: string]: T}> {
-    return (key: string, val: any): {[k: string]: T} => {
+function sValues<T extends RequestField>(schema: SchemaField<T>): SchemaBase<{ [k: string]: T }> {
+    return (key: string, val: any): { [k: string]: T } => {
         if (!_.isPlainObject(val)) {
             throw new Error("Field " + key + " must be an object");
         }
@@ -109,8 +109,8 @@ function sValues<T extends RequestField>(schema: SchemaField<T>): SchemaBase<{[k
     }
 }
 
-function sOr<A extends RequestField, B extends RequestField>(s1: SchemaField<A>, s2: SchemaField<B>): SchemaBase<A|B> {
-    return (key: string, val: any): A|B => {
+function sOr<A extends RequestField, B extends RequestField>(s1: SchemaField<A>, s2: SchemaField<B>): SchemaBase<A | B> {
+    return (key: string, val: any): A | B => {
         try {
             return validateSchemaField(s1, key, val);
         } catch {
@@ -175,7 +175,7 @@ function validateSchemaField<T>(schema: SchemaField<T>, key: string, val: any): 
     throw Error("impossible for schema to be neither");
 }
 // validates the object recursively
-function validateSchema<Request extends (object|null)>(schema: SchemaType<Request>, obj: any, key: string = ""): Request {
+function validateSchema<Request extends (object | null)>(schema: SchemaType<Request>, obj: any, key: string = ""): Request {
     if (schema == null) {
         if (obj != null) {
             throw new Error("Object " + key + " must be null");
@@ -192,13 +192,13 @@ function validateSchema<Request extends (object|null)>(schema: SchemaType<Reques
     });
     return _.mapValues(schema, (s, f) => validateSchemaField(s, keyConcat(key, f), obj[f])) as Request;
 }
-export class API2<Request extends object, R2 extends object|null> {
+export class API2<Request extends object, R2 extends object | null> {
     constructor(
         public path: string,
         public requestSchema: SchemaType<Request>,
         public responseSchema: SchemaType<R2>,
         public method: "POST" | "PUT" | "DELETE" = "POST",
-    ) {}
+    ) { }
 
     /**
      * Throws an error when the request does not match the schema.
@@ -238,7 +238,7 @@ export const EmptyResponseValue: EmptyResponse = {
     isEmptyResponse: true,
 };
 export const emptySchema: SchemaType<EmptyResponse> = {
-    isEmptyResponse: sBoolean({val: true}),
+    isEmptyResponse: sBoolean({ val: true }),
 }
 
 /** Reusable Schemas */
@@ -349,33 +349,33 @@ export type AddTransactionRequest2 = {
 }
 const req: SchemaType<AddTransactionRequest2> = {
     frame: sNumber(),
-    amount: sMoney({nonNegative: true}),
+    amount: sMoney({ nonNegative: true }),
     description: sString(),
     date: sDate(),
     category: sString(),
     split: sOptional({
         with: sString(),
-        myShare: sShare({nonNegative: true}),
-        theirShare: sShare({nonNegative: true}),
-        otherAmount: sMoney({nonNegative: true}),
+        myShare: sShare({ nonNegative: true }),
+        theirShare: sShare({ nonNegative: true }),
+        otherAmount: sMoney({ nonNegative: true }),
         iPaid: sBoolean(),
     }),
 }
 export const AddTransaction = new API2<AddTransactionRequest2, Transaction>('/api/transaction', req, transactionSchema);
 
-export const DeleteTransaction = new API2('/api/transaction', {id: sString()}, emptySchema, 'DELETE');
+export const DeleteTransaction = new API2('/api/transaction', { id: sString() }, emptySchema, 'DELETE');
 
 export const TransactionSplit = new API2('/api/transaction/split', {
-    tid: sString({nonEmpty: true}),
-    sid: sString({nonEmpty: true}),
-    total: sMoney({nonNegative: true}),
-    myShare: sShare({nonNegative: true}),
-    theirShare: sShare({nonNegative: true}),
+    tid: sString({ nonEmpty: true }),
+    sid: sString({ nonEmpty: true }),
+    total: sMoney({ nonNegative: true }),
+    myShare: sShare({ nonNegative: true }),
+    theirShare: sShare({ nonNegative: true }),
     iPaid: sBoolean(),
 }, emptySchema);
 
 export const TransactionDescription = new API2('/api/transaction/description', {
-    description: sString({nonEmpty: true}),
+    description: sString({ nonEmpty: true }),
     id: sString(),
 }, emptySchema);
 
@@ -409,11 +409,12 @@ export const Initialize = new API2('/api/init', {
     friends: sOptional(sArray(friendSchema)),
     pendingFriends: sOptional(sArray(friendSchema)),
     invites: sOptional(sArray(friendSchema)),
-} as SchemaType<Partial<InitState>>);
+    history: sOptional(sValues(sArray(sMoney()))),
+} as SchemaType<InitState>);
 
-export const AddCategory = new API2<{frame: number, name: string}, Category>('/api/category', {
+export const AddCategory = new API2<{ frame: number, name: string }, Category>('/api/category', {
     frame: sNumber(),
-    name: sString({nonEmpty: true}),
+    name: sString({ nonEmpty: true }),
 }, categorySchema);
 
 export const DeleteCategory = new API2('/api/category', {
@@ -424,13 +425,13 @@ export const DeleteCategory = new API2('/api/category', {
 export const CategoryBudget = new API2('/api/category/budget', {
     id: sString(),
     frame: sNumber(),
-    amount: sMoney({nonNegative: true})
+    amount: sMoney({ nonNegative: true })
 }, emptySchema);
 
 export const CategoryName = new API2('/api/category/name', {
     id: sString(),
     frame: sNumber(),
-    name: sString({nonEmpty: true}),
+    name: sString({ nonEmpty: true }),
 }, emptySchema);
 
 export const BudgetingMove = new API2('/api/budgeting/move', {
@@ -445,9 +446,9 @@ export const Income = new API2('/api/income', {
     frame: sNumber(),
 }, emptySchema);
 
-export const Name = new API2('/api/name', {name: sString()}, emptySchema);
-const friendRequest = {email: sString({nonEmpty: true})};
-export type FriendRequest = {email: string};
+export const Name = new API2('/api/name', { name: sString() }, emptySchema);
+const friendRequest = { email: sString({ nonEmpty: true }) };
+export type FriendRequest = { email: string };
 export const AcceptFriend = new API2<FriendRequest, Friend>('/api/friend', friendRequest, friendSchema);
 export const RejectFriend = new API2('/api/friend/reject', friendRequest, emptySchema);
 export const DeleteFriend = new API2('/api/friend', friendRequest, emptySchema, 'DELETE');

@@ -46,19 +46,24 @@
   "devDependencies": {
     "awesome-typescript-loader": "^5.2.0",
     "source-map-loader": "^0.2.4",
+    "tslint": "^5.12.1",
+    "tslint-eslint-rules": "^5.4.0",
+    "tslint-react": "^3.6.0",
+    "tslint-react-hooks": "^1.1.0",
     "typescript": "^3.2.0",
+    "typescript-tslint-plugin": "^0.3.1",
     "webpack": "^4.16.5",
     "webpack-cli": "^3.1.0"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build-server": "tsc",
+    "build-server": "node_modules/.bin/tsc",
     "build-client": "node_modules/.bin/webpack --mode=development",
     "build": "npm run build-server && npm run build-client",
     "watch-server": "node_modules/.bin/tsc -w",
     "watch-serve": "find dist/server dist/shared | entr -r sh -c \"npm run serve\"",
     "watch-client": "node_modules/.bin/webpack --mode=development --watch",
-    "lint": "tslint -c tslint.json -p tsconfig.json",
+    "lint": "node_modules/.bin/tslint -c tslint.json -p tsconfig.json",
     "serve": "node dist/server/server.js"
   },
   "repository": {
