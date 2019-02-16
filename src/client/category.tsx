@@ -1,9 +1,10 @@
 import React, { useState } from "react";
 import { Link, Redirect, RouteComponentProps } from "react-router-dom";
-import { CategoryName } from "../shared/api";
+import { CategoryBudget, CategoryName } from "../shared/api";
+import * as categories from "../shared/categories";
 import Money from "../shared/Money";
 import { Category, CategoryId, Frame as FrameType, Transaction, TransactionId } from "../shared/types";
-import { ClickToEditText } from "./components/clicktoedit";
+import { ClickToEditMoney, ClickToEditText } from "./components/clicktoedit";
 import { Histogram } from "./components/histogram";
 import { MobileQuery } from "./components/media";
 import { ProgressBar } from "./components/progressbar";
@@ -40,13 +41,6 @@ const CategoryPage: React.SFC<Props> = (props) => {
         return <Redirect to={`/app/${month}/${year}/categories/${id}/${category.name}`} />;
     }
 
-    const histogramWithSize = (s: number) => <Histogram
-        month={Number(props.match.params.month) - 1}
-        data={props.categoryHistory.slice(props.categoryHistory.length - s)}
-        height={200}
-        className="category-page-histogram"
-    />;
-
     return (<div>
         <h2>
             <Link
@@ -78,7 +72,17 @@ const CategoryPage: React.SFC<Props> = (props) => {
         </div>
         */}
 
-        <h3>Spending this month: {spending.formatted()} / {category.budget.formatted()}</h3>
+        <h3>Spending this month: {spending.formatted()} / <ClickToEditMoney
+            size={6}
+            api={CategoryBudget}
+            value={category.budget}
+            onChange={onUpdateBudget(props.onChangeCategory, category)}
+            postData={{
+                id: category.id,
+                frame: category.frame,
+            }}
+            postKey="amount"
+        /></h3>
         <ProgressBar
             amount={spending}
             total={category.budget}
@@ -88,7 +92,7 @@ const CategoryPage: React.SFC<Props> = (props) => {
         />
 
         <h3>Spending history</h3>
-        <MobileQuery desktop={histogramWithSize(6)} mobile={histogramWithSize(3)} />
+        <MobileQuery desktop={histogramWithSize(props, 6)} mobile={histogramWithSize(props, 3)} />
 
         {props.transactions.length === 0 ? "There are no transactions this month." :
             <div>
@@ -105,5 +109,32 @@ const CategoryPage: React.SFC<Props> = (props) => {
             </div>}
     </div>);
 };
+
+const histogramWithSize = (props: Props, s: number) => <Histogram
+    month={Number(props.match.params.month) - 1}
+    data={histogramData(props.categoryHistory, s)}
+    height={200}
+    className="category-page-histogram"
+/>;
+
+const histogramData = (h: Array<{ budget: Money, spending: Money }>, s: number) => {
+    let data = h.slice(h.length - s);
+    while (
+        data.length > 1
+        && data[0].budget.cmp(Money.Zero) === 0
+        && data[0].spending.cmp(Money.Zero) === 0
+    ) {
+        data = data.slice(1);
+    }
+    return data;
+}
+
+const onUpdateBudget = (onChangeCategory: (c: Category) => void, category: Category) => (newBudget: Money) => {
+    const newCategory = { ...category };
+    newCategory.budget = newBudget;
+    newCategory.balance = categories.updateBalanceWithBudget(
+        category, newBudget);
+    onChangeCategory(newCategory);
+}
 
 export default CategoryPage;

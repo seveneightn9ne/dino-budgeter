@@ -352,7 +352,7 @@ form {
     margin: 0;
 }
 
-h2 .cte {
+h2 .cte, h3 .cte {
     display: inline;
 }
 
@@ -823,6 +823,7 @@ input.center {
 .histogram-bars {
     display: flex;
     width: 100px;
+    margin: 0 auto;
 }
 
 .histogram-label {

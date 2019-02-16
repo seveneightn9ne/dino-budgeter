@@ -104,47 +104,91 @@ export default class Frame extends React.Component<FrameProps, FrameState> {
     }
 
     onChangeCategory(newCategory: Category) {
-        const newFrame = { ...this.state.frame };
-        const newCategories: Category[] = this.state.frame.categories.map(c => {
-            if (c.id == newCategory.id) {
-                return newCategory;
-            } else {
-                return c;
-            }
+        this.setState(({ frame, history }) => {
+            const newFrame = { ...frame };
+            const newCategories: Category[] = frame.categories.map((c) => {
+                if (c.id === newCategory.id) {
+                    return newCategory;
+                } else {
+                    return c;
+                }
+            });
+            newFrame.categories = newCategories;
+            const budgeted = this.calculateBudgeted(newCategories);
+            const newHistory = this.newCategoryHistory(history, newCategory.id, null, budgeted);
+            return { frame: newFrame, budgeted, history: newHistory };
         });
-        newFrame.categories = newCategories;
-        const budgeted = this.calculateBudgeted(newCategories);
-        this.setState({ frame: newFrame, budgeted });
     }
 
-    onAddTransaction(t: Transaction) {
-        const newFrame = { ...this.state.frame };
-        if (t.frame == this.state.frame.index) {
-            newFrame.balance = this.state.frame.balance.minus(t.amount);
-            newFrame.spending = this.state.frame.spending.plus(t.amount);
-            newFrame.categories = newFrame.categories.map(c => {
-                if (c.id == t.category) {
-                    const newBalance = c.balance.minus(t.amount);
-                    return { ...c, balance: newBalance };
-                }
-                return c;
-            });
-        } else if (t.frame < this.state.frame.index) {
-            newFrame.balance = this.state.frame.balance.minus(t.amount);
-        }
-        const transactions = [...this.state.transactions, t];
-        const debts = { ...this.state.debts };
-        if (t.split) {
-            const prevBalance = debts[t.split.with.email].balance || Money.Zero;
-            debts[t.split.with.email] = {
-                balance: prevBalance.plus(getBalanceDelta(this.state.me.uid, null, t)),
-                payments: debts[t.split.with.email].payments,
+    private categoryHistorySpending = (
+        history: { [c: string]: Array<{ budget: Money, spending: Money }> },
+        cid: CategoryId) => {
+        return history[cid][history[cid].length - 1].spending;
+    }
+
+    private newCategoryHistory = (
+        history: { [c: string]: Array<{ budget: Money, spending: Money }> },
+        cid: CategoryId, spending: Money | null, budget: Money | null) => {
+        const newHistory = { ...history };
+        newHistory[cid] = [...history[cid]];
+        const prev = newHistory[cid][newHistory[cid].length - 1];
+        newHistory[cid][newHistory[cid].length - 1] = {
+            spending: spending || prev.spending,
+            budget: budget || prev.budget,
+        };
+        return newHistory;
+    }
+
+    private onAddTransaction(t: Transaction) {
+        this.setState(({ frame, debts, transactions, me, history }) => {
+            const newFrame = { ...frame };
+            let newHistory = history;
+            if (t.frame === frame.index) {
+                newFrame.balance = frame.balance.minus(t.amount);
+                newFrame.spending = frame.spending.plus(t.amount);
+                newFrame.categories = newFrame.categories.map((c) => {
+                    if (c.id === t.category) {
+                        const newBalance = c.balance.minus(t.amount);
+                        const newSpending = this.categoryHistorySpending(history, c.id).plus(t.amount);
+                        newHistory = this.newCategoryHistory(history, c.id, newSpending, null);
+                        return { ...c, balance: newBalance };
+                    }
+                    return c;
+                });
+            } else if (t.frame < frame.index) {
+                newFrame.balance = frame.balance.minus(t.amount);
+            }
+            if (t.category && t.frame + 6 >= frame.index) {
+                // needs to update in the history
+                const newCatHistory = [...history[t.category]];
+                const index = this.historyIndex(newCatHistory, frame.index, t.frame);
+                newCatHistory[index] = {
+                    budget: newCatHistory[index].budget,
+                    spending: newCatHistory[index].spending.plus(t.amount),
+                };
+                newHistory[t.category] = newCatHistory;
+            }
+            const newTransactions = [...transactions, t];
+            const newDebts = { ...debts };
+            if (t.split) {
+                const prevBalance = debts[t.split.with.email].balance || Money.Zero;
+                debts[t.split.with.email] = {
+                    balance: prevBalance.plus(getBalanceDelta(me.uid, null, t)),
+                    payments: debts[t.split.with.email].payments,
+                };
+            }
+            return {
+                frame: newFrame,
+                transactions: newTransactions,
+                debts: newDebts,
+                history: newHistory,
             };
-        }
-        this.setState({
-            frame: newFrame,
-            transactions, debts
         });
+    }
+
+    private historyIndex = (history: any[], current: FrameIndex, target: FrameIndex) => {
+        const frameIndexDelta = current - target;
+        return history.length - 1 - frameIndexDelta;
     }
 
     onUpdateTransaction(t: Transaction) {
@@ -190,28 +234,43 @@ export default class Frame extends React.Component<FrameProps, FrameState> {
         this.setState({ transactions, frame: newFrame, debts });
     }
 
+    // Note: you can only delete a transaction that's for the current frame.
     onDeleteTransaction(id: TransactionId) {
-        const transaction = this.state.transactions.filter(otherT => otherT.id == id)[0];
-        const transactions = this.state.transactions.filter(t => t.id != id);
-        const frame = {
-            ...this.state.frame, categories:
-                this.state.frame.categories.map(category => {
-                    if (transaction.category == category.id) {
-                        return { ...category, balance: category.balance.plus(transaction.amount) };
-                    }
-                    return category;
-                })
-        };
-        const debts = { ...this.state.debts };
-        if (transaction.split) {
-            const prevBalance = debts[transaction.split.with.email].balance || Money.Zero;
-            debts[transaction.split.with.email] = {
-                balance: prevBalance.plus(getBalanceDelta(this.state.me.uid, transaction, null)),
-                payments: debts[transaction.split.with.email].payments,
+        this.setState(({ transactions, frame, debts, history, me }) => {
+            const transaction = transactions.filter(otherT => otherT.id == id)[0];
+            const newTransactions = transactions.filter(t => t.id != id);
+            const newFrame = {
+                ...frame, categories:
+                    frame.categories.map(category => {
+                        if (transaction.category == category.id) {
+                            return { ...category, balance: category.balance.plus(transaction.amount) };
+                        }
+                        return category;
+                    }),
             };
-            this.setState({ debts });
-        }
-        this.setState({ transactions, frame, debts });
+            const newDebts = { ...debts };
+
+            const newHistory = transaction.category ?
+                this.newCategoryHistory(
+                    history,
+                    transaction.category,
+                    this.categoryHistorySpending(history, transaction.category).minus(transaction.amount),
+                    null)
+                : history;
+            if (transaction.split) {
+                const prevBalance = debts[transaction.split.with.email].balance || Money.Zero;
+                newDebts[transaction.split.with.email] = {
+                    balance: prevBalance.plus(getBalanceDelta(me.uid, transaction, null)),
+                    payments: debts[transaction.split.with.email].payments,
+                };
+            }
+            return {
+                transactions: newTransactions,
+                frame: newFrame,
+                debts: newDebts,
+                history: newHistory,
+            };
+        });
     }
 
     onChangeIncome(event: React.ChangeEvent<HTMLInputElement>): void {

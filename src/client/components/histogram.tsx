@@ -9,17 +9,7 @@ export const Histogram: React.SFC<{
     height: number,
     className?: string,
 }> = (props) => {
-    let { data } = props;
-    const { month, height, className } = props;
-
-    // Strip off old data that's all 0's [i.e. before category existed]
-    while (
-        data.length > 0
-        && data[0].budget.cmp(Money.Zero) === 0
-        && data[0].spending.cmp(Money.Zero) === 0
-    ) {
-        data = data.slice(1);
-    }
+    const { month, data, height, className } = props;
 
     if (data.length === 0) {
         return null;
@@ -55,7 +45,7 @@ export const Histogram: React.SFC<{
         if (spending.cmp(budget) > 0) {
             color = "red";
         }
-        return <div className="histogram-item" key={`${monthName(i)}`}>
+        return <div className="histogram-item" key={`${budget.string()}-${spending.string()}-${monthName(i)}`}>
             <div className="histogram-bars">
                 <div className="histogram-bar-total spending" style={{ height: height - 20 }}>
                     <div className={`histogram-bar-filled ${color}`} style={{ height: `${heightPct(spending)}%` }} />

@@ -12,9 +12,7 @@ export const ProgressBar: React.SFC<{
     className?: string,
 }> = (props) => {
     let pct = props.amount.dividedBy(props.total).times(new Money(100)).string();
-    console.log(pct);
     let className = "green";
-    console.log(props.total.minus(props.amount).cmp(new Money(1)));
     if (props.total.cmp(Money.Zero) === 0 && props.amount.cmp(Money.Zero) === 0) {
         // 0 out of 0 is 0, not 100.
         pct = "0";
@@ -31,7 +29,6 @@ export const ProgressBar: React.SFC<{
     const useGauge = frames.index(now.getMonth(), now.getFullYear()) === props.frame;
     if (useGauge) {
         const gaugePct = 100 * Math.min(now.getDate(), 30) / 30;
-        console.log(`100 * max(${now.getDate()}, 30) / 30 = ${gaugePct}`);
         let style: React.CSSProperties = {
             left: `${gaugePct}%`,
             borderLeftWidth: 2,
