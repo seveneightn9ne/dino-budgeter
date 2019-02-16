@@ -192,38 +192,62 @@ export default class Frame extends React.Component<FrameProps, FrameState> {
     }
 
     private onUpdateTransaction(t: Transaction) {
-        this.setState(({ transactions, frame, me, debts }) => {
+        this.setState(({ transactions, frame, me, debts, history }) => {
             const oldTransaction = transactions.filter((otherT) => otherT.id === t.id)[0];
             let newFrame = frame;
-            if (oldTransaction.category !== t.category) {
-                const newCategories = frame.categories.map((c) => {
-                    // Remove the old transaction amount from the old category
-                    if (c.id === oldTransaction.category) {
-                        return { ...c, balance: c.balance.plus(oldTransaction.amount) };
-                    }
-                    // Add the new transaction amount to the new category
-                    if (c.id === t.category) {
-                        return { ...c, balance: c.balance.minus(t.amount) };
-                    }
-                    return c;
-                });
-                newFrame = { ...frame, categories: newCategories };
-            } else if (t.category && oldTransaction.amount !== t.amount) {
-                // Update the category balance
-                const newCategories = frame.categories.map((c) => {
-                    if (c.id === t.category) {
-                        return { ...c, balance: c.balance.plus(oldTransaction.amount).minus(t.amount) };
-                    }
-                    return c;
-                });
-                newFrame = { ...frame, categories: newCategories };
-            }
-            const newTransactions = transactions.map((otherT) => {
-                if (t.id === otherT.id) {
-                    return t;
+            let newTransactions = transactions;
+            const newHistory = { ...history };
+            if (t.frame === frame.index) {
+                if (oldTransaction.category !== t.category) {
+                    const newCategories = frame.categories.map((c) => {
+                        // Remove the old transaction amount from the old category
+                        if (c.id === oldTransaction.category) {
+                            return { ...c, balance: c.balance.plus(oldTransaction.amount) };
+                        }
+                        // Add the new transaction amount to the new category
+                        if (c.id === t.category) {
+                            return { ...c, balance: c.balance.minus(t.amount) };
+                        }
+                        return c;
+                    });
+                    newFrame = { ...frame, categories: newCategories };
+                } else if (t.category && oldTransaction.amount.cmp(t.amount) !== 0) {
+                    // Update the category balance
+                    const newCategories = frame.categories.map((c) => {
+                        if (c.id === t.category) {
+                            return { ...c, balance: c.balance.plus(oldTransaction.amount).minus(t.amount) };
+                        }
+                        return c;
+                    });
+                    newFrame = { ...frame, categories: newCategories };
                 }
-                return otherT;
-            });
+                newTransactions = transactions.map((otherT) => {
+                    if (t.id === otherT.id) {
+                        return t;
+                    }
+                    return otherT;
+                });
+            }
+            if (oldTransaction.category) {
+                // Remove from old category's history
+                const newCatHistory = [...newHistory[oldTransaction.category]];
+                const index = this.historyIndex(newCatHistory, frame.index, oldTransaction.frame);
+                newCatHistory[index] = {
+                    budget: newCatHistory[index].budget,
+                    spending: newCatHistory[index].spending.minus(oldTransaction.amount),
+                };
+                newHistory[oldTransaction.category] = newCatHistory;
+            }
+            if (t.category) {
+                // Add to new category's history
+                const newCatHistory = [...newHistory[t.category]];
+                const index = this.historyIndex(newCatHistory, frame.index, t.frame);
+                newCatHistory[index] = {
+                    budget: newCatHistory[index].budget,
+                    spending: newCatHistory[index].spending.plus(t.amount),
+                };
+                newHistory[t.category] = newCatHistory;
+            }
             const newDebts = { ...debts };
             if (t.split) {
                 const prevBalance = debts[t.split.with.email].balance || Money.Zero;
@@ -236,6 +260,7 @@ export default class Frame extends React.Component<FrameProps, FrameState> {
                 transactions: newTransactions,
                 frame: newFrame,
                 debts: newDebts,
+                history: newHistory,
             };
         });
     }
