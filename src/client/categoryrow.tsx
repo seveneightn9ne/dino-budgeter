@@ -155,7 +155,7 @@ export default class CategoryRow extends React.Component<CategoryRowProps, Categ
             amount={spending}
             total={this.props.category.budget}
             frame={this.props.category.frame}
-            height={10}
+            small={true}
         />;
 
         return <tr key={this.props.category.id} className="hoverable category-row" onClick={this.onClick}>

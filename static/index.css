@@ -767,12 +767,20 @@ input.center {
     /*overflow: hidden;*/
 }
 
+.progress-bar.small {
+    border-width: 0;
+}
+
 .progress-bar .progress {
     background-color: #7be84c;
     height: 100%;
     overflow: visible;
     white-space: nowrap;
     min-width: 2px;
+}
+
+.progress-bar.small .progress {
+    min-width: 0px;
 }
 
 .progress-bar.green .progress {
@@ -809,18 +817,6 @@ input.center {
 /*.progress-bar:hover {
     overflow: visible;
 }*/
-
-.progress-td .progress-bar {
-    overflow: hidden;
-}
-
-.progress-td .progress-gauge {
-    border-color: #555;
-}
-
-.progress-td .progress-bar:hover {
-    overflow: visible;
-}
 
 .histogram-bar-filled {
     background-color: #7c4dff;

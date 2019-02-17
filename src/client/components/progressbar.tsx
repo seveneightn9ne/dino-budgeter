@@ -7,12 +7,13 @@ import { FrameIndex } from "../../shared/types";
 export const ProgressBar: React.SFC<{
     amount: Money,
     total: Money,
-    height: number,
     frame: FrameIndex,
     className?: string,
+    small?: boolean,
 }> = (props) => {
     let pct = props.amount.dividedBy(props.total).times(new Money(100)).string();
     let className = "green";
+    const height = props.small ? 10 : 20;
     if (props.total.cmp(Money.Zero) === 0 && props.amount.cmp(Money.Zero) === 0) {
         // 0 out of 0 is 0, not 100.
         pct = "0";
@@ -29,28 +30,33 @@ export const ProgressBar: React.SFC<{
     const useGauge = frames.index(now.getMonth(), now.getFullYear()) === props.frame;
     if (useGauge) {
         const gaugePct = 100 * Math.min(now.getDate(), 30) / 30;
-        let style: React.CSSProperties = {
-            left: `${gaugePct}%`,
-            borderLeftWidth: 2,
-        };
-        const width = props.height > 10 ? 2 : 1;
-        if (gaugePct > 50) {
-            style = {
-                right: `${100 - gaugePct}%`,
-                borderRightWidth: width,
-            };
-        }
         if (className === "green" && gaugePct < Number(pct)) {
             className = "yellow";
         }
-        style.paddingTop = props.height + 3;
-        gauge = <div className="progress-gauge" style={style}>today</div>;
+        if (!props.small) {
+            let style: React.CSSProperties = {
+                left: `${gaugePct}%`,
+                borderLeftWidth: 2,
+            };
+            const width = props.small ? 0 : 2;
+            if (gaugePct > 50) {
+                style = {
+                    right: `${100 - gaugePct}%`,
+                    borderRightWidth: width,
+                };
+            }
+            style.paddingTop = height + 3;
+            gauge = <div className="progress-gauge" style={style}>today</div>;
+        }
     }
-    const hoverText = `${props.amount.formatted()} / ${props.total.formatted()}`;
-    return <div className={`progress-bar ${className} ${props.className || ""}`} style={{ height: props.height }}>
+    if (props.small) {
+        className += " small";
+    }
+    // const hoverText = `${props.amount.formatted()} / ${props.total.formatted()}`;
+    return <div className={`progress-bar ${className} ${props.className || ""}`} style={{ height }}>
         <div className="progress" style={{ width: `${pct}%` }}>
-            <span className="progress-text">{hoverText}</span>
+            {/*<span className="progress-text">{hoverText}</span>*/}
             {gauge}
         </div>
     </div>;
-}
+};

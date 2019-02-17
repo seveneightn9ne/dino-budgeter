@@ -86,7 +86,6 @@ const CategoryPage: React.SFC<Props> = (props) => {
         <ProgressBar
             amount={spending}
             total={category.budget}
-            height={20}
             frame={props.frame.index}
             className="category-page-progress"
         />
