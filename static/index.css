@@ -67,6 +67,11 @@ h1 {
     padding-bottom: 20px;
 }
 
+h1 .title {
+    color: inherit;
+    text-decoration: none;
+}
+
 .framenav {
     font-size: 22px;
     text-decoration: none;

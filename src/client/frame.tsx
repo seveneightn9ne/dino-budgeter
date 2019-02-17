@@ -409,7 +409,11 @@ export default class Frame extends React.Component<FrameProps, FrameState> {
         </nav></DesktopOnly>;
         return <div>
             <header><div className="inner">
-                <h1>{prevButton}{this.monthName() + " " + this.year()}{nextButton}</h1>
+                <h1>
+                    {prevButton}
+                    <Link to={appPrefix} className="title">{this.monthName() + " " + this.year()}</Link>
+                    {nextButton}
+                </h1>
                 {nav}
             </div></header>
             <main>
