@@ -48,6 +48,10 @@ main {
     margin-bottom: 100px;
 }
 
+main.home {
+    max-width: 1500px;
+}
+
 header {
     padding-top: 20px;
     border-bottom: 1px solid #e9e3f9;
@@ -620,24 +624,44 @@ input.center {
 
 /* home, signup, login page */
 
-.login form {
-    width: 300px;
+.login form, .signup form {
     margin: 20px 0;
     font-size: 16px;
 }
 
-.login form>div {
+.login form>div, .signup form>div {
     margin-bottom: 20px;
 }
 
-.login .button {
+.login .button, .signup .button {
     margin: 40px 0;
-    display: block;
     width: 150px;
+}
+
+.home, .login, .signup {
+    text-align: center;
 }
 
 .home div {
     margin-top: 20px;
+}
+
+.home p {
+    padding-bottom: 20px;
+}
+
+.home .images {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.home .images img {
+    display: block;
+    box-shadow: 1px 1px 5px #aaa;
+    border-radius: 4px;
+    padding: 5px;
+    margin: 20px;
 }
 
 /* account page */

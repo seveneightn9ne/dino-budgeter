@@ -91,6 +91,7 @@ app.use(serveStatic(path.join(__dirname, "../../node_modules/react/umd")));
 app.use(serveStatic(path.join(__dirname, "../../node_modules/react-dom/umd")));
 app.use(serveStatic(path.join(__dirname, "../../static/RobotoMono")));
 app.use(serveStatic(path.join(__dirname, "../../static/fontawesome")));
+app.use(serveStatic(path.join(__dirname, "../../static/images")));
 app.get("/index.css", serveStatic(path.join(__dirname, "../../static/")));
 app.get("/fontawesome-all.css", serveStatic(path.join(__dirname, "../../static/")));
 
