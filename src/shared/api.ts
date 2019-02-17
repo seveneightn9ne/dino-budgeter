@@ -8,20 +8,20 @@ function sNumber(): SchemaField<number> {
             return val;
         }
         throw new Error("Field " + key + " must be a number");
-    }
+    };
 }
 
 function sString(opts: { nonEmpty?: boolean } = {}): SchemaField<string> {
     const { nonEmpty } = opts;
     return (key: string, val: any): string => {
         if (typeof val === "string") {
-            if (nonEmpty && val.length == 0) {
+            if (nonEmpty && val.length === 0) {
                 throw new Error("Field " + key + " cannot be an empty string");
             }
             return val;
         }
         throw new Error("Field " + key + " must be a string");
-    }
+    };
 }
 
 function sLiteral<S extends string>(literal: S): SchemaField<S> {
@@ -30,7 +30,7 @@ function sLiteral<S extends string>(literal: S): SchemaField<S> {
             throw new Error("Field " + key + " must be " + literal);
         }
         return literal;
-    }
+    };
     return f as SchemaField<S>;
 
 }
@@ -41,7 +41,7 @@ function sNull(): SchemaField<null> {
             throw new Error("Field " + key + " must be null");
         }
         return null;
-    }
+    };
 }
 
 function sBoolean(opts?: { val?: boolean }): SchemaField<boolean> {
@@ -53,7 +53,7 @@ function sBoolean(opts?: { val?: boolean }): SchemaField<boolean> {
             return val;
         }
         throw new Error("Field " + key + " must be a boolean");
-    }
+    };
     return f as SchemaField<boolean>;
 }
 
@@ -64,7 +64,7 @@ function sDate(): SchemaField<Date> {
             throw new Error("Field " + key + " must be a date");
         }
         return date;
-    }
+    };
 }
 
 function sMoney(opts: { nonNegative?: boolean } = {}): SchemaField<Money> {
@@ -75,7 +75,7 @@ function sMoney(opts: { nonNegative?: boolean } = {}): SchemaField<Money> {
             return money;
         }
         throw new Error("Field " + key + " must be a Money");
-    }
+    };
 }
 
 function sShare(opts: { nonNegative?: boolean } = {}): SchemaField<Share> {
@@ -86,7 +86,7 @@ function sShare(opts: { nonNegative?: boolean } = {}): SchemaField<Share> {
             return share;
         }
         throw new Error("Field " + key + " must be a Share");
-    }
+    };
 }
 
 function sOptional<T extends RequestField>(schema: SchemaField<T>): SchemaBase<T> {
@@ -95,7 +95,7 @@ function sOptional<T extends RequestField>(schema: SchemaField<T>): SchemaBase<T
             return undefined;
         }
         return validateSchemaField(schema, key, val);
-    }
+    };
 }
 
 function sValues<T extends RequestField>(schema: SchemaField<T>): SchemaBase<{ [k: string]: T }> {
@@ -106,17 +106,18 @@ function sValues<T extends RequestField>(schema: SchemaField<T>): SchemaBase<{ [
         return _.mapValues(val, (innerVal, innerKey) => {
             return validateSchemaField(schema, keyConcat(key, innerKey), innerVal);
         });
-    }
+    };
 }
 
-function sOr<A extends RequestField, B extends RequestField>(s1: SchemaField<A>, s2: SchemaField<B>): SchemaBase<A | B> {
+function sOr<A extends RequestField, B extends RequestField>(
+    s1: SchemaField<A>, s2: SchemaField<B>): SchemaBase<A | B> {
     return (key: string, val: any): A | B => {
         try {
             return validateSchemaField(s1, key, val);
         } catch {
             return validateSchemaField(s2, key, val);
         }
-    }
+    };
 }
 
 function sBaseArray<T>(innerType: SchemaBase<T>): SchemaBase<T[]> {
@@ -137,11 +138,10 @@ function sArray<T>(innerType: SchemaField<T>): SchemaBase<T[]> {
     };
 }
 
-
 type RequestBaseType = string | number | boolean | Date | Money | Share;
 type RequestBase = RequestBaseType | RequestBaseType[];
 type RequestField = RequestBase | object;
-export type RequestType = {
+export interface RequestType {
     [key: string]: RequestField;
 }
 
@@ -149,7 +149,7 @@ type SchemaBase<T> = (k: string, v: any) => T;
 type SchemaField<T> = T extends object ? (SchemaType<T> | SchemaBase<T>) : SchemaBase<T>;
 export type SchemaType<R extends object> = {
     [P in keyof R]: SchemaField<R[P]>;
-}
+};
 
 function maybeGetSchemaType<T>(s: SchemaField<T>): T extends object ? SchemaType<T> : undefined {
     if (_.isPlainObject(s)) {
@@ -175,7 +175,8 @@ function validateSchemaField<T>(schema: SchemaField<T>, key: string, val: any): 
     throw Error("impossible for schema to be neither");
 }
 // validates the object recursively
-function validateSchema<Request extends (object | null)>(schema: SchemaType<Request>, obj: any, key: string = ""): Request {
+function validateSchema<Request extends (object | null)>(
+    schema: SchemaType<Request>, obj: any, key: string = ""): Request {
     if (schema == null) {
         if (obj != null) {
             throw new Error("Object " + key + " must be null");
@@ -185,9 +186,9 @@ function validateSchema<Request extends (object | null)>(schema: SchemaType<Requ
     if (!_.isPlainObject(obj)) {
         throw Error("Object " + key + " must be an object");
     }
-    _.forOwn(obj, (_, key) => {
-        if (!(key in schema)) {
-            throw Error("Extraneous field " + key);
+    _.forOwn(obj, (_v, field) => {
+        if (!(field in schema)) {
+            throw Error("Extraneous field " + field);
         }
     });
     return _.mapValues(schema, (s, f) => validateSchemaField(s, keyConcat(key, f), obj[f])) as Request;
@@ -204,7 +205,7 @@ export class API2<Request extends object, R2 extends object | null> {
      * Throws an error when the request does not match the schema.
      */
     public reviveRequest(request: string): Request {
-        if (request == '') {
+        if (request === "") {
             request = JSON.stringify(EmptyResponseValue);
         }
         try {
@@ -216,7 +217,7 @@ export class API2<Request extends object, R2 extends object | null> {
     }
 
     public reviveResponse(response: string): R2 {
-        if (response == '') {
+        if (response === "") {
             response = JSON.stringify(EmptyResponseValue);
         }
         try {
@@ -262,7 +263,7 @@ const frameSchema: SchemaType<Frame> = {
     ghost: sBoolean(),
     categories: sOptional(sArray(categorySchema)),
     balance: sOptional(sMoney()),
-    spending: sOptional(sMoney())
+    spending: sOptional(sMoney()),
 }
 const paymentSchema: SchemaType<PaymentType> = {
     type: sLiteral('payment'),

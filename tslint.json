@@ -1,6 +1,6 @@
 {
     "extends": [
-        "tslint:latest",
+        "tslint:recommended",
         "tslint-react",
         "tslint-react-hooks"
     ],
@@ -18,6 +18,13 @@
         "jsx-wrap-multiline": false,
         "max-classes-per-file": false,
         "member-ordering": false,
-        "no-object-literal-type-assertion": false
+        "no-object-literal-type-assertion": false,
+        "variable-name": [
+            true,
+            "ban-keywords",
+            "check-format",
+            "allow-pascal-case",
+            "allow-leading-underscore"
+        ]
     }
 }
