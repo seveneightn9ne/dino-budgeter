@@ -319,10 +319,10 @@ export default class TxEntry extends React.Component<Props, TxEntryState> {
         // You can remove a split iff it's a new transaction.
         const closeButton = isUpdate(this.props) ? null : <span className="close clickable fa-times fas" onClick={this.closeSplitSection} />;
         return <div>
-            <label>Split with:
+            <label>Split with:{" "}
                 {isUpdate(this.props) ? (this.props.transaction.split.with.name || this.props.transaction.split.with.email) :
                     <select onChange={util.cc(this, "splitWith")} value={this.state.splitWith}>
-                        {this.props.friends.map(f => <option key={f.uid}>{f.email}</option>)}
+                        {this.props.friends.map(f => <option key={f.uid}>{f.name || f.email}</option>)}
                     </select>
                 }
                 {closeButton}
