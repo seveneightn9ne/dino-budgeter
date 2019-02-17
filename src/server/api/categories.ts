@@ -1,14 +1,15 @@
+import { AddCategory, ApiRequest, CategoryBudget, CategoryName, DeleteCategory, EmptyResponse } from "../../shared/api";
 import Money from "../../shared/Money";
 import { Category, User } from "../../shared/types";
 import * as util from "../../shared/util";
-import { Response, ErrorResponse } from "../api";
+import { ErrorResponse, Response } from "../api";
 import * as categories from "../categories";
 import db from "../db";
-import * as user from "../user";
 import * as frames from "../frames";
-import { ApiRequest, AddCategory, DeleteCategory, CategoryBudget, CategoryName, EmptyResponse } from "../../shared/api";
+import * as user from "../user";
 
-export function handle_category_post(request: ApiRequest<typeof AddCategory>, actor: User): Promise<Response<Category>> {
+export function handle_category_post(
+    request: ApiRequest<typeof AddCategory>, actor: User): Promise<Response<Category>> {
     const c: Category = {
         frame: request.frame,
         name: request.name,
@@ -21,7 +22,7 @@ export function handle_category_post(request: ApiRequest<typeof AddCategory>, ac
         gid: undefined,
         ordering: undefined,
     };
-    return db.tx(async t => {
+    return db.tx(async (t) => {
         c.gid = await user.getDefaultGroup(actor, t);
         c.ordering = await categories.getNextOrdinal(c.gid, c.frame, t);
         await frames.markNotGhost(c.gid, c.frame, t);
@@ -32,9 +33,10 @@ export function handle_category_post(request: ApiRequest<typeof AddCategory>, ac
     });
 }
 
-export function handle_category_delete(request: ApiRequest<typeof DeleteCategory>, actor: User): Promise<Response<EmptyResponse>> {
-    const {id, frame} = request;
-    return db.tx(async t => {
+export function handle_category_delete(
+    request: ApiRequest<typeof DeleteCategory>, actor: User): Promise<Response<EmptyResponse>> {
+    const { id, frame } = request;
+    return db.tx(async (t) => {
         const row = await t.oneOrNone("select * from categories where id = $1 and frame = $2", [id, frame]);
         if (!row) {
             return {
@@ -57,9 +59,10 @@ export function handle_category_delete(request: ApiRequest<typeof DeleteCategory
     });
 }
 
-export function handle_category_budget_post(request: ApiRequest<typeof CategoryBudget>, actor: User): Promise<Response<EmptyResponse>> {
-    const {id, frame, amount} = request;
-    return db.tx(async t => {
+export function handle_category_budget_post(
+    request: ApiRequest<typeof CategoryBudget>, actor: User): Promise<Response<EmptyResponse>> {
+    const { id, frame, amount } = request;
+    return db.tx(async (t) => {
         const gid = await user.getDefaultGroup(actor, t);
         await frames.markNotGhost(gid, request.frame, t);
         // gid included to make sure user has permission to edit this category
@@ -70,9 +73,10 @@ export function handle_category_budget_post(request: ApiRequest<typeof CategoryB
     });
 }
 
-export function handle_category_name_post(request: ApiRequest<typeof CategoryName>, actor: User): Promise<Response<EmptyResponse>> {
-    const {id, frame, name} = request;
-    return db.tx(async t => {
+export function handle_category_name_post(
+    request: ApiRequest<typeof CategoryName>, actor: User): Promise<Response<EmptyResponse>> {
+    const { id, frame, name } = request;
+    return db.tx(async (t) => {
         const gid = await user.getDefaultGroup(actor, t);
         await frames.markNotGhost(gid, request.frame, t);
         // gid included to make sure user has permission to edit this category
