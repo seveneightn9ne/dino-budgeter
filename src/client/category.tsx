@@ -126,7 +126,7 @@ const histogramData = (h: Array<{ budget: Money, spending: Money }>, s: number) 
         data = data.slice(1);
     }
     return data;
-}
+};
 
 const onUpdateBudget = (onChangeCategory: (c: Category) => void, category: Category) => (newBudget: Money) => {
     const newCategory = { ...category };
@@ -134,6 +134,6 @@ const onUpdateBudget = (onChangeCategory: (c: Category) => void, category: Categ
     newCategory.balance = categories.updateBalanceWithBudget(
         category, newBudget);
     onChangeCategory(newCategory);
-}
+};
 
 export default CategoryPage;

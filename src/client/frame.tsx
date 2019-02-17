@@ -115,7 +115,7 @@ export default class Frame extends React.Component<FrameProps, FrameState> {
             });
             newFrame.categories = newCategories;
             const budgeted = this.calculateBudgeted(newCategories);
-            const newHistory = this.newCategoryHistory(history, newCategory.id, null, budgeted);
+            const newHistory = this.newCategoryHistory(history, newCategory.id, null, newCategory.budget);
             return { frame: newFrame, budgeted, history: newHistory };
         });
     }
