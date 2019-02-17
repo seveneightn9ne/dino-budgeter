@@ -1,9 +1,9 @@
 import _ from "lodash";
 import pgPromise from "pg-promise";
 import Money from "../shared/Money";
-import { Friend, GroupId, User, UserId, Payment, Charge } from "../shared/types";
-import * as payments from "./payments";
+import { Charge, Friend, GroupId, Payment, User, UserId, UserSettings } from "../shared/types";
 import db from "./db";
+import * as payments from "./payments";
 
 export function getGroups(user: User | UserId, t?: pgPromise.ITask<{}>): Promise<GroupId[]> {
     return t ? getGroupsInner(user, t) : db.task(t => getGroupsInner(user, t));
@@ -34,12 +34,12 @@ export async function getUserByEmail(email: string, t: pgPromise.ITask<{}>): Pro
 
 export async function getFriendByEmail(email: string, t: pgPromise.ITask<{}>): Promise<Friend | null> {
     const row = await t.oneOrNone("select U.uid, U.name, M.gid from users U left join membership M on U.uid = M.uid where U.email = $1", [email]);
-    return row ? {uid: row.uid, gid: row.gid, email, name: row.name} : null;
+    return row ? { uid: row.uid, gid: row.gid, email, name: row.name } : null;
 }
 
 export async function getFriend(uid: UserId, t: pgPromise.ITask<{}>): Promise<Friend | null> {
     const row = await t.oneOrNone("select U.email, U.name, M.gid from users U left join membership M on U.uid = M.uid where U.uid = $1", [uid]);
-    return row ? {uid: uid, gid: row.gid, email: row.email, name: row.name} : null;
+    return row ? { uid: uid, gid: row.gid, email: row.email, name: row.name } : null;
 }
 
 export async function getEmail(user: UserId, t: pgPromise.ITask<{}>): Promise<string> {
@@ -124,14 +124,15 @@ export async function isFriend(u1: UserId, u2: UserId, t: pgPromise.ITask<{}>): 
 }
 
 /** Amounts that user owes each friend. Negative means the friend owes the user. */
-export async function getDebts(user: UserId, t: pgPromise.ITask<{}>): Promise<{[email: string]: {balance: Money, payments: (Payment|Charge)[]}}> {
+export async function getDebts(user: UserId, t: pgPromise.ITask<{}>):
+    Promise<{ [email: string]: { balance: Money, payments: (Payment | Charge)[] } }> {
     const uidToDebts = _.mapValues(await payments.getBalances(user, t), (amount, u2) => {
         const u1 = [user, u2].sort()[0];
         return u1 == user ? amount : amount.negate();
     });
     const uids = _.keys(uidToDebts);
     const emails = await getEmails(uids, t);
-    const ret: {[email: string]: {balance: Money, payments: (Payment|Charge)[]}} = {};
+    const ret: { [email: string]: { balance: Money, payments: (Payment | Charge)[] } } = {};
     for (let i = 0; i < uids.length; i++) {
         ret[emails[i]] = {
             balance: uidToDebts[uids[i]],
@@ -139,4 +140,21 @@ export async function getDebts(user: UserId, t: pgPromise.ITask<{}>): Promise<{[
         }
     }
     return ret;
+}
+
+export async function getSettings(user: UserId, t: pgPromise.ITask<{}>): Promise<UserSettings> {
+    const row = await t.one("select settings from users where uid = $1", [user]);
+    return row.settings;
+}
+
+// XXX gets the user settings for the first user in the group
+export async function getGroupSettings(group: GroupId, t: pgPromise.ITask<{}>): Promise<UserSettings> {
+    const row = await t.one(`select U.settings from users U
+        left join membership M on U.uid = M.uid
+        where M.gid = $1 limit 1`, [group]);
+    return row.settings;
+}
+
+export async function setSettings(user: UserId, settings: UserSettings, t: pgPromise.ITask<{}>): Promise<void> {
+    return t.none("update users set settings = $1 where uid = $2", [settings, user]);
 }

@@ -1,16 +1,16 @@
 import bcrypt from "bcrypt";
 import { Request, Response } from "express";
 import passport from "passport";
-import {Strategy as LocalStrategy } from "passport-local";
+import { Strategy as LocalStrategy } from "passport-local";
 import { User } from "../shared/types";
 import { randomId } from "../shared/util";
 import db from "./db";
 
-passport.serializeUser(function(user: User, cb) {
+passport.serializeUser(function (user: User, cb) {
     cb(null, user.uid);
 });
 
-passport.deserializeUser(function(id: string, cb) {
+passport.deserializeUser(function (id: string, cb) {
     db.one("select * from users where uid=$1", id)
         .then((row) => cb(null, row as User))
         .catch((error) => cb(error));
@@ -18,31 +18,32 @@ passport.deserializeUser(function(id: string, cb) {
 
 // Passport configuration
 passport.use(new LocalStrategy(
-  function(username, password, done) {
-    db.one("select * from users where email=$1", username)
-    .then((row) => {
-      if (bcrypt.compareSync(password, row.password_hash)) {
-        return done(null, row as User);
-      } else {
-          // TODO how to show the user the error message??
-        return done(null, false, {message: "Incorrect passowrd."});
-      }
-    })
-    .catch(() => {
-      return done(null, false, { message: "Incorrect username." });
-    });
-  }
+    function (username, password, done) {
+        db.one("select * from users where email=$1", username)
+            .then((row) => {
+                if (bcrypt.compareSync(password, row.password_hash)) {
+                    return done(null, row as User);
+                } else {
+                    // TODO how to show the user the error message??
+                    return done(null, false, { message: "Incorrect passowrd." });
+                }
+            })
+            .catch(() => {
+                return done(null, false, { message: "Incorrect username." });
+            });
+    }
 ));
 
-export const handle_login_post = function(req: Request, res: Response) {
+export const handle_login_post = function (req: Request, res: Response) {
     const successRedirect = req.body.redirect || "/app";
     console.log(successRedirect);
     passport.authenticate("local", {
         successRedirect,
-        failureRedirect: "/login/error"})(req, res);
+        failureRedirect: "/login/error",
+    })(req, res);
 }
 
-export const handle_signup_post = function(req: Request, res: Response) {
+export const handle_signup_post = function (req: Request, res: Response) {
     req.checkBody("username").isEmail();
     req.checkBody("password").notEmpty();
     const email = req.body.username;
@@ -65,12 +66,12 @@ export const handle_signup_post = function(req: Request, res: Response) {
             const password_hash = bcrypt.hashSync(password, 10);
             const user_id = randomId();
             const group_id = randomId();
-            db.tx(function * (t) {
+            db.tx(function* (t) {
                 yield t.none("insert into users values ($1, $2, $3)", [user_id, email, password_hash]);
                 yield t.none("insert into groups values ($1)", [group_id]);
                 yield t.none("insert into membership (uid, gid) values ($1, $2)", [user_id, group_id]);
             }).then(() => {
-                passport.authenticate("local", {successRedirect: "/app"})(req, res);
+                passport.authenticate("local", { successRedirect: "/app" })(req, res);
             });
         }
     });

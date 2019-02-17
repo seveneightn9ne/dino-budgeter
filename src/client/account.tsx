@@ -1,17 +1,18 @@
 import * as React from "react";
-import { Friend } from "../shared/types";
-import * as util from "./util";
-import { Name, AcceptFriend, RejectFriend, DeleteFriend } from "../shared/api";
-import {Link} from "react-router-dom";
+import { Link } from "react-router-dom";
+import { AcceptFriend, DeleteFriend, Name, RejectFriend, UpdateSettings } from "../shared/api";
+import { Friend, UserSettings } from "../shared/types";
 import { FadeCheck } from "./components/fadecheck";
+import * as util from "./util";
 
-interface Props {}
+interface Props { }
 
 interface InitializedState {
     me: Friend;
     friends: Friend[];
     pendingFriends: Friend[];
     invites: Friend[];
+    settings: UserSettings;
 }
 
 interface NonInitializedState {
@@ -21,9 +22,11 @@ interface NonInitializedState {
     name: string;
     lastSave: number;
     timers: number[];
+    rollover: boolean;
+    lastSaveRollover: number;
 }
 
-interface State extends Partial<InitializedState>, NonInitializedState {}
+interface State extends Partial<InitializedState>, NonInitializedState { }
 
 export default class Account extends React.Component<Props, State> {
 
@@ -33,18 +36,23 @@ export default class Account extends React.Component<Props, State> {
         name: "",
         lastSave: 0,
         timers: [],
+        rollover: false,
+        lastSaveRollover: 0,
     };
 
     componentDidMount() {
-        util.initializeState(this, 0, "friends", "pendingFriends", "me", "invites").then(() => {
-            this.setState({
-                name: this.state.me.name || this.state.me.email,
-            });
+        util.initializeState(this, 0, "friends", "pendingFriends", "me", "invites", "settings").then(() => {
+            console.log("init with rollover " + this.state.settings.rollover);
+            console.log("making state to " + !(this.state.settings.rollover === false));
+            this.setState(({ me, settings }) => ({
+                name: me.name || me.email,
+                rollover: !(settings.rollover === false), // defaults to true
+            }));
         });
     }
 
     onAddFriend(e: React.FormEvent) {
-        this.setState({addFriendError: ""});
+        this.setState({ addFriendError: "" });
         this.acceptFriend(this.state.addFriend, false);
         this.setState({
             addFriend: "",
@@ -56,15 +64,28 @@ export default class Account extends React.Component<Props, State> {
         const name = this.state.name;
         util.apiFetch({
             api: Name,
-            body: {name},
+            body: { name },
         }).then(() => {
-            this.setState(({me}) => ({
-                me: {...me, name},
+            this.setState(({ me }) => ({
+                me: { ...me, name },
                 name: name || me.email,
                 lastSave: Date.now(),
             }));
         });
         e.preventDefault();
+    }
+
+    private onSaveRollover = (rollover: boolean) => {
+        this.setState({ rollover });
+        util.apiFetch({
+            api: UpdateSettings,
+            body: { rollover },
+        }).then(() => {
+            this.setState(({ settings }) => ({
+                settings: { ...settings, rollover },
+                lastSaveRollover: Date.now(),
+            }));
+        });
     }
 
     isInitialized(state: State): state is (InitializedState & NonInitializedState) {
@@ -74,7 +95,7 @@ export default class Account extends React.Component<Props, State> {
     acceptFriend(email: string, wasInvited: boolean) {
         util.apiFetch({
             api: AcceptFriend,
-            body: {email},
+            body: { email },
         }).then((friend) => {
             if (wasInvited) {
                 // Invite -> Friend
@@ -90,7 +111,7 @@ export default class Account extends React.Component<Props, State> {
             }
         }).catch(e => {
             if (e == 404) {
-                this.setState({addFriendError: "That user does not exist."});
+                this.setState({ addFriendError: "That user does not exist." });
             } else {
                 throw e;
             }
@@ -101,7 +122,7 @@ export default class Account extends React.Component<Props, State> {
     rejectFriend(email: string) {
         util.apiFetch({
             api: RejectFriend,
-            body: {email},
+            body: { email },
         }).then(() => {
             const newInvites = this.state.invites.filter(i => i.email != email);
             const newFriends = this.state.friends.filter(f => f.email != email);
@@ -117,7 +138,7 @@ export default class Account extends React.Component<Props, State> {
     deleteFriend(email: string) {
         util.apiFetch({
             api: DeleteFriend,
-            body: {email},
+            body: { email },
         }).then(() => {
             const newInvites = this.state.invites.filter(i => i.email != email);
             const newFriends = this.state.friends.filter(f => f.email != email);
@@ -130,7 +151,57 @@ export default class Account extends React.Component<Props, State> {
         });
     }
 
-    render(): JSX.Element {
+    private onChangeRollover = (e: React.ChangeEvent<HTMLInputElement>) => {
+        this.onSaveRollover(e.target.checked);
+    }
+
+    private onChangeNoRollover = (e: React.ChangeEvent<HTMLInputElement>) => {
+        this.onSaveRollover(!e.target.checked);
+    }
+
+    private renderSettings(): JSX.Element {
+        const defaultName = this.state.me ? this.state.me.name || this.state.me.email : '';
+        const nameCls = this.state.name === defaultName ? "button secondary inline" : "button inline";
+        return <div>
+            <h2>Settings</h2>
+            <form onSubmit={this.onSaveName}>
+                <label>
+                    <b>Name</b> (shown to friends):{" "}
+                    <input type="text" value={this.state.name} onChange={util.cc(this, "name")} />
+                </label>{' '}
+                <input type="submit" value="Save" className={nameCls} />
+                <FadeCheck save={this.state.lastSave} />
+            </form>
+            <p>
+                <b>Rollover:</b> when there's money left over at the end of the month,{" "}
+                <FadeCheck save={this.state.lastSaveRollover} />
+            </p>
+            <form>
+                <label>
+                    <input
+                        type="radio"
+                        name="rollover"
+                        value="1"
+                        checked={this.state.rollover}
+                        onChange={this.onChangeRollover}
+                    />{" "}
+                    Roll over to the next month
+            </label><br />
+                <label>
+                    <input
+                        type="radio"
+                        name="rollover"
+                        value="0"
+                        checked={!this.state.rollover}
+                        onChange={this.onChangeNoRollover}
+                    />{" "}
+                    Ignore leftover money
+            </label>
+            </form>
+        </div>;
+    }
+
+    public render(): JSX.Element {
         if (!this.state.initialized) {
             return null;
         }
@@ -138,8 +209,8 @@ export default class Account extends React.Component<Props, State> {
             <span className="button inline secondary" onClick={() => this.deleteFriend(friend.email)}>Remove</span></li>);
 
         friends.push(...this.state.pendingFriends.map(friend => <li key={friend.uid}>{friend.email}{" "}
-                <span className="pending">(Pending)</span>{" "}
-                <span className="button inline secondary" onClick={() => this.rejectFriend(friend.email)}>Remove</span></li>));
+            <span className="pending">(Pending)</span>{" "}
+            <span className="button inline secondary" onClick={() => this.rejectFriend(friend.email)}>Remove</span></li>));
 
         let errorMessage;
         if (this.state.addFriendError) {
@@ -161,8 +232,6 @@ export default class Account extends React.Component<Props, State> {
 
             </div>;
         }
-        const defaultName = this.state.me ? this.state.me.name || this.state.me.email : '';
-        const nameCls = this.state.name === defaultName ? "button secondary inline" : "button inline";
         return <div>
             <header><div className="inner">
                 <h1>
@@ -171,23 +240,19 @@ export default class Account extends React.Component<Props, State> {
                 </h1>
             </div></header>
             <main className="account">
-            <p>{this.state.me.email}</p>
-            <form onSubmit={this.onSaveName}>
-            <label>Name (shown to friends): <input type="text" value={this.state.name} onChange={util.cc(this, "name")} /></label>{' '}
-            <input type="submit" value="Save" className={nameCls} />
-            <FadeCheck save={this.state.lastSave} />
-            </form>
-            {invites}
-            <h2>Friends</h2>
-            <ul>
-                {friends}
-            </ul>
-            <p>Add a friend by email. Once they confirm, you'll be able to split transactions with them.</p>
-            {errorMessage}
-            <form className="oneline" onSubmit={this.onAddFriend.bind(this)}>
-                <label>Email: <input type="email" value={this.state.addFriend} onChange={util.cc(this, "addFriend")} /></label>
-                <input type="submit" value="Request" className="button secondary" />
-            </form>
+                <p>{this.state.me.email}</p>
+                {invites}
+                {this.renderSettings()}
+                <h2>Friends</h2>
+                <ul>
+                    {friends}
+                </ul>
+                <p>Add a friend by email. Once they confirm, you'll be able to split transactions with them.</p>
+                {errorMessage}
+                <form className="oneline" onSubmit={this.onAddFriend.bind(this)}>
+                    <label>Email: <input type="email" value={this.state.addFriend} onChange={util.cc(this, "addFriend")} /></label>
+                    <input type="submit" value="Request" className="button secondary" />
+                </form>
             </main>
         </div>;
     }

@@ -1,12 +1,13 @@
 
 import { Request, Response as ExpressResponse } from "express";
-import { Response, ErrorResponse } from "../api";
+import _ from "lodash";
+import { ApiRequest, EmptyResponse, FriendRequest, Name, UpdateSettings } from "../../shared/api";
+import { Friend, User } from "../../shared/types";
+import { ErrorResponse, Response } from "../api";
 import db from "../db";
 import * as user from "../user";
-import { FriendRequest, ApiRequest, Name, EmptyResponse } from "../../shared/api";
-import { Friend, User } from "../../shared/types";
 
-export const handle_auth_redirect_get = function(_req: Request, res: ExpressResponse) {
+export const handle_auth_redirect_get = function (_req: Request, res: ExpressResponse) {
     res.sendStatus(401);
 };
 
@@ -55,6 +56,16 @@ export function handle_friend_delete(request: FriendRequest, actor: User): Promi
 export function handle_change_name_post(request: ApiRequest<typeof Name>, actor: User): Promise<Response<EmptyResponse>> {
     return db.tx(async t => {
         await user.setName(actor.uid, request.name, t);
+        return null;
+    });
+}
+
+export function handle_update_settings_post(
+    request: ApiRequest<typeof UpdateSettings>, actor: User): Promise<Response<EmptyResponse>> {
+    return db.tx(async (t) => {
+        const settings = await user.getSettings(actor.uid, t);
+        _.assignIn(settings, request);
+        await user.setSettings(actor.uid, settings, t);
         return null;
     });
 }

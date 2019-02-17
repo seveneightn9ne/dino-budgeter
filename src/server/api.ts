@@ -113,6 +113,9 @@ export async function handle_init_get(request: ApiRequest<typeof Initialize>, ac
         if (fields.has('history')) {
             resData.history = await categories.getHistory(await gid(), request.index, t);
         }
+        if (fields.has('settings')) {
+            resData.settings = await user.getSettings(actor.uid, t);
+        }
         return resData;
     });
 }

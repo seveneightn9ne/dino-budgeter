@@ -8,7 +8,7 @@ import morgan from "morgan";
 import passport from "passport";
 import path from "path";
 import serveStatic from "serve-static";
-import { AcceptFriend, AddCategory, AddTransaction, BudgetingMove, CategoryBudget, CategoryName, DeleteCategory, DeleteFriend, DeleteTransaction, Income, Initialize, Name, Payment, RejectFriend, TransactionAmount, TransactionCategory, TransactionDate, TransactionDescription, TransactionSplit } from '../shared/api';
+import { AcceptFriend, AddCategory, AddTransaction, BudgetingMove, CategoryBudget, CategoryName, DeleteCategory, DeleteFriend, DeleteTransaction, Income, Initialize, Name, Payment, RejectFriend, TransactionAmount, TransactionCategory, TransactionDate, TransactionDescription, TransactionSplit, UpdateSettings } from '../shared/api';
 import * as api from "./api";
 import * as categories from "./api/categories";
 import * as frame from "./api/frame";
@@ -64,6 +64,7 @@ api.registerHandler(app, AcceptFriend, user.handle_add_friend_post);
 api.registerHandler(app, RejectFriend, user.handle_reject_friend_post);
 api.registerHandler(app, DeleteFriend, user.handle_friend_delete);
 api.registerHandler(app, Name, user.handle_change_name_post);
+api.registerHandler(app, UpdateSettings, user.handle_update_settings_post);
 
 api.registerHandler(app, Payment, payments.handle_payment_post);
 api.registerHandler(app, Initialize, api.handle_init_get);

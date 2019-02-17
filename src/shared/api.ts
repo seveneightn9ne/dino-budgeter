@@ -1,6 +1,6 @@
 import _ from "lodash";
 import Money from "./Money";
-import { Category, CategoryId, Charge, Frame, FrameIndex, Friend, InitState, Payment as PaymentType, Share, Transaction } from "./types";
+import { Category, CategoryId, Charge, Frame, FrameIndex, Friend, InitState, Payment as PaymentType, Share, Transaction, UserSettings } from "./types";
 
 function sNumber(): SchemaField<number> {
     return (key: string, val: any): number => {
@@ -308,6 +308,9 @@ const transactionSchema: SchemaType<Transaction> = {
         otherAmount: sMoney(),
     }),
 }
+const settingsSchema: SchemaType<UserSettings> = {
+    rollover: sOptional(sBoolean()),
+} as SchemaType<UserSettings>;
 
 /** API Endpoints */
 
@@ -413,6 +416,7 @@ export const Initialize = new API2('/api/init', {
     history: sOptional(sValues(sArray({
         budget: sMoney(), spending: sMoney(),
     }))),
+    settings: sOptional(settingsSchema),
 } as SchemaType<InitState>);
 
 export const AddCategory = new API2<{ frame: number, name: string }, Category>('/api/category', {
@@ -455,3 +459,5 @@ export type FriendRequest = { email: string };
 export const AcceptFriend = new API2<FriendRequest, Friend>('/api/friend', friendRequest, friendSchema);
 export const RejectFriend = new API2('/api/friend/reject', friendRequest, emptySchema);
 export const DeleteFriend = new API2('/api/friend', friendRequest, emptySchema, 'DELETE');
+
+export const UpdateSettings = new API2('/api/settings', settingsSchema, emptySchema);

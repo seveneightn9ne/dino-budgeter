@@ -1,11 +1,12 @@
 import pgPromise from "pg-promise";
+import * as shared from "../shared/frames";
 import Money from "../shared/Money";
 import { Category, Frame, FrameIndex, GroupId } from "../shared/types";
 import * as util from "../shared/util";
 import * as categories from "./categories";
 import db from "./db";
+import * as user from "./user";
 export * from "../shared/frames";
-import * as shared from "../shared/frames";
 
 export function getOrCreateFrame(gid: GroupId, index: FrameIndex, t?: pgPromise.ITask<{}>): Promise<Frame> {
     return t ? getOrCreateFrameInner(gid, index, t) : db.tx(t => getOrCreateFrameInner(gid, index, t));
@@ -23,7 +24,7 @@ async function getOrCreateFrameInner(gid: GroupId, index: FrameIndex, t: pgPromi
     // Delete any ghost if it exists
     await deleteGhost(gid, index, t);
     console.log("creating new frame");
-    const frame: Frame = {gid, index, balance: Money.Zero, income: Money.Zero, ghost: true};
+    const frame: Frame = { gid, index, balance: Money.Zero, income: Money.Zero, ghost: true };
     frame.spending = await getSpending(gid, index, t);
     frame.balance = await getBalance(gid, index, t);
     const prevFrame = await getPreviousFrame(gid, index, t);
@@ -57,8 +58,8 @@ async function getOrCreateFrameInner(gid: GroupId, index: FrameIndex, t: pgPromi
     await t.none("insert into frames (gid, index, income, ghost) values ($1, $2, $3, true)", [
         frame.gid, frame.index, frame.income.string()]);
     await t.batch(frame.categories.map(c =>
-            t.none("insert into categories (id, gid, frame, name, ordering, budget, ghost) values ($1, $2, $3, $4, $5, $6, true)", [
-                c.id, c.gid, c.frame, c.name, c.ordering, c.budget.string()])));
+        t.none("insert into categories (id, gid, frame, name, ordering, budget, ghost) values ($1, $2, $3, $4, $5, $6, true)", [
+            c.id, c.gid, c.frame, c.name, c.ordering, c.budget.string()])));
     return frame;
 }
 
@@ -80,14 +81,19 @@ export function getIncome(gid: GroupId, index: FrameIndex, t: pgPromise.ITask<{}
     });
 }
 
-export function getBalance(gid: GroupId, index: FrameIndex, t: pgPromise.ITask<{}>): Promise<Money> {
-    return t.manyOrNone("select amount from transactions where gid = $1 and frame <= $2 and alive = true", [gid, index]).then(rows => {
-        const totalSpent = rows ? Money.sum(rows.map(r => new Money(r.amount))) : Money.Zero;
-        return t.manyOrNone("select income from frames where gid = $1 and index <= $2", [gid, index]).then(rows => {
-            const totalIncome = rows ? Money.sum(rows.map(r => new Money(r.income))) : Money.Zero;
-            return totalIncome.minus(totalSpent);
-        });
-    });
+export async function getBalance(gid: GroupId, index: FrameIndex, t: pgPromise.ITask<{}>): Promise<Money> {
+    const settings = await user.getGroupSettings(gid, t);
+    const frameComparison = settings.rollover ? "<=" : "=";
+
+    const txnRows = await t.manyOrNone(`select amount from transactions
+        where gid = $1 and frame ${frameComparison} $2 and alive = true`, [gid, index]);
+    const totalSpent = txnRows ? Money.sum(txnRows.map((r) => new Money(r.amount))) : Money.Zero;
+
+    const incomeRows = await t.manyOrNone(`select income from frames
+        where gid = $1 and index ${frameComparison} $2`, [gid, index]);
+    const totalIncome = incomeRows ? Money.sum(incomeRows.map((r) => new Money(r.income))) : Money.Zero;
+
+    return totalIncome.minus(totalSpent);
 }
 
 function getSpending(gid: GroupId, frame: FrameIndex, t: pgPromise.ITask<{}>): Promise<Money> {

@@ -109,4 +109,12 @@ alter table categories add ghost bool not null default false;
 end if;
 end $$;
 
+-- migration 11: users settings
+do $$ begin
+if not exists(select * from information_schema.columns where table_name = 'users' and column_name = 'settings')
+then
+alter table users add settings json not null default '{}';
+end if;
+end $$;
+
 commit;

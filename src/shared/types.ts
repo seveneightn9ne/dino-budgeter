@@ -13,6 +13,10 @@ export interface User {
     name: string | null;
     email: string;
     password_hash: string;
+    settings: UserSettings;
+}
+export interface UserSettings {
+    rollover?: boolean;
 }
 
 // Corresponds to `categories` db table, plus `balance`
@@ -88,6 +92,7 @@ export interface InitState {
             spending: Money,
         }>,
     };
+    settings?: UserSettings;
 }
 
 export interface Payment {
