@@ -88,6 +88,10 @@ h1 .title {
     padding-left: 0;
 }
 
+.overall-progress {
+    margin: 10px 10px 30px;
+}
+
 .catnav {
     font-size: 16px;
     text-decoration: none;

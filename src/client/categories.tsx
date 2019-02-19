@@ -9,6 +9,7 @@ import AIComponent from "./ai";
 import CategoryRow from "./categoryrow";
 import { Blob, BlobOp } from "./components/blob";
 import { ClickToEditMoney } from "./components/clicktoedit";
+import { ProgressBar } from "./components/progressbar";
 import NewCategory from "./newcategory";
 
 interface Props extends RouteComponentProps<{ month: number, year: number }> {
@@ -97,6 +98,14 @@ export default class Categories extends React.Component<Props, State> {
                     <BlobOp op="=" />
                     <Blob title="Balance" amount={this.props.frame.balance.formatted()} bold={true} />
                 </div>
+
+                <ProgressBar
+                    frame={this.props.frame.index}
+                    amount={this.props.frame.spending}
+                    total={this.props.frame.balance.plus(this.props.frame.spending)}
+                    className="overall-progress"
+                />
+
                 {ais}
                 <table className="categories" cellPadding={0} cellSpacing={0} ><tbody>
                     <tr>
