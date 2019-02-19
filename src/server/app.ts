@@ -38,7 +38,7 @@ const sessionOptions: session.SessionOptions = {
   saveUninitialized: true,
   secret: [process.env.DINO_SESSION_SECRET, "TODO"],
 };
-if (app.get("env") == "production") {
+if (app.get("env") === "production") {
   app.set("trust proxy", 1); // 1 means the first hop before the proxy (nginx) is considered the client
   // sessionOptions.cookie.secure = true; // TODO: this doesn't work, why? (server does not set any cookie)
 }

@@ -2,6 +2,7 @@ import _ from "lodash";
 import Money from "../shared/Money";
 import app from "./app";
 import db from "./db";
+import * as email from "./email";
 
 /**
  * Run DB migrations
@@ -20,7 +21,7 @@ async function migrateAddFriendshipBalance() {
         ST.settled = false and
         T.alive = true and
         M.uid = ST.payer`);
-    const balances: {[uid: string]: {[uid: string]: Money}} = {};
+    const balances: { [uid: string]: { [uid: string]: Money } } = {};
     const work: Promise<any>[] = [];
     rows.forEach(row => {
       // balance: u1 owes u2.
@@ -58,9 +59,10 @@ if (!process.env.DINO_SESSION_SECRET) {
     console.log(
       "  App is running at http://localhost:%d in %s mode",
       app.get("port"),
-      app.get("env")
+      app.get("env"),
     );
     console.log("  Press CTRL-C to stop\n");
+    email.send({ to: "jess@jesskenney.com", subject: "Dino Server Started", body: "" });
   });
 }
 
