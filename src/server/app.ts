@@ -57,6 +57,7 @@ app.post("/signup", auth.handle_signup_post);
 app.post("/forgot-password", auth.handle_forgot_password_post);
 app.get("/reset", auth.handle_reset_password_get);
 app.post("/reset-password", auth.handle_reset_password_post);
+app.get("/logout", auth.handle_logout_get);
 
 /**
  * API Routes. They require login.

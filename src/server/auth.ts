@@ -46,6 +46,11 @@ export const handle_login_post = function (req: Request, res: Response) {
     })(req, res);
 };
 
+export const handle_logout_get = function (req: Request, res: Response) {
+    req.logOut();
+    res.redirect("/");
+}
+
 export const handle_signup_post = function (req: Request, res: Response) {
     req.checkBody("username").isEmail();
     req.checkBody("password").notEmpty();

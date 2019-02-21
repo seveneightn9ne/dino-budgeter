@@ -35,10 +35,8 @@ const Login = (props: RouteComponentProps<{}>) => <main className="login">
             <label>Password:{' '}</label>
             <input type="password" name="password" />
         </div>
-        <p>Forgot your password? You can <Link to="/forgot-password">reset it</Link>.</p>
-        <div>
-            <input type="submit" value="Log In" className="button" />
-        </div>
+        <div>Forgot your password? You can <Link to="/forgot-password">reset it</Link>.</div>
+        <div><input type="submit" value="Log In" className="button" /></div>
     </form></main>;
 
 const Signup = () => <main className="signup"><form action="/signup" method="post">
