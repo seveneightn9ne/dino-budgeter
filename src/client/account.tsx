@@ -253,7 +253,7 @@ export default class Account extends React.Component<Props, State> {
                     <label>Email: <input type="email" value={this.state.addFriend} onChange={util.cc(this, "addFriend")} /></label>
                     <input type="submit" value="Request" className="button secondary" />
                 </form>
-                <p><Link to="/logout" className="button">Log Out</Link></p>
+                <p><a href="/logout" className="button">Log Out</a></p>
             </main>
         </div>;
     }
