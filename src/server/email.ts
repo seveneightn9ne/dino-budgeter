@@ -1,20 +1,24 @@
 import nodemailer from "nodemailer";
 import app from "./app";
 
-let transporter: nodemailer.Transporter;
-if (app.get("env") === "production") {
-    transporter = nodemailer.createTransport({
-        host: "localhost",
-        port: 25,
-        tls: {
-            rejectUnauthorized: false,
-        },
-    });
+let _transporter: nodemailer.Transporter;
+
+function transporter(): nodemailer.Transporter {
+    if (!_transporter) {
+        _transporter = nodemailer.createTransport({
+            host: "localhost",
+            port: 25,
+            tls: {
+                rejectUnauthorized: false,
+            },
+        });
+    }
+    return _transporter;
 }
 
 export function send(opts: { to: string, subject: string, body: string }) {
     if (app.get("env") === "production") {
-        transporter.sendMail({
+        transporter().sendMail({
             from: "\"Dino Budgeting\" dino@dino.jesskenney.com",
             to: opts.to,
             subject: opts.subject,

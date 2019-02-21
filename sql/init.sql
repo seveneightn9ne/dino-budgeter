@@ -103,4 +103,11 @@ create table payments (
 );
 create index payments_idx on payments(friendship_u1, friendship_u2, ctime);
 
+create table email_resets (
+  uid char(32) not null primary key references users,
+  token text not null,
+  expires timestamp not null
+);
+create index token_idx on email_resets(token);
+
 commit;

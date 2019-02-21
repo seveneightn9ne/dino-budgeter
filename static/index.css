@@ -633,21 +633,21 @@ input.center {
 
 /* home, signup, login page */
 
-.login form, .signup form {
+.login form, .signup form, .forgot-password form, .reset-password form {
     margin: 20px 0;
     font-size: 16px;
 }
 
-.login form>div, .signup form>div {
+.login form>div, .signup form>div, .forgot-password form>div, .reset-password form>div {
     margin-bottom: 20px;
 }
 
-.login .button, .signup .button {
+.login .button, .signup .button, .forgot-password .button, .reset-password .button {
     margin: 40px 0;
     width: 150px;
 }
 
-.home, .login, .signup {
+.home, .login, .signup, .forgot-password, .reset-password {
     text-align: center;
 }
 

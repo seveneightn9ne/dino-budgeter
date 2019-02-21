@@ -141,3 +141,10 @@ export class NormalizedShare extends Share {
         return new Money(this.num.times(money.num));
     }
 }
+
+// db: email_resets
+export interface EmailReset {
+    uid: UserId;
+    token: string;
+    expires: Date;
+}

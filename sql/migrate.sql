@@ -117,4 +117,18 @@ alter table users add settings json not null default '{}';
 end if;
 end $$;
 
+
+-- migration 12: password resets
+do $$ begin
+if not exists(select * from information_schema.tables where table_name = 'email_resets')
+then
+create table email_resets (
+  uid char(32) not null primary key references users,
+  token text not null,
+  expires timestamp not null
+);
+create index token_idx on email_resets(token);
+end if;
+end $$;
+
 commit;

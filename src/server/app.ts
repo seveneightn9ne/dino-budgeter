@@ -20,7 +20,7 @@ import db from "./db";
 
 const app = express();
 app.use(bodyParser.text({
-  type: "application/json"
+  type: "application/json",
 }));
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(validator());
@@ -54,6 +54,9 @@ app.set("port", process.env.PORT || 3000);
  */
 app.post("/login", auth.handle_login_post);
 app.post("/signup", auth.handle_signup_post);
+app.post("/forgot-password", auth.handle_forgot_password_post);
+app.get("/reset", auth.handle_reset_password_get);
+app.post("/reset-password", auth.handle_reset_password_post);
 
 /**
  * API Routes. They require login.
@@ -94,7 +97,6 @@ app.use(serveStatic(path.join(__dirname, "../../static/RobotoMono")));
 app.use(serveStatic(path.join(__dirname, "../../static/fontawesome")));
 app.use(serveStatic(path.join(__dirname, "../../static/images")));
 app.get("/index.css", serveStatic(path.join(__dirname, "../../static/")));
-app.get("/fontawesome-all.css", serveStatic(path.join(__dirname, "../../static/")));
 
 const reactMode = app.get("env") == "development" ? "development" : "production.min";
 app.get("/react.js", (_, res) =>
@@ -107,6 +109,8 @@ const index = (_req: Request, res: Response) =>
   res.sendFile(path.join(__dirname + "../../../static/index.html"));
 
 app.get("/", ensureLogin.ensureLoggedOut("/app"), index);
+app.get("/login", ensureLogin.ensureLoggedOut("/app"), index);
+app.get("/signup", ensureLogin.ensureLoggedOut("/app"), index);
 app.get("/app", ensureLogin.ensureLoggedIn(""), index);
 app.get("/app/home/:month/:year", ensureLogin.ensureLoggedIn(""), index);
 app.get("/app/transactions/:month/:year", ensureLogin.ensureLoggedIn(""), index);
