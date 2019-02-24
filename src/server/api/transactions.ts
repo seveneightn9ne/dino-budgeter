@@ -1,9 +1,10 @@
-import { AddTransaction, ApiRequest, DeleteTransaction, EmptyResponse, TransactionAmount, TransactionCategory, TransactionDate, TransactionDescription, TransactionSplit } from "../../shared/api";
+import { Response } from "typescript-json-api/dist/server/express";
+import { ApiRequest, EmptyResponse } from "typescript-json-api/dist/shared/api";
+import { AddTransaction, DeleteTransaction, TransactionAmount, TransactionCategory, TransactionDate, TransactionDescription, TransactionSplit } from "../../shared/api";
 import { index } from "../../shared/frames";
 import { distributeTotal } from "../../shared/transactions";
 import { CategoryId, Transaction, TransactionId, User } from "../../shared/types";
 import * as util from "../../shared/util";
-import { ErrorResponse, Response } from "../api";
 import db from "../db";
 import * as frames from "../frames";
 import * as payments from "../payments";
@@ -20,7 +21,7 @@ export function handle_transaction_post(request: ApiRequest<typeof AddTransactio
             return Promise.resolve({
                 code: 400,
                 message: 'Calculated different values for split',
-            } as ErrorResponse);
+            });
         }
     }
     const tx_id = util.randomId();
@@ -29,7 +30,7 @@ export function handle_transaction_post(request: ApiRequest<typeof AddTransactio
             return {
                 code: 400,
                 message: 'You can only split with a friend',
-            } as ErrorResponse;
+            };
         }
         const gid = await user.getDefaultGroup(actor, t);
         await frames.markNotGhost(gid, request.frame, t);
@@ -97,7 +98,7 @@ export function handle_transaction_delete(request: ApiRequest<typeof DeleteTrans
             return {
                 code: 400,
                 message: "You can't edit this transaction.",
-            } as ErrorResponse;
+            };
         }
         await transactions.deleteTransaction(request.id, t);
         return null;
@@ -145,13 +146,13 @@ function handle_transaction_update_post<
             return {
                 code: 403,
                 message: "The transaction is not in your group",
-            } as ErrorResponse;
+            };
         }
         if (existing.split && !canEditShared(field)) {
             return {
                 code: 400,
                 message: "Can't edit " + field + " on a shared transaction",
-            } as ErrorResponse;
+            };
         }
         const val = transform(value);
         const query = "update transactions set " + field + " = $1 where id = $2";

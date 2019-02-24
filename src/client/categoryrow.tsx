@@ -1,6 +1,6 @@
 import * as React from "react";
 import { match, Redirect } from "react-router-dom";
-import { ApiRequest, BudgetingMove, CategoryBudget, DeleteCategory } from "../shared/api";
+import { BudgetingMove, CategoryBudget, DeleteCategory } from "../shared/api";
 import * as categories from "../shared/categories";
 import Money from "../shared/Money";
 import { Category, CategoryId } from "../shared/types";
@@ -130,7 +130,7 @@ export default class CategoryRow extends React.Component<CategoryRowProps, Categ
                 title={"Cover from another category"}
             >
                 Cover from {" "}
-                <ClickToEditDropdown<ApiRequest<typeof BudgetingMove>, "from">
+                <ClickToEditDropdown
                     open={true}
                     zeroValue="Choose category..."
                     value=""

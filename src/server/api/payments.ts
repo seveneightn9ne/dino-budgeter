@@ -1,9 +1,10 @@
-import { Response, ErrorResponse } from "../api";
-import db from "../db";
-import * as user from "../user";
-import * as payments from "../payments";
-import { ApiRequest, ApiResponse, Payment } from "../../shared/api";
+import { Response } from "typescript-json-api/dist/server/express";
+import { ApiRequest, ApiResponse } from "typescript-json-api/dist/shared/api";
+import { Payment } from "../../shared/api";
 import { User } from "../../shared/types";
+import db from "../db";
+import * as payments from "../payments";
+import * as user from "../user";
 
 export function handle_payment_post(request: ApiRequest<typeof Payment>, actor: User): Promise<Response<ApiResponse<typeof Payment>>> {
     return db.tx(async t => {
@@ -13,7 +14,7 @@ export function handle_payment_post(request: ApiRequest<typeof Payment>, actor: 
             return {
                 code: 400,
                 message: `You are not friends with ${request.email}`,
-            } as ErrorResponse;
+            };
         }
         let from = actor.uid;
         let to = friend.uid;

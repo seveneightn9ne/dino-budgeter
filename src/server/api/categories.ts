@@ -1,8 +1,9 @@
-import { AddCategory, ApiRequest, CategoryBudget, CategoryName, DeleteCategory, EmptyResponse } from "../../shared/api";
+import { Response } from "typescript-json-api/dist/server/express";
+import { ApiRequest, EmptyResponse } from "typescript-json-api/dist/shared/api";
+import { AddCategory, CategoryBudget, CategoryName, DeleteCategory } from "../../shared/api";
 import Money from "../../shared/Money";
 import { Category, User } from "../../shared/types";
 import * as util from "../../shared/util";
-import { ErrorResponse, Response } from "../api";
 import * as categories from "../categories";
 import db from "../db";
 import * as frames from "../frames";
@@ -42,7 +43,7 @@ export function handle_category_delete(
             return {
                 code: 400,
                 message: "Category not found",
-            } as ErrorResponse;
+            };
         }
         const category = categories.fromSerialized(row);
         const membership = await t.oneOrNone("select * from membership where uid = $1 and gid = $2", [
@@ -51,7 +52,7 @@ export function handle_category_delete(
             return {
                 code: 403,
                 message: "User is not in the category's group",
-            } as ErrorResponse;
+            };
         }
         await frames.markNotGhost(category.gid, request.frame, t);
         await t.none("update categories set alive = false where id = $1 and frame = $2", [id, frame]);

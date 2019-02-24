@@ -1,7 +1,7 @@
 import * as React from "react";
 import { Link, RouteComponentProps } from "react-router-dom";
 import { AI, getAIs } from "../shared/ai";
-import { ApiRequest, Income } from "../shared/api";
+import { Income } from "../shared/api";
 import * as frames from "../shared/frames";
 import Money from "../shared/Money";
 import { Category, CategoryId, Frame as FrameType } from "../shared/types";
@@ -53,7 +53,7 @@ export default class Categories extends React.Component<Props, State> {
         // income - spent = balance;
         // spent = income - balance;
         const income = (
-            <ClickToEditMoney<ApiRequest<typeof Income>, "income">
+            <ClickToEditMoney
                 api={Income}
                 size={6}
                 value={this.props.frame.income}

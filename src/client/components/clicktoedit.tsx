@@ -1,5 +1,5 @@
 import * as React from "react";
-import { API2, EmptyResponse } from "../../shared/api";
+import { API, EmptyResponse } from "typescript-json-api/dist/shared/api";
 import Money from "../../shared/Money";
 import * as util from "../util";
 
@@ -8,7 +8,7 @@ interface ClickToEditProps<Request extends object, K extends keyof Request, V ex
     onChange: (newVal: V) => void;
     className?: string;
     // The |{} is a hack because typescript doesn't correctly infer the Response type of API2s with an emptySchema.
-    api: API2<Request, EmptyResponse | {}>;
+    api: API<Request, EmptyResponse | {}>;
     postData?: Pick<Request, Exclude<keyof Request, K>>;
     postKey: K;
     open?: boolean;

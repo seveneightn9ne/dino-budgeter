@@ -1,9 +1,10 @@
 
 import { Request, Response as ExpressResponse } from "express";
 import _ from "lodash";
-import { ApiRequest, EmptyResponse, FriendRequest, Name, UpdateSettings } from "../../shared/api";
+import { Response } from "typescript-json-api/dist/server/express";
+import { ApiRequest, EmptyResponse } from "typescript-json-api/dist/shared/api";
+import { FriendRequest, Name, UpdateSettings } from "../../shared/api";
 import { Friend, User } from "../../shared/types";
-import { ErrorResponse, Response } from "../api";
 import db from "../db";
 import * as user from "../user";
 
@@ -18,7 +19,7 @@ export function handle_add_friend_post(request: FriendRequest, actor: User): Pro
             return {
                 code: 404,
                 message: 'There is no user with that email',
-            } as ErrorResponse;
+            };
         }
         await user.addFriend(actor.uid, friend.uid, t);
         return friend;
@@ -32,7 +33,7 @@ export function handle_reject_friend_post(request: FriendRequest, actor: User): 
             return {
                 code: 404,
                 message: "There is no user with that email",
-            } as ErrorResponse;
+            };
         }
         await user.deleteFriendship(actor.uid, uid, t);
         return null;
@@ -46,7 +47,7 @@ export function handle_friend_delete(request: FriendRequest, actor: User): Promi
             return {
                 code: 404,
                 message: "There is no user with that email",
-            } as ErrorResponse;
+            };
         }
         await user.softDeleteFriendship(actor.uid, uid, t);
         return null;
