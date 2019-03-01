@@ -30,10 +30,11 @@ async function getOrCreateFrameInner(gid: GroupId, index: FrameIndex, t: pgPromi
     const prevFrame = await getPreviousFrame(gid, index, t);
     if (prevFrame) {
         frame.income = prevFrame.income;
-        frame.categories = (await getCategories(gid, prevFrame.index, t)).map(c => ({
+        frame.categories = await t.batch((await getCategories(gid, prevFrame.index, t)).map(async c => ({
             ...c,
             frame: frame.index,
-        }));
+            balance: c.budget.minus(await categories.getSpending(c.id, frame.index, t)),
+        })));
         frame.balance = frame.balance.plus(frame.income);
     } else {
         console.log("no previous frame");
