@@ -55,6 +55,7 @@ const frameSchema: SchemaType<Frame> = {
 }
 const paymentSchema: SchemaType<PaymentType> = {
     type: Schemas.literal('payment'),
+    id: Schemas.string(),
     payer: Schemas.string(),
     payee: Schemas.string(),
     amount: DinoSchemas.money(),
@@ -64,6 +65,7 @@ const paymentSchema: SchemaType<PaymentType> = {
 }
 const chargeSchema: SchemaType<Charge> = {
     type: Schemas.literal('charge'),
+    id: Schemas.string(),
     debtor: Schemas.string(),
     debtee: Schemas.string(),
     amount: DinoSchemas.money(),

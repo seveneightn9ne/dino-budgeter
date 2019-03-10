@@ -72,6 +72,7 @@ export async function getPayments(u1: UserId, u2: UserId, t: pgPromise.ITask<{}>
         const date = new Date(row.ctime);
         const memo = row.memo;
         const frame = row.frame;
+        const id = row.id;
         let amount = new Money(row.amount);
         if (row.is_charge) {
             // amount is what u1 owes u2. so u1 is the debtee by default.
@@ -84,7 +85,7 @@ export async function getPayments(u1: UserId, u2: UserId, t: pgPromise.ITask<{}>
             }
             return {
                 type: 'charge',
-                debtor, debtee, amount, date, memo, frame
+                debtor, debtee, amount, date, memo, frame, id
             } as Charge;
         } else {
             // amount is what u1 owes u2. so u2 is the payer by default.
@@ -97,8 +98,8 @@ export async function getPayments(u1: UserId, u2: UserId, t: pgPromise.ITask<{}>
             }
             return {
                 type: 'payment',
-                payer, payee, amount, date, memo, frame
+                payer, payee, amount, date, memo, frame, id
             } as Payment;
         }
-    }), 'date'));
+    }), "date" /* sortBy */));
 }

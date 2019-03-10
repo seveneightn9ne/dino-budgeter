@@ -93,6 +93,7 @@ create table transaction_splits (
 create index split_sid on transaction_splits(sid);
 
 create table payments (
+  id char(32) primary key,
   friendship_u1 char(32) not null references users,
   friendship_u2 char(32) not null references users,
   amount text not null default '0',

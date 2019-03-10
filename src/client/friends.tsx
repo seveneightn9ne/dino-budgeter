@@ -1,10 +1,10 @@
 import _ from "lodash";
 import * as React from "react";
+import { Payment as APIPayment } from "../shared/api";
 import Money from "../shared/Money";
-import { Friend, Payment, Charge, UserId, FrameIndex } from "../shared/types";
+import { Charge, FrameIndex, Friend, Payment, UserId } from "../shared/types";
 import { ControlledPoplet } from "./components/poplet";
 import * as util from "./util";
-import { Payment as APIPayment } from "../shared/api";
 
 interface Props {
     index: FrameIndex;
@@ -12,11 +12,13 @@ interface Props {
     friends: Friend[];
     pendingFriends: Friend[];
     invites: Friend[];
-    debts: {[email: string]: {
-        balance: Money,
-        payments: (Payment|Charge)[],
-    }};
-    onPayment: (email: string, pmt: Payment|Charge) => void;
+    debts: {
+        [email: string]: {
+            balance: Money,
+            payments: (Payment | Charge)[],
+        }
+    };
+    onPayment: (email: string, pmt: Payment | Charge) => void;
 }
 
 type State = {
@@ -30,8 +32,8 @@ type State = {
     charge_youCharge: boolean,
     charge_memo: string,
 
-    collapsePayments: {[uid: string]: boolean},
-    latestFrame: {[uid: string]: FrameIndex},
+    collapsePayments: { [uid: string]: boolean },
+    latestFrame: { [uid: string]: FrameIndex },
 };
 
 type UiFriend = {
@@ -39,7 +41,7 @@ type UiFriend = {
     email: string,
     debt: {
         balance: Money,
-        payments: (Payment|Charge)[],
+        payments: (Payment | Charge)[],
     },
     pending?: true,
     invite?: true,
@@ -65,7 +67,7 @@ export default class Friends extends React.Component<Props, State> {
         }
     }
 
-    selectOnFocus = (e: React.FocusEvent<HTMLInputElement>) => 
+    selectOnFocus = (e: React.FocusEvent<HTMLInputElement>) =>
         e.currentTarget.select();
 
     openPayment = () => this.setState({
@@ -74,19 +76,19 @@ export default class Friends extends React.Component<Props, State> {
         payment_amount: '',
         payment_memo: '',
     });
-    closePayment = () => this.setState({paymentOpen: false});
+    closePayment = () => this.setState({ paymentOpen: false });
     openCharge = () => this.setState({
         chargeOpen: true,
         charge_youCharge: true,
         charge_amount: '',
         charge_memo: '',
     });
-    closeCharge = () => this.setState({chargeOpen: false});
+    closeCharge = () => this.setState({ chargeOpen: false });
 
     onSubmitPayment = (f: UiFriend) => (e: React.FormEvent) =>
         this.onSubmitInner(e, f.email, f.uid, this.state.payment_amount, this.state.payment_youPay, this.state.payment_memo, true);
 
-    onSubmitCharge = (f: UiFriend) => (e: React.FormEvent) => 
+    onSubmitCharge = (f: UiFriend) => (e: React.FormEvent) =>
         this.onSubmitInner(e, f.email, f.uid, this.state.charge_amount, this.state.charge_youCharge, this.state.charge_memo, false);
 
     onSubmitInner = (e: React.FormEvent, email: string, uid: UserId, amountStr: string, youPay: boolean, memo: string, isPayment: boolean) => {
@@ -109,6 +111,7 @@ export default class Friends extends React.Component<Props, State> {
                     payee: youPay ? uid : this.props.me.uid,
                     amount, memo, frame,
                     date: new Date(),
+                    id: "", // XXX(jessk): get the id
                 }
                 this.props.onPayment(email, payment);
             } else {
@@ -118,6 +121,7 @@ export default class Friends extends React.Component<Props, State> {
                     debtee: youPay ? uid : this.props.me.uid,
                     amount, memo, frame,
                     date: new Date(),
+                    id: "", // XXX(jessk): get the id
                 }
                 this.props.onPayment(email, charge);
 
@@ -130,18 +134,18 @@ export default class Friends extends React.Component<Props, State> {
         let allFriends: UiFriend[] = props.friends.map(f => ({
             name: f.name,
             email: f.email,
-            debt: props.debts[f.email] || {balance: Money.Zero, payments: []},
+            debt: props.debts[f.email] || { balance: Money.Zero, payments: [] },
             uid: f.uid,
         }));
         allFriends = allFriends.concat(props.pendingFriends.map(f => ({
             email: f.email,
-            debt: props.debts[f.email] || {balance: Money.Zero, payments: []},
+            debt: props.debts[f.email] || { balance: Money.Zero, payments: [] },
             pending: true as true,
             uid: f.uid,
         })));
         allFriends = allFriends.concat(props.invites.map(f => ({
             email: f.email,
-            debt: props.debts[f.email] || {balance: Money.Zero, payments: []},
+            debt: props.debts[f.email] || { balance: Money.Zero, payments: [] },
             invite: true as true,
             uid: f.uid,
         })));
@@ -150,16 +154,16 @@ export default class Friends extends React.Component<Props, State> {
 
     toggleCollapse = (uid: UserId) => () => {
         const newState = !this.state.collapsePayments[uid];
-        this.setState({collapsePayments: {...this.state.collapsePayments, [uid]: newState}});
+        this.setState({ collapsePayments: { ...this.state.collapsePayments, [uid]: newState } });
     }
 
     loadMore = (f: UiFriend) => () => {
         const payments = _.sortBy(this.props.debts[f.email].payments.filter(p => p.frame < this.state.latestFrame[f.uid]), 'frame');
-        if (payments.length ==  0) {
+        if (payments.length == 0) {
             console.error("This is impossible");
             return;
         }
-        this.setState({latestFrame: {...this.state.latestFrame, [f.uid]: payments[0].frame}});
+        this.setState({ latestFrame: { ...this.state.latestFrame, [f.uid]: payments[0].frame } });
     }
 
     displayName = (friend: UiFriend) => {
@@ -175,11 +179,11 @@ export default class Friends extends React.Component<Props, State> {
                 <label>Amount: <input type="text" size={6} onFocus={this.selectOnFocus}
                     value={this.state.payment_amount} onChange={util.cc(this, "payment_amount")} /></label>
                 <label>Memo: <input type="text" value={this.state.payment_memo} onChange={util.cc(this, "payment_memo")} /></label>
-                <div className="section" style={{clear: "both"}}>
+                <div className="section" style={{ clear: "both" }}>
                     <label className="nostyle"><input type="radio" name="payer" value="0" checked={this.state.payment_youPay}
-                        onChange={(e) => this.setState({payment_youPay: e.target.checked})} /> You're paying {this.displayName(f)}</label>
+                        onChange={(e) => this.setState({ payment_youPay: e.target.checked })} /> You're paying {this.displayName(f)}</label>
                     <label className="nostyle"><input type="radio" name="payer" value="1" checked={!this.state.payment_youPay}
-                        onChange={(e) => this.setState({payment_youPay: !e.target.checked})} /> {this.displayName(f)} is paying you</label>
+                        onChange={(e) => this.setState({ payment_youPay: !e.target.checked })} /> {this.displayName(f)} is paying you</label>
                 </div>
                 <input className="button" type="submit" value="Save" />
             </form>
@@ -195,11 +199,11 @@ export default class Friends extends React.Component<Props, State> {
                 <label>Amount: <input type="text" size={6} onFocus={this.selectOnFocus}
                     value={this.state.charge_amount} onChange={util.cc(this, "charge_amount")} /></label>
                 <label>Memo: <input type="text" value={this.state.charge_memo} onChange={util.cc(this, "charge_memo")} /></label>
-                <div className="section" style={{clear: "both"}}>
+                <div className="section" style={{ clear: "both" }}>
                     <label className="nostyle"><input type="radio" name="payer" value="1" checked={this.state.charge_youCharge}
-                        onChange={(e) => this.setState({charge_youCharge: e.target.checked})} /> {this.displayName(f)} owes you</label>
+                        onChange={(e) => this.setState({ charge_youCharge: e.target.checked })} /> {this.displayName(f)} owes you</label>
                     <label className="nostyle"><input type="radio" name="payer" value="0" checked={!this.state.charge_youCharge}
-                        onChange={(e) => this.setState({charge_youCharge: !e.target.checked})} /> You owe {this.displayName(f)}</label>
+                        onChange={(e) => this.setState({ charge_youCharge: !e.target.checked })} /> You owe {this.displayName(f)}</label>
                 </div>
                 <input className="button" type="submit" value="Save" />
             </form>
@@ -208,10 +212,10 @@ export default class Friends extends React.Component<Props, State> {
 
     render() {
         // TODO - want friendship last-active to sort the friendships.
-       
+
         const rows = this.allFriends().map(f => {
             const displayName = f.name || f.email;
-            const email = displayName !== f.email ? 
+            const email = displayName !== f.email ?
                 <div className="friend-email">{f.email}</div> : null;
             const debt = f.debt.balance.cmp(Money.Zero) == 0 ? null :
                 f.debt.balance.cmp(Money.Zero) > 0 ?
@@ -224,13 +228,13 @@ export default class Friends extends React.Component<Props, State> {
             const payment = this.renderPayment(f);
             const charge = this.renderCharge(f);
             const payments = f.debt.payments.filter(p => p.frame >= this.state.latestFrame[f.uid]).map(payment => {
-                const text = payment.type == 'payment' ? (payment.payer == this.props.me.uid ? 
-                    `You paid ${displayName} ${payment.amount.formatted()}`:
-                    `${displayName} paid you ${payment.amount.formatted()}`):
-                    (payment.debtor == this.props.me.uid ? 
+                const text = payment.type == 'payment' ? (payment.payer == this.props.me.uid ?
+                    `You paid ${displayName} ${payment.amount.formatted()}` :
+                    `${displayName} paid you ${payment.amount.formatted()}`) :
+                    (payment.debtor == this.props.me.uid ?
                         `You charged ${displayName} ${payment.amount.formatted()}` :
-                        `${displayName} charged you ${payment.amount.formatted()}`); 
-                return <tr key={payment.date.toString()+payment.memo+payment.amount.string()}>
+                        `${displayName} charged you ${payment.amount.formatted()}`);
+                return <tr key={payment.date.toString() + payment.memo + payment.amount.string()}>
                     <td>{text}</td>
                     <td>{payment.memo}</td>
                     <td>{util.yyyymmdd(payment.date)}</td>
@@ -239,15 +243,15 @@ export default class Friends extends React.Component<Props, State> {
             const collapsePaymentButton = this.state.collapsePayments[f.uid] ?
                 <div className="friend-collapse fa-chevron-right fas" onClick={this.toggleCollapse(f.uid)}></div> :
                 <div className="friend-collapse fa-chevron-down fas" onClick={this.toggleCollapse(f.uid)}></div>;
-            const paymentsTable = this.state.collapsePayments[f.uid] ? null : 
-                payments.length == 0 ? null : 
-                <div className="friend-table-container"><table className="friend-table"><tbody>
-                    <tr><th></th><th>Memo</th><th>Date</th></tr>
-                    {payments}
-                </tbody></table></div>;
+            const paymentsTable = this.state.collapsePayments[f.uid] ? null :
+                payments.length == 0 ? null :
+                    <div className="friend-table-container"><table className="friend-table"><tbody>
+                        <tr><th></th><th>Memo</th><th>Date</th></tr>
+                        {payments}
+                    </tbody></table></div>;
             const paymentsLoadMore = this.state.collapsePayments[f.uid] ? null :
                 payments.length == this.props.debts[f.email].payments.length ? null :
-                <div className="friend-more clickable" onClick={this.loadMore(f)}>Load older payments</div>;
+                    <div className="friend-more clickable" onClick={this.loadMore(f)}>Load older payments</div>;
             return (<div key={f.email}><div className="friend-row">
                 {payments.length == 0 ? null : collapsePaymentButton}
                 <div className="friend-title">
@@ -264,8 +268,8 @@ export default class Friends extends React.Component<Props, State> {
                     </div>
                 </div>
             </div>
-            {paymentsTable}
-            {paymentsLoadMore}
+                {paymentsTable}
+                {paymentsLoadMore}
             </div>);
         });
         return <div className="friends">

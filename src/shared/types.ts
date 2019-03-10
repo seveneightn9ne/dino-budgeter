@@ -6,6 +6,7 @@ export type CategoryId = string;
 export type FrameIndex = number;
 export type TransactionId = string;
 export type SplitId = string;
+export type PaymentId = string;
 
 // Corresponds to `users` db table
 export interface User {
@@ -97,6 +98,7 @@ export interface InitState {
 
 export interface Payment {
     type: 'payment',
+    id: PaymentId,
     payer: UserId,
     payee: UserId,
     amount: Money,
@@ -107,6 +109,7 @@ export interface Payment {
 
 export interface Charge {
     type: 'charge',
+    id: PaymentId,
     debtor: UserId,
     debtee: UserId,
     amount: Money,

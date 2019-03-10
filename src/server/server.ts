@@ -1,5 +1,6 @@
 import _ from "lodash";
 import Money from "../shared/Money";
+import * as util from "../shared/util";
 import app from "./app";
 import db from "./db";
 import * as email from "./email";
@@ -48,23 +49,56 @@ async function migrateAddFriendshipBalance() {
   });
 }
 
-migrateAddFriendshipBalance();
+async function migrateAddPaymentId() {
+  let totalRows = 0;
+  let expectedRows = 0;
+  await db.tx(async (t) => {
+    const rows = await t.manyOrNone("select round(extract(epoch from ctime)) as epoch from payments where id is null");
+    expectedRows = rows.length;
+    await t.batch(rows.map(async (row) => {
+      const args = [
+        util.randomId(),
+        row.epoch,
+      ];
+      const result = await t.result(`update payments set id = $1
+        where round(extract(epoch from ctime)) = $2`, args);
+      totalRows += result.rowCount;
+      if (result.rowCount !== 1) {
+        console.warn(
+          `Migration to add IDs to payments got an unexpected result: an update affected ${result.rowCount} rows.`);
+      }
+    }));
+  });
+  if (expectedRows !== totalRows) {
+    console.warn(
+      `Expected to affect ${expectedRows} rows but affected ${totalRows} rows!`
+    );
+  }
+  if (totalRows > 0) {
+    console.log(`Migration added ID to ${totalRows} payments`);
+  }
+}
+
+async function runMigrations() {
+  await migrateAddFriendshipBalance();
+  await migrateAddPaymentId();
+}
 
 let server = null;
 
 if (!process.env.DINO_SESSION_SECRET) {
   console.error("DINO_SESSION_SECRET is required");
 } else {
-  server = app.listen(app.get("port"), () => {
-    console.log(
-      "  App is running at http://localhost:%d in %s mode",
-      app.get("port"),
-      app.get("env"),
-    );
-    console.log("  Press CTRL-C to stop\n");
-    email.send({ to: "jess@jesskenney.com", subject: "Dino Server Started", body: "" });
-  });
+  runMigrations().then(() =>
+    server = app.listen(app.get("port"), () => {
+      console.log(
+        "App is running at http://localhost:%d in %s mode",
+        app.get("port"),
+        app.get("env"),
+      );
+      console.log("Press CTRL-C to stop\n");
+      email.send({ to: "jess@jesskenney.com", subject: "Dino Server Started", body: "" });
+    }));
 }
-
 
 export default server;
