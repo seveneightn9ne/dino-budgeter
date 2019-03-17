@@ -541,12 +541,18 @@ footer {
     border-top: 1px solid #e9e3f9;
 }
 
-.add-transaction-button {
+span.add-transaction-button {
     display: inline-block;
     text-decoration: none;
     color: white;
     text-align: center;
     margin-left: 10px;
+}
+
+.poplet.add-transaction-button {
+    color: #444444;
+    text-align: left;
+    margin: 20px;
 }
 
 .add-transaction-button .icon {

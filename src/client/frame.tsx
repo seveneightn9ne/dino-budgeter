@@ -10,9 +10,11 @@ import { getBalanceDelta } from "../shared/transactions";
 import { Category, CategoryId, Charge, FrameIndex, InitState, Payment, Transaction, TransactionId } from "../shared/types";
 import Categories from "./categories";
 import CategoryPage from "./category";
-import { DesktopOnly, MobileOnly } from "./components/media";
+import { DesktopOnly, MobileOnly, MobileQuery } from "./components/media";
+import { ControlledPoplet } from "./components/poplet";
 import Friends from "./friends";
 import Transactions from "./transactions";
+import TxEntry from "./txentry";
 import * as util from "./util";
 
 type FrameProps = RouteComponentProps<{ month: string, year: string }>;
@@ -21,6 +23,7 @@ interface FrameState extends InitState {
     budgeted?: Money;
     setIncome: string;
     setIncomeErr?: boolean;
+    addTxnOpen: boolean;
 }
 
 /** /app/:month/:year */
@@ -29,6 +32,7 @@ export default class Frame extends React.Component<FrameProps, FrameState> {
     state: FrameState = {
         initialized: false,
         setIncome: "",
+        addTxnOpen: false,
     };
 
     month = (props = this.props) => Number(props.match.params.month) - 1;
@@ -63,6 +67,9 @@ export default class Frame extends React.Component<FrameProps, FrameState> {
     }
 
     componentDidMount() {
+        if (this.props.location.pathname.endsWith("add-transaction")) {
+            this.setState({ addTxnOpen: true });
+        }
         this.initializeFrame();
     }
 
@@ -71,6 +78,18 @@ export default class Frame extends React.Component<FrameProps, FrameState> {
             prevProps.match.params.year != this.props.match.params.year) {
             this.initializeFrame();
         }
+        if (
+            prevProps.location.pathname !== this.props.location.pathname
+            && this.props.location.pathname.endsWith("add-transaction")
+            /*&& !this.state.addTxnOpen*/
+        ) {
+            this.setState({ addTxnOpen: true });
+        }
+    }
+
+    private openAddTxn = () => this.setState({ addTxnOpen: true });
+    private closeAddTxn = () => {
+        this.setState({ addTxnOpen: false });
     }
 
     calculateBudgeted(categories: Category[]): Money {
@@ -139,7 +158,7 @@ export default class Frame extends React.Component<FrameProps, FrameState> {
         return newHistory;
     }
 
-    private onAddTransaction(t: Transaction) {
+    private onAddTransaction = (t: Transaction) => {
         this.setState(({ frame, debts, transactions, me, history }) => {
             const newFrame = { ...frame };
             let newHistory = history;
@@ -182,6 +201,7 @@ export default class Frame extends React.Component<FrameProps, FrameState> {
                 transactions: newTransactions,
                 debts: newDebts,
                 history: newHistory,
+                addTxnOpen: false,
             };
         });
     }
@@ -387,7 +407,7 @@ export default class Frame extends React.Component<FrameProps, FrameState> {
             <Transactions transactions={this.state.transactions}
                 onUpdateTransaction={this.onUpdateTransaction.bind(this)}
                 onDeleteTransaction={this.onDeleteTransaction.bind(this)}
-                onAddTransaction={this.onAddTransaction.bind(this)}
+                onAddTransaction={this.onAddTransaction}
                 frame={this.state.frame}
                 newTxDate={this.newTxDate()}
                 categories={this.state.frame.categories}
@@ -418,7 +438,6 @@ export default class Frame extends React.Component<FrameProps, FrameState> {
             </div></header>
             <main>
                 <Switch>
-                    <Redirect exact from="/app/:month/:year" to="/app/:month/:year/categories" />
                     <Route path={"/app/:month/:year/categories"}>
                         <Switch>
                             <Route
@@ -451,14 +470,42 @@ export default class Frame extends React.Component<FrameProps, FrameState> {
                     </Route>
                     <Route path={"/app/:month/:year/transactions"} render={() => transactions} />
                     <Route path={"/app/:month/:year/debts"} render={() => debts} />
+
+                    <Route
+                        exact={true}
+                        from="/app/:month/:year"
+                        render={() => <MobileQuery
+                            mobile={<Switch><Redirect
+                                from={"/app/:month/:year"}
+                                to={"/app/:month/:year/transactions/add-transaction"}
+                            /></Switch>}
+                            desktop={<Switch><Redirect
+                                from={"/app/:month/:year"}
+                                to={"/app/:month/:year/categories"}
+                            /></Switch>}
+                        />
+                        }
+                    />
                     <Route path={"/app/add-transaction"} render={() => null} />
                 </Switch>
             </main>
             <MobileOnly>
                 <footer>
-                    <Link to="/app/add-transaction" className="add-transaction-button">
-                        <span className="fa-plus-circle fas icon" />
-                    </Link>
+                    <ControlledPoplet
+                        open={this.state.addTxnOpen}
+                        onRequestClose={this.closeAddTxn}
+                        onRequestOpen={this.openAddTxn}
+                        className="add-transaction-button"
+                        text={<span className="fa-plus-circle fas icon" />}
+                    >
+                        <h2>Add Transaction</h2>
+                        <TxEntry
+                            onAddTransaction={this.onAddTransaction}
+                            defaultDate={this.newTxDate()}
+                            friends={this.state.friends || []}
+                            categories={this.state.categories || []}
+                        />
+                    </ControlledPoplet>
                     <Link to={`${appPrefix}/categories`} className="link">Home</Link>
                     <Link to={`${appPrefix}/transactions`} className="link">Transactions</Link>
                     {this.state.friends.length > 0 || _.size(this.state.debts) > 0 ?
