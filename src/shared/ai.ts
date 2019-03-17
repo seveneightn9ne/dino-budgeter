@@ -1,6 +1,6 @@
+import * as frames from './frames';
 import Money from "./Money";
 import { Frame, FrameIndex, Transaction, TransactionId } from "./types";
-import * as frames from './frames';
 
 export interface AI {
     frame?: FrameIndex;
@@ -73,7 +73,7 @@ export class UncategorizedMulti implements AI {
     constructor(
         public frame: FrameIndex,
         public tids: TransactionId[],
-    ) {}
+    ) { }
 
     message(): string {
         return this.tids.length > 1 ?
@@ -87,7 +87,7 @@ export class DebtAI implements AI {
         public email: string,
         public iOwe: Money,
         public doAction: () => Promise<void>,
-    ) {}
+    ) { }
 
     message(): string {
         return this.iOwe.cmp(Money.Zero) > 0 ? `You owe ${this.email} ${this.iOwe.formatted()}.` :
@@ -133,7 +133,7 @@ export function getTransactionAIs(frame: Frame, transactions: Transaction[]): AI
     const ais: AI[] = [];
     const uncategorized: TransactionId[] = [];
     transactions.forEach(transaction => {
-        if (!transaction.category) {
+        if (!transaction.category && transaction.amount.cmp(Money.Zero) !== 0) {
             uncategorized.push(transaction.id);
         }
     });

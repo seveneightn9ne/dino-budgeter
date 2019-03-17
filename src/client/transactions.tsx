@@ -1,7 +1,8 @@
-import * as _ from "lodash";
+import _ from "lodash";
 import * as React from "react";
 import { getTransactionAIs } from "../shared/ai";
 import { DeleteTransaction, TransactionAmount, TransactionCategory, TransactionDate, TransactionDescription } from "../shared/api";
+import Money from '../shared/Money';
 import { Category, CategoryId, Frame, Friend, Transaction, TransactionId } from "../shared/types";
 import AIComponent from "./ai";
 import { ClickToEditDate, ClickToEditDropdown, ClickToEditMoney, ClickToEditText } from "./components/clicktoedit";
@@ -34,6 +35,10 @@ type Props = PropsForPage | PropsForCategory;
 
 interface State {
     popletOpen: boolean;
+}
+
+function shouldHighlight(tx: Transaction): boolean {
+    return !tx.category && tx.amount.cmp(Money.Zero) !== 0;
 }
 
 export default class Transactions extends React.Component<Props, State> {
@@ -110,7 +115,7 @@ export default class Transactions extends React.Component<Props, State> {
                 postKey="description"
                 postData={{ id: tx.id }}
             /></td>
-            <td className={tx.category ? "category" : "category highlighted"}>
+            <td className={shouldHighlight(tx) ? "category highlighted" : "category"}>
                 <ClickToEditDropdown
                     editable={editable}
                     api={TransactionCategory}
@@ -190,7 +195,10 @@ class MobileTransactionRow extends React.PureComponent<MobileRowProps, { open: b
             </div>
             <div className="tx-mobile-stretch">
                 <div className="tx-mobile-category">
-                    {this.props.categoryName(tx.category) || <span className="highlighted">Uncategorized</span>}
+                    {
+                        this.props.categoryName(tx.category) ||
+                        <span className={shouldHighlight(tx) ? "highlighted" : ""}>Uncategorized</span>
+                    }
                 </div>
                 <div className="tx-mobile-desc">{tx.description}</div>
             </div>
