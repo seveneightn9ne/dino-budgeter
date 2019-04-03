@@ -1,7 +1,8 @@
 import _ from "lodash";
 import pgPromise from "pg-promise";
 import Money from "../shared/Money";
-import { UserId, Payment, Charge, FrameIndex } from "../shared/types";
+import { UserId, Payment, Charge, FrameIndex, PaymentId } from "../shared/types";
+import * as util from '../shared/util';
 
 export async function addToBalance(u1: UserId, u2: UserId, amount: Money, t: pgPromise.ITask<{}>): Promise<void> {
     [u1, u2] = [u1, u2].sort();
@@ -41,7 +42,7 @@ export async function addPayment(frame: FrameIndex, from: UserId, to: UserId, me
     if (u1 === from) {
         amount = amount.negate();
     }
-    return addPaymentInner(frame, u1, u2, memo, amount, false, t);
+    return addPaymentInner(util.randomId(), frame, u1, u2, memo, amount, false, t);
 }
 
 export async function addCharge(frame: FrameIndex, debtor: UserId, debtee: UserId, memo: string, amount: Money, t: pgPromise.ITask<{}>): Promise<void> {
@@ -51,12 +52,12 @@ export async function addCharge(frame: FrameIndex, debtor: UserId, debtee: UserI
     if (u1 === debtor) {
         amount = amount.negate();
     }
-    return addPaymentInner(frame, u1, u2, memo, amount, true, t);
+    return addPaymentInner(util.randomId(), frame, u1, u2, memo, amount, true, t);
 }
 
 /** u1, u2 must be sorted */
-async function addPaymentInner(frame: FrameIndex, u1: UserId, u2: UserId, memo: string, amount: Money, isCharge: boolean, t: pgPromise.ITask<{}>) {
-    await t.none("insert into payments (friendship_u1, friendship_u2, amount, is_charge, memo, frame) values ($1, $2, $3, $4, $5, $6)", [u1, u2, amount.string(), isCharge, memo, frame]);
+async function addPaymentInner(id: PaymentId, frame: FrameIndex, u1: UserId, u2: UserId, memo: string, amount: Money, isCharge: boolean, t: pgPromise.ITask<{}>) {
+    await t.none("insert into payments (id, friendship_u1, friendship_u2, amount, is_charge, memo, frame) values ($1, $2, $3, $4, $5, $6, $7)", [id, u1, u2, amount.string(), isCharge, memo, frame]);
     await addToBalance(u1, u2, amount, t);
 }
 
