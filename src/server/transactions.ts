@@ -100,6 +100,11 @@ export async function getUser(tid: TransactionId, t: pgPromise.ITask<{}>): Promi
     return row.uid;
 }
 
+export async function getGid(tid: TransactionId, t: pgPromise.ITask<{}>): Promise<GroupId> {
+    const row = await t.one("select gid from transactions id = $1", [tid]);
+    return row.gid;
+}
+
 export async function canUserEdit(tid: TransactionId, uid: UserId, t: pgPromise.ITask<{}>): Promise<boolean> {
     const row = await t.one(`select count(*) > 0 as exists
         from membership left join transactions

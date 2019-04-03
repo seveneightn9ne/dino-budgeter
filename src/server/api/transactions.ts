@@ -61,6 +61,7 @@ export function handle_transaction_post(request: ApiRequest<typeof AddTransactio
                 payer,
             });
             await t.batch([
+                frames.markNotGhost(other_gid, request.frame, t),
                 payments.addToBalance(actor.uid, other, balance, t),
                 t.none(query, [other_id, other_gid, request.frame, request.split.otherAmount.string(), request.description, other_cat, request.date]),
                 t.none(`insert into shared_transactions (id, payer, settled) values ($1, $2, true)`, [sid, payer]),
@@ -157,8 +158,10 @@ function handle_transaction_update_post<
         const val = transform(value);
         const query = "update transactions set " + field + " = $1 where id = $2";
         await t.none(query, [val, id]);
+        let otherTid: TransactionId;
         if (updateLinked && existing.split) {
-            await t.none(query, [val, await transactions.getOtherTid(id, existing.split.id, t)]);
+            otherTid = await transactions.getOtherTid(id, existing.split.id, t);
+            await t.none(query, [val, otherTid]);
         }
         // Update the frame with the date
         if (field === "date") {
@@ -166,6 +169,10 @@ function handle_transaction_update_post<
                 throw new Error("How can I update date when it's not a date");
             }
             const newFrame = index(val.getMonth(), val.getFullYear());
+            await frames.markNotGhost(existing.gid, newFrame, t);
+            if (updateLinked && existing.split) {
+                await frames.markNotGhost(await transactions.getGid(otherTid, t), newFrame, t);
+            }
             await t.none("update transactions set frame = $1 where id = $2", [newFrame, id]);
         }
         return null;
