@@ -18,7 +18,7 @@ create table users (
   password_hash char(60) not null,
   settings json not null default '{}',
   ctime timestamp not null default current_timestamp,
-  name varchar(255),
+  name varchar(255)
 );
 create index email on users(email);
 

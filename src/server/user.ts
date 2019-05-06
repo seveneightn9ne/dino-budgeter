@@ -69,8 +69,8 @@ export async function addFriend(actor: UserId, friend: UserId, t: pgPromise.ITas
     } else {
         const u1_accepted = u1 == actor;
         const u2_accepted = u2 == actor;
-        await t.none("insert into friendship (u1, u2, u1_accepted, u2_accepted, alive) values ($1, $2, $3, $4, true)",
-            [u1, u2, u1_accepted, u2_accepted]);
+        await t.none("insert into friendship (u1, u2, u1_accepted, u2_accepted, balance, alive) values ($1, $2, $3, $4, $5, true)",
+            [u1, u2, u1_accepted, u2_accepted, '0']);
     }
 }
 

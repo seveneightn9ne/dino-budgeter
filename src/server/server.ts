@@ -87,7 +87,7 @@ async function runMigrations() {
 let server = null;
 
 if (!process.env.DINO_SESSION_SECRET) {
-  console.error("DINO_SESSION_SECRET is required");
+  console.error("FATAL: DINO_SESSION_SECRET is required");
 } else {
   runMigrations().then(() =>
     server = app.listen(app.get("port"), () => {

@@ -38,6 +38,7 @@ sudo apt install postgresql postgresql-contrib
 ```
 brew install postgresql
 ```
+Test that your database is running with `psql postgres`. If it doesn't work, run `brew services restart postgresql`.
 
 ### 2. Create a user named `budgeter` and give it no special priveleges.
 
@@ -92,9 +93,14 @@ Create a `.envrc` file in the repo root with the following contents:
 
 ```
 export PGPASSWORD=blahblahpassword
+export DINO_SESSION_SECRET=somelongsecuresecretstring
 ```
 
-You may need to run `direnv allow`.
+Set the `PGPASSWORD` value to the password you set in step 3.
+
+Set the `DINO_SESSION_SECRET` to a long random string.
+
+Afterwards, you may need to run `direnv allow`.
 
 ### 6. Initialize the db
 ```

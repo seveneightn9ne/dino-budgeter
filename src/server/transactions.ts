@@ -101,7 +101,7 @@ export async function getUser(tid: TransactionId, t: pgPromise.ITask<{}>): Promi
 }
 
 export async function getGid(tid: TransactionId, t: pgPromise.ITask<{}>): Promise<GroupId> {
-    const row = await t.one("select gid from transactions id = $1", [tid]);
+    const row = await t.one("select gid from transactions where id = $1", [tid]);
     return row.gid;
 }
 

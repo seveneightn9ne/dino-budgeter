@@ -2,7 +2,7 @@ import { IMain } from "pg-promise";
 import pgPromise from "pg-promise";
 
 const pgp: IMain = pgPromise({
-    error: (err: any, e: pgPromise.EventContext) => {
+    error: (err: any, e: pgPromise.IEventContext) => {
         let msg = "";
         if (typeof err === 'string') {
             msg = err;
