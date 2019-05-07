@@ -110,7 +110,7 @@ export default class Account extends React.Component<Props, State> {
                 });
             }
         }).catch(e => {
-            if (e == 404) {
+            if (e.status && e.status == 404) {
                 this.setState({ addFriendError: "That user does not exist." });
             } else {
                 throw e;
@@ -208,7 +208,8 @@ export default class Account extends React.Component<Props, State> {
         const friends = this.state.friends.map(friend => <li key={friend.uid}>{friend.email}{" "}
             <span className="button inline secondary" onClick={() => this.deleteFriend(friend.email)}>Remove</span></li>);
 
-        friends.push(...this.state.pendingFriends.map(friend => <li key={friend.uid}>{friend.email}{" "}
+        friends.push(...this.state.pendingFriends.map(friend => <li key={friend.uid}>
+            <span className="highlighted">{friend.email}</span>{" "}
             <span className="pending">(Pending)</span>{" "}
             <span className="button inline secondary" onClick={() => this.rejectFriend(friend.email)}>Remove</span></li>));
 

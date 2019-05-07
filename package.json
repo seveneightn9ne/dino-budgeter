@@ -43,7 +43,7 @@
     "react-dom": "^16.8.0",
     "react-media": "^1.8.0",
     "react-router-dom": "^4.3.1",
-    "typescript-json-api": "^1.0.5"
+    "typescript-json-api": "^1.0.8"
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.2",
