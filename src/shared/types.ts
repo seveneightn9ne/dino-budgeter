@@ -75,7 +75,6 @@ export interface Friend {
 
 export interface InitState {
     frame?: Frame;
-    categories?: Category[];
     friends?: Friend[];
     pendingFriends?: Friend[];
     invites?: Friend[];

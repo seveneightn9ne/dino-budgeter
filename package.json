@@ -63,6 +63,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "build-server": "node_modules/.bin/tsc",
     "build-client": "node_modules/.bin/webpack --mode=development",
+    "build-client-prod": "node_modules/.bin/webpack --mode=production",
     "build": "npm run build-server && npm run build-client",
     "watch-server": "node_modules/.bin/tsc -w",
     "watch-serve": "find dist/server dist/shared | entr -r sh -c \"npm run serve\"",

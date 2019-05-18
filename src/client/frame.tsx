@@ -503,7 +503,7 @@ export default class Frame extends React.Component<FrameProps, FrameState> {
                             onAddTransaction={this.onAddTransaction}
                             defaultDate={this.newTxDate()}
                             friends={this.state.friends || []}
-                            categories={this.state.categories || []}
+                            categories={this.state.frame.categories || []}
                         />
                     </ControlledPoplet>
                     <Link to={`${appPrefix}/categories`} className="link">Home</Link>

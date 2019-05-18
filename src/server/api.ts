@@ -27,9 +27,6 @@ export async function handle_init_get(
         if (fields.has('invites')) {
             resData.invites = await user.getFriendInvites(actor.uid, t);
         }
-        if (fields.has('categories')) {
-            resData.categories = await categories.getCategories(await gid(), request.index, t);
-        }
         if (fields.has('friends')) {
             resData.friends = await user.getFriends(actor.uid, t);
         }
