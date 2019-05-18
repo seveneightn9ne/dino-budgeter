@@ -65,6 +65,7 @@
     "build-client": "node_modules/.bin/webpack --mode=development",
     "build-client-prod": "node_modules/.bin/webpack --mode=production",
     "build": "npm run build-server && npm run build-client",
+    "build-prod": "npm run build-server && npm run build-client-prod",
     "watch-server": "node_modules/.bin/tsc -w",
     "watch-serve": "find dist/server dist/shared | entr -r sh -c \"npm run serve\"",
     "watch-client": "node_modules/.bin/webpack --mode=development --watch",
