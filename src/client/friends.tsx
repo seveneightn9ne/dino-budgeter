@@ -104,13 +104,13 @@ export default class Friends extends React.Component<Props, State> {
                 email, amount, youPay, isPayment, memo, frame,
             },
         }).then(() => {
+            const date = util.defaultTxDate(frame); // just so it's in the right frame
             if (isPayment) {
                 const payment: Payment = {
                     type: 'payment',
                     payer: youPay ? this.props.me.uid : uid,
                     payee: youPay ? uid : this.props.me.uid,
-                    amount, memo, frame,
-                    date: new Date(),
+                    amount, memo, frame, date,
                     id: "", // XXX(jessk): get the id
                 }
                 this.props.onPayment(email, payment);
@@ -119,8 +119,7 @@ export default class Friends extends React.Component<Props, State> {
                     type: 'charge',
                     debtor: youPay ? this.props.me.uid : uid,
                     debtee: youPay ? uid : this.props.me.uid,
-                    amount, memo, frame,
-                    date: new Date(),
+                    amount, memo, frame, date,
                     id: "", // XXX(jessk): get the id
                 }
                 this.props.onPayment(email, charge);

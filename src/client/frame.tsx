@@ -358,14 +358,14 @@ export default class Frame extends React.Component<FrameProps, FrameState> {
     }
 
     onPayment = (email: string, pmt: Charge | Payment) => {
-        let diffToBalance = pmt.amount.plus(Money.Zero);
-        if (pmt.type == 'charge') {
-            diffToBalance = diffToBalance.negate();
-        }
+        let diffToBalance = pmt.amount.plus(Money.Zero); // why + 0?
+        // If I charge you, you owe me more. balance (I owe you) decreases
+        // If I pay you, I owe you less. balance (I owe you) decreases
         if ((pmt.type == 'charge' && pmt.debtor !== this.state.me.uid) ||
             (pmt.type == 'payment' && pmt.payer !== this.state.me.uid)) {
             diffToBalance = diffToBalance.negate();
         }
+        // Because it should decrease, we use minus
         const newBalance = this.state.debts[email].balance.minus(diffToBalance);
         const newPayments = [pmt, ...this.state.debts[email].payments];
         this.setState({ debts: { ...this.state.debts, [email]: { balance: newBalance, payments: newPayments } } });
