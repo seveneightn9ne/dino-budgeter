@@ -1,31 +1,26 @@
 {
-    "compilerOptions": {
-        "esModuleInterop": true,
-        "target": "es6",
-        "noImplicitAny": true,
-        "noUnusedLocals": true,
-        "noUnusedParameters": true,
-        "module": "commonjs",
-        "moduleResolution": "node",
-        "sourceMap": true,
-        "outDir": "dist",
-        "baseUrl": ".",
-        "jsx": "react",
-        "paths": {
-            "*": [
-                "node_modules/*",
-                "src/types/*"
-            ]
-        },
-        "lib": ["es5", "es2015", "dom"],
-        "plugins": [
-            {
-                "name": "typescript-tslint-plugin",
-                "configFile": "tslint.json",
-            }
-        ]
+  "compilerOptions": {
+    "esModuleInterop": true,
+    "target": "es6",
+    "noImplicitAny": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "sourceMap": true,
+    "outDir": "dist",
+    "baseUrl": ".",
+    "jsx": "react",
+    "paths": {
+      "*": ["node_modules/*", "src/types/*"]
     },
-    "include": [
-        "src/**/*"
+    "lib": ["es5", "es2015", "dom"],
+    "plugins": [
+      {
+        "name": "typescript-tslint-plugin",
+        "configFile": "tslint.json"
+      }
     ]
+  },
+  "include": ["src/**/*"]
 }

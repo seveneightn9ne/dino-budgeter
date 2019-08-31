@@ -9,7 +9,28 @@ import passport from "passport";
 import path from "path";
 import serveStatic from "serve-static";
 import { express as api } from "typescript-json-api";
-import { AcceptFriend, AddCategory, AddTransaction, BudgetingMove, CategoryBudget, CategoryName, DeleteCategory, DeleteFriend, DeleteTransaction, Income, Initialize, Name, Payment, RejectFriend, TransactionAmount, TransactionCategory, TransactionDate, TransactionDescription, TransactionSplit, UpdateSettings } from '../shared/api';
+import {
+  AcceptFriend,
+  AddCategory,
+  AddTransaction,
+  BudgetingMove,
+  CategoryBudget,
+  CategoryName,
+  DeleteCategory,
+  DeleteFriend,
+  DeleteTransaction,
+  Income,
+  Initialize,
+  Name,
+  Payment,
+  RejectFriend,
+  TransactionAmount,
+  TransactionCategory,
+  TransactionDate,
+  TransactionDescription,
+  TransactionSplit,
+  UpdateSettings,
+} from "../shared/api";
 import * as dino_api from "./api";
 import * as categories from "./api/categories";
 import * as frame from "./api/frame";
@@ -20,9 +41,11 @@ import * as auth from "./auth";
 import db from "./db";
 
 const app = express();
-app.use(bodyParser.text({
-  type: "application/json",
-}));
+app.use(
+  bodyParser.text({
+    type: "application/json",
+  }),
+);
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(validator());
 app.use(morgan("combined"));
@@ -52,7 +75,9 @@ app.set("port", process.env.PORT || 3000);
 
 // API configuration
 api.registerPassportUserExtractor();
-api.registerMiddleware(ensureLogin.ensureLoggedIn({ redirectTo: "/api/auth-redirect" }));
+api.registerMiddleware(
+  ensureLogin.ensureLoggedIn({ redirectTo: "/api/auth-redirect" }),
+);
 
 /**
  * Primary app routes.
@@ -83,10 +108,22 @@ api.register(app, BudgetingMove, frame.handle_budgeting_move_post);
 
 api.register(app, AddTransaction, transactions.handle_transaction_post);
 api.register(app, DeleteTransaction, transactions.handle_transaction_delete);
-api.register(app, TransactionDescription, transactions.handle_transaction_description_post);
-api.register(app, TransactionAmount, transactions.handle_transaction_amount_post);
+api.register(
+  app,
+  TransactionDescription,
+  transactions.handle_transaction_description_post,
+);
+api.register(
+  app,
+  TransactionAmount,
+  transactions.handle_transaction_amount_post,
+);
 api.register(app, TransactionDate, transactions.handle_transaction_date_post);
-api.register(app, TransactionCategory, transactions.handle_transaction_category_post);
+api.register(
+  app,
+  TransactionCategory,
+  transactions.handle_transaction_category_post,
+);
 api.register(app, TransactionSplit, transactions.handle_transaction_split_post);
 
 api.register(app, AddCategory, categories.handle_category_post);
@@ -104,11 +141,21 @@ app.use(serveStatic(path.join(__dirname, "../../static/fontawesome")));
 app.use(serveStatic(path.join(__dirname, "../../static/images")));
 app.get("/index.css", serveStatic(path.join(__dirname, "../../static/")));
 
-const reactMode = app.get("env") == "development" ? "development" : "production.min";
+const reactMode =
+  app.get("env") == "development" ? "development" : "production.min";
 app.get("/react.js", (_, res) =>
-  res.sendFile(path.join(__dirname, `../../node_modules/react/umd/react.${reactMode}.js`)));
+  res.sendFile(
+    path.join(__dirname, `../../node_modules/react/umd/react.${reactMode}.js`),
+  ),
+);
 app.get("/react-dom.js", (_, res) =>
-  res.sendFile(path.join(__dirname, `../../node_modules/react-dom/umd/react-dom.${reactMode}.js`)));
+  res.sendFile(
+    path.join(
+      __dirname,
+      `../../node_modules/react-dom/umd/react-dom.${reactMode}.js`,
+    ),
+  ),
+);
 
 const index = (_req: Request, res: Response) =>
   res.sendFile(path.join(__dirname + "../../../static/index.html"));
@@ -118,7 +165,11 @@ app.get("/login", ensureLogin.ensureLoggedOut("/app"), index);
 app.get("/signup", ensureLogin.ensureLoggedOut("/app"), index);
 app.get("/app", ensureLogin.ensureLoggedIn(""), index);
 app.get("/app/home/:month/:year", ensureLogin.ensureLoggedIn(""), index);
-app.get("/app/transactions/:month/:year", ensureLogin.ensureLoggedIn(""), index);
+app.get(
+  "/app/transactions/:month/:year",
+  ensureLogin.ensureLoggedIn(""),
+  index,
+);
 
 // Anything not matched above, use the main react app
 app.get("*", index);
