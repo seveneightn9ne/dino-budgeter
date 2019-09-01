@@ -115,6 +115,8 @@ const transactionSchema: SchemaType<Transaction> = {
 };
 const settingsSchema: SchemaType<UserSettings> = {
   rollover: Schemas.optional(Schemas.boolean()),
+  emailNewTransaction: Schemas.optional(Schemas.boolean()),
+  emailNewPayment: Schemas.optional(Schemas.boolean()),
 } as SchemaType<UserSettings>;
 
 /** API Endpoints */
@@ -334,7 +336,9 @@ export const Name = new api.API(
   api.emptySchema,
 );
 const friendRequest = { email: Schemas.string({ nonEmpty: true }) };
-export interface FriendRequest { email: string }
+export interface FriendRequest {
+  email: string;
+}
 export const AcceptFriend = new api.API<FriendRequest, Friend>(
   "/api/friend",
   friendRequest,

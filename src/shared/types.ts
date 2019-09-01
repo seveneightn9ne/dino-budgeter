@@ -18,6 +18,8 @@ export interface User {
 }
 export interface UserSettings {
   rollover?: boolean;
+  emailNewTransaction?: boolean;
+  emailNewPayment?: boolean;
 }
 
 // Corresponds to `categories` db table, plus `balance`

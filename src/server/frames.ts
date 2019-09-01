@@ -148,8 +148,8 @@ export async function getBalance(
   index: FrameIndex,
   t: pgPromise.ITask<{}>,
 ): Promise<Money> {
-  const settings = await user.getGroupSettings(gid, t);
-  const frameComparison = settings.rollover ? "<=" : "=";
+  const rollover = await user.getGroupSettingOrDefault(gid, "rollover", t);
+  const frameComparison = rollover ? "<=" : "=";
 
   const txnRows = await t.manyOrNone(
     `select amount from transactions

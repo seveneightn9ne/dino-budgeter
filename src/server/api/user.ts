@@ -77,7 +77,7 @@ export function handle_update_settings_post(
   actor: User,
 ): Promise<Response<EmptyResponse>> {
   return db.tx(async (t) => {
-    const settings = await user.getSettings(actor.uid, t);
+    const settings = await user.getRawSettings(actor.uid, t);
     _.assignIn(settings, request);
     await user.setSettings(actor.uid, settings, t);
     return null;

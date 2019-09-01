@@ -20,6 +20,7 @@ import {
 import * as util from "../../shared/util";
 import db from "../db";
 import * as frames from "../frames";
+import * as notify from "../notify";
 import * as payments from "../payments";
 import * as transactions from "../transactions";
 import * as user from "../user";
@@ -132,6 +133,7 @@ export function handle_transaction_post(
       date: request.date,
       split,
     };
+    notify.newTransaction(transaction, actor, t);
     return transaction;
   });
 }

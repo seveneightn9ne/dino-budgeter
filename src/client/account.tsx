@@ -1,3 +1,4 @@
+import _ from "lodash";
 import * as React from "react";
 import { Link } from "react-router-dom";
 import {
@@ -7,6 +8,7 @@ import {
   RejectFriend,
   UpdateSettings,
 } from "../shared/api";
+import * as settings from "../shared/settings";
 import { Friend, UserSettings } from "../shared/types";
 import { FadeCheck } from "./components/fadecheck";
 import * as util from "./util";
@@ -23,13 +25,15 @@ interface InitializedState {
 
 interface NonInitializedState {
   initialized: boolean;
+
+  displaySettings: Required<UserSettings>;
+  lastSaveSettings: { [k in keyof Required<UserSettings>]: number };
+
   addFriend: string;
   addFriendError?: string;
+
   name: string;
   lastSave: number;
-  timers: number[];
-  rollover: boolean;
-  lastSaveRollover: number;
 }
 
 interface State extends Partial<InitializedState>, NonInitializedState {}
@@ -40,9 +44,10 @@ export default class Account extends React.Component<Props, State> {
     addFriend: "",
     name: "",
     lastSave: 0,
-    timers: [],
-    rollover: false,
-    lastSaveRollover: 0,
+    displaySettings: settings.getDefaultSettings(),
+    lastSaveSettings: _.mapValues(settings.getDefaultSettings(), () => 0) as {
+      [k in keyof Required<UserSettings>]: number;
+    },
   };
 
   public componentDidMount() {
@@ -57,14 +62,18 @@ export default class Account extends React.Component<Props, State> {
         "settings",
       )
       .then(() => {
-        console.log("init with rollover " + this.state.settings.rollover);
-        console.log(
-          "making state to " + !(this.state.settings.rollover === false),
-        );
-        this.setState(({ me, settings }) => ({
-          name: me.name || me.email,
-          rollover: !(settings.rollover === false), // defaults to true
-        }));
+        this.setState(({ me, displaySettings, settings }) => {
+          const newDisplaySettings = { ...displaySettings };
+          _.forEach(settings, (setting, key: keyof UserSettings) => {
+            if (setting !== undefined) {
+              newDisplaySettings[key] = setting;
+            }
+          });
+          return {
+            name: me.name || me.email,
+            displaySettings: newDisplaySettings,
+          };
+        });
       });
   }
 
@@ -94,22 +103,26 @@ export default class Account extends React.Component<Props, State> {
     e.preventDefault();
   }
 
-  private onSaveRollover = (rollover: boolean) => {
-    this.setState({ rollover });
+  private onUpdateSetting = (setting: keyof UserSettings, value: boolean) => {
+    this.setState(({ displaySettings }) => ({
+      displaySettings: { ...displaySettings, [setting]: value },
+    }));
     util
       .apiFetch({
         api: UpdateSettings,
-        body: { rollover },
+        body: { [setting]: value },
       })
       .then(() => {
-        this.setState(({ settings }) => ({
-          settings: { ...settings, rollover },
-          lastSaveRollover: Date.now(),
+        this.setState(({ displaySettings, lastSaveSettings }) => ({
+          displaySettings: { ...displaySettings, [setting]: value },
+          lastSaveSettings: { ...lastSaveSettings, [setting]: Date.now() },
         }));
       });
   }
 
-  public isInitialized(state: State): state is InitializedState & NonInitializedState {
+  public isInitialized(
+    state: State,
+  ): state is InitializedState & NonInitializedState {
     return state.initialized;
   }
 
@@ -184,11 +197,36 @@ export default class Account extends React.Component<Props, State> {
   }
 
   private onChangeRollover = (e: React.ChangeEvent<HTMLInputElement>) => {
-    this.onSaveRollover(e.target.checked);
+    this.onUpdateSetting("rollover", e.target.checked);
   }
 
   private onChangeNoRollover = (e: React.ChangeEvent<HTMLInputElement>) => {
-    this.onSaveRollover(!e.target.checked);
+    this.onUpdateSetting("rollover", !e.target.checked);
+  }
+
+  private onChangeSettingField = (
+    field: keyof UserSettings,
+    e: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    this.onUpdateSetting(field, e.target.checked);
+  }
+
+  private renderSettingsCheckbox(
+    field: keyof UserSettings,
+    description: string,
+  ): JSX.Element {
+    return (
+      <label>
+        <input
+          type="checkbox"
+          name={field}
+          onChange={(e) => this.onChangeSettingField(field, e)}
+          checked={this.state.displaySettings[field]}
+        />
+        {" " + description + " "}
+        <FadeCheck save={this.state.lastSaveSettings[field]} />
+      </label>
+    );
   }
 
   private renderSettings(): JSX.Element {
@@ -216,7 +254,7 @@ export default class Account extends React.Component<Props, State> {
         </form>
         <p>
           <b>Rollover:</b> when there's money left over at the end of the month,{" "}
-          <FadeCheck save={this.state.lastSaveRollover} />
+          <FadeCheck save={this.state.lastSaveSettings.rollover} />
         </p>
         <form>
           <label>
@@ -224,7 +262,7 @@ export default class Account extends React.Component<Props, State> {
               type="radio"
               name="rollover"
               value="1"
-              checked={this.state.rollover}
+              checked={this.state.displaySettings.rollover}
               onChange={this.onChangeRollover}
             />{" "}
             Roll over to the next month
@@ -235,11 +273,27 @@ export default class Account extends React.Component<Props, State> {
               type="radio"
               name="rollover"
               value="0"
-              checked={!this.state.rollover}
+              checked={!this.state.displaySettings.rollover}
               onChange={this.onChangeNoRollover}
             />{" "}
             Ignore leftover money
           </label>
+        </form>
+
+        <form>
+          <p>
+            <b>Email:</b> send me an email when...
+            <br />
+            {this.renderSettingsCheckbox(
+              "emailNewTransaction",
+              "A friend adds a new transaction split with me",
+            )}
+            <br />
+            {this.renderSettingsCheckbox(
+              "emailNewPayment",
+              "A friend adds a payment or charge with me",
+            )}
+          </p>
         </form>
       </div>
     );

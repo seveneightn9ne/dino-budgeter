@@ -1,6 +1,7 @@
 import _ from "lodash";
 import pgPromise from "pg-promise";
 import Money from "../shared/Money";
+import * as settings from "../shared/settings";
 import {
   Charge,
   Friend,
@@ -82,9 +83,7 @@ export async function getFriend(
     "select U.email, U.name, M.gid from users U left join membership M on U.uid = M.uid where U.uid = $1",
     [uid],
   );
-  return row
-    ? { uid, gid: row.gid, email: row.email, name: row.name }
-    : null;
+  return row ? { uid, gid: row.gid, email: row.email, name: row.name } : null;
 }
 
 export async function getEmail(
@@ -263,7 +262,8 @@ export async function getDebts(
   return ret;
 }
 
-export async function getSettings(
+// Doesn't have defaults applied. Prefer getSettingOrDefault to read a particular value.
+export async function getRawSettings(
   user: UserId,
   t: pgPromise.ITask<{}>,
 ): Promise<UserSettings> {
@@ -271,8 +271,16 @@ export async function getSettings(
   return row.settings;
 }
 
+export async function getSettingOrDefault(
+  user: UserId,
+  field: keyof UserSettings,
+  t: pgPromise.ITask<{}>,
+): Promise<boolean> {
+  return settings.getWithDefault(await getRawSettings(user, t), field);
+}
+
 // XXX gets the user settings for the first user in the group
-export async function getGroupSettings(
+async function getRawGroupSettings(
   group: GroupId,
   t: pgPromise.ITask<{}>,
 ): Promise<UserSettings> {
@@ -283,6 +291,15 @@ export async function getGroupSettings(
     [group],
   );
   return row.settings;
+}
+
+// XXX gets the user settings for the first user in the group
+export async function getGroupSettingOrDefault(
+  user: UserId,
+  field: keyof UserSettings,
+  t: pgPromise.ITask<{}>,
+): Promise<boolean> {
+  return settings.getWithDefault(await getRawGroupSettings(user, t), field);
 }
 
 export async function setSettings(

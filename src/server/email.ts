@@ -16,9 +16,13 @@ function transporter(): nodemailer.Transporter {
   return _transporter;
 }
 
-export function send(opts: { to: string; subject: string; body: string }) {
+export async function send(opts: {
+  to: string;
+  subject: string;
+  body: string;
+}) {
   if (app.get("env") === "production") {
-    transporter().sendMail({
+    return transporter().sendMail({
       from: '"Dino Budgeting" dino@dino.jesskenney.com',
       to: opts.to,
       subject: opts.subject,

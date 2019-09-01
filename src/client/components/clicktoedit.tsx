@@ -1,6 +1,7 @@
 import * as React from "react";
 import { API, EmptyResponse } from "typescript-json-api/dist/shared/api";
 import Money from "../../shared/Money";
+import { formatDate } from "../../shared/util";
 import * as util from "../util";
 
 interface ClickToEditProps<
@@ -246,7 +247,7 @@ export class ClickToEditDate<
     return util.fromYyyymmdd(val) as Value<Request, K, Date>;
   }
   public formatDisplay(val: Date): string {
-    return `${val.getMonth() + 1}/${val.getDate()}/${val.getFullYear()}`;
+    return formatDate(val);
   }
   public toInput(val: Date): string {
     return util.yyyymmdd(val);
@@ -289,7 +290,9 @@ export class ClickToEditDropdown<
   public validateChange(val: string): boolean {
     return this.props.values.get(val) != undefined;
   }
-  public postTransform(val: Value<Request, K, string>): Value<Request, K, string> {
+  public postTransform(
+    val: Value<Request, K, string>,
+  ): Value<Request, K, string> {
     if (this.props.postTransform) {
       return this.props.postTransform(val) as Value<Request, K, string>;
     }
@@ -326,7 +329,11 @@ export class ClickToEditDropdown<
       ),
     );
     return (
-      <select autoFocus={true} onChange={this.onChange} value={this.state.newValue}>
+      <select
+        autoFocus={true}
+        onChange={this.onChange}
+        value={this.state.newValue}
+      >
         {options}
       </select>
     );

@@ -61,7 +61,7 @@ export async function handle_init_get(
       );
     }
     if (fields.has("settings")) {
-      resData.settings = await user.getSettings(actor.uid, t);
+      resData.settings = await user.getRawSettings(actor.uid, t);
     }
     return resData;
   });

@@ -2,6 +2,7 @@ import _ from "lodash";
 import * as React from "react";
 import { Payment as APIPayment } from "../shared/api";
 import Money from "../shared/Money";
+import { description } from "../shared/payments";
 import { Charge, FrameIndex, Friend, Payment, UserId } from "../shared/types";
 import { ControlledPoplet } from "./components/poplet";
 import * as util from "./util";
@@ -373,14 +374,7 @@ export default class Friends extends React.Component<Props, State> {
       const payments = f.debt.payments
         .filter((p) => p.frame >= this.state.latestFrame[f.uid])
         .map((payment) => {
-          const text =
-            payment.type == "payment"
-              ? payment.payer == this.props.me.uid
-                ? `You paid ${displayName} ${payment.amount.formatted()}`
-                : `${displayName} paid you ${payment.amount.formatted()}`
-              : payment.debtor == this.props.me.uid
-              ? `You charged ${displayName} ${payment.amount.formatted()}`
-              : `${displayName} charged you ${payment.amount.formatted()}`;
+          const text = description(this.props.me.uid, f, payment);
           return (
             <tr
               key={

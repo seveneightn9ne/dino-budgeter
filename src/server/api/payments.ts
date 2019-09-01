@@ -26,6 +26,7 @@ export function handle_payment_post(
     }
     if (request.isPayment) {
       await payments.addPayment(
+        actor,
         frame,
         from,
         to,
@@ -35,6 +36,7 @@ export function handle_payment_post(
       );
     } else {
       await payments.addCharge(
+        actor,
         frame,
         from,
         to,

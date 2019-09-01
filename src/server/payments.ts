@@ -6,9 +6,11 @@ import {
   FrameIndex,
   Payment,
   PaymentId,
+  User,
   UserId,
 } from "../shared/types";
 import * as util from "../shared/util";
+import * as notify from "./notify";
 
 export async function addToBalance(
   u1: UserId,
@@ -67,6 +69,7 @@ export async function getBalances(
 }
 
 export async function addPayment(
+  actor: User,
   frame: FrameIndex,
   from: UserId,
   to: UserId,
@@ -77,22 +80,27 @@ export async function addPayment(
   const [u1, u2] = [from, to].sort();
   // Jess pays Miles $10.
   // If Jess is u1, the balance should decrease by $10.
+  let dbAmount = amount;
   if (u1 === from) {
-    amount = amount.negate();
+    dbAmount = amount.negate();
   }
-  return addPaymentInner(
-    util.randomId(),
-    frame,
-    u1,
-    u2,
-    memo,
+  const id = util.randomId();
+  await addPaymentInner(id, frame, u1, u2, memo, dbAmount, false, t);
+  const payment = {
+    type: "payment",
+    payer: from,
+    payee: to,
     amount,
-    false,
-    t,
-  );
+    date: new Date(),
+    memo,
+    frame,
+    id,
+  } as Payment;
+  notify.newPayment(actor, getOther(actor, u1, u2), payment, t);
 }
 
 export async function addCharge(
+  actor: User,
   frame: FrameIndex,
   debtor: UserId,
   debtee: UserId,
@@ -103,10 +111,27 @@ export async function addCharge(
   const [u1, u2] = [debtor, debtee].sort();
   // Miles owes Jess $10, so Jess is the debtor.
   // If Jess is u1, the balance should decrease by $10.
+  let dbAmount = amount;
   if (u1 === debtor) {
-    amount = amount.negate();
+    dbAmount = amount.negate();
   }
-  return addPaymentInner(util.randomId(), frame, u1, u2, memo, amount, true, t);
+  const id = util.randomId();
+  await addPaymentInner(id, frame, u1, u2, memo, dbAmount, true, t);
+  const charge = {
+    type: "charge",
+    debtor,
+    debtee,
+    amount,
+    date: new Date(),
+    memo,
+    frame,
+    id,
+  } as Charge;
+  notify.newPayment(actor, getOther(actor, u1, u2), charge, t);
+}
+
+function getOther(actor: User, u1: UserId, u2: UserId): UserId {
+  return actor.uid === u1 ? u2 : u1;
 }
 
 /** u1, u2 must be sorted */

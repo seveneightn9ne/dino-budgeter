@@ -7,3 +7,7 @@ export function randomId() {
 export function token() {
   return randomstring.generate({ length: 64, capitalization: "lowercase" });
 }
+
+export function formatDate(val: Date) {
+  return `${val.getMonth() + 1}/${val.getDate()}/${val.getFullYear()}`;
+}

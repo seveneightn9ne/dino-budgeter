@@ -1,4 +1,5 @@
 # Dino Budgeter
+
 Budgeting webapp.
 
 ## Development
@@ -6,16 +7,19 @@ Budgeting webapp.
 See [Dev Setup] first.
 
 Build the stuff
+
 ```
 npm run build
 ```
 
 Run the server
+
 ```
 npm run serve
 ```
 
 Watching
+
 ```
 npm run watch-server
 npm run watch-client
@@ -26,30 +30,32 @@ npm run watch-serve
 
 ### 1. Install Postgres
 
-*Ubuntu*
+_Ubuntu_
 
 ```
 sudo apt update
 sudo apt install postgresql postgresql-contrib
 ```
 
-*macOS*
+_macOS_
 
 ```
 brew install postgresql
 ```
+
 Test that your database is running with `psql postgres`. If it doesn't work, run `brew services restart postgresql`.
 
 ### 2. Create a user named `budgeter` and give it no special priveleges.
 
-*Ubuntu*
+_Ubuntu_
 
 Ignore non-fatal errors about changing directories.
+
 ```
 sudo -u postgres createuser --interactive
 ```
 
-*macOS*
+_macOS_
 
 ```
 createuser --interactive
@@ -57,14 +63,14 @@ createuser --interactive
 
 ### 3. Set the user's password. Pick a good password and save it somewhere.
 
-*Ubuntu*
+_Ubuntu_
 
 ```
 sudo -u postgres psql
 postgres=# \password budgeter
 ```
 
-*macOS*
+_macOS_
 
 ```
 psql postgres
@@ -73,13 +79,13 @@ postgres=# \password budgeter
 
 ### 4. Create a database named `budgeter`.
 
-*Ubuntu*
+_Ubuntu_
 
 ```
 sudo -u postgres createdb budgeter
 ```
 
-*macOS*
+_macOS_
 
 ```
 createdb budgeter
@@ -103,6 +109,7 @@ Set the `DINO_SESSION_SECRET` to a long random string.
 Afterwards, you may need to run `direnv allow`.
 
 ### 6. Initialize the db
+
 ```
 sql/init.sh
 ```
@@ -112,11 +119,14 @@ sql/init.sh
 https://nodejs.org/en/
 
 ### 8. Install typescript
+
 ```
 npm install -g typescript
 ```
 
 ### 9. Install dependencies
+
 ```
+brew install entr
 npm install
 ```
