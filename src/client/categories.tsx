@@ -25,6 +25,7 @@ interface State {
   budgeted?: Money;
   setIncome: string;
   setIncomeErr?: boolean;
+  newCat?: CategoryId;
 }
 
 /** shows the categories list on the home page */
@@ -42,6 +43,7 @@ export default class Categories extends React.Component<Props, State> {
         key={c.id}
         category={c}
         categories={this.props.frame.categories}
+        new={this.state.newCat === c.id}
         match={this.props.match}
         budgetLeftover={frames.unbudgeted(this.props.frame)}
         onDeleteCategory={this.props.onDeleteCategory}
@@ -133,7 +135,7 @@ export default class Categories extends React.Component<Props, State> {
               <td colSpan={4}>
                 <NewCategory
                   frame={this.props.frame.index}
-                  onAddCategory={this.props.onAddCategory}
+                  onAddCategory={this.onAddCategory}
                 />
               </td>
             </tr>
@@ -142,6 +144,12 @@ export default class Categories extends React.Component<Props, State> {
         </table>
       </div>
     );
+  }
+
+  private onAddCategory = (c: Category) => {
+    this.setState({ newCat: c.id });
+    this.props.onAddCategory(c);
+    setTimeout(() => this.setState({ newCat: undefined }), 1000);
   }
 
   private getAIs(): AI[] {

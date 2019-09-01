@@ -34,6 +34,7 @@ interface BaseProps {
   frame: Frame;
   transactions: Transaction[];
   categories: Category[];
+  newTxn?: TransactionId;
   onUpdateTransaction: (txn: Transaction) => void;
   onDeleteTransaction: (id: TransactionId) => void;
 }
@@ -60,7 +61,7 @@ function shouldHighlight(tx: Transaction): boolean {
 }
 
 export default class Transactions extends React.Component<Props, State> {
-  public state = {
+  public state: State = {
     popletOpen: false,
   };
 
@@ -117,7 +118,12 @@ export default class Transactions extends React.Component<Props, State> {
     const rowsDesktop = _.sortBy(this.props.transactions, ["date"])
       .reverse()
       .map((tx) => (
-        <tr className="hoverable" key={tx.id}>
+        <tr
+          className={`hoverable ${
+            this.props.newTxn === tx.id ? "new" : "not-new"
+          }`}
+          key={tx.id}
+        >
           <td className="del">
             <span
               className="deleteCr clickable fa-times fas"
@@ -199,6 +205,7 @@ export default class Transactions extends React.Component<Props, State> {
           editable={editable}
           key={tx.id}
           tx={tx}
+          new={tx.id === this.props.newTxn}
           onUpdateTransaction={this.props.onUpdateTransaction}
           onDeleteTransaction={this.props.onDeleteTransaction}
           categories={this.props.categories}
@@ -261,6 +268,7 @@ interface MobileRowProps {
   tx: Transaction;
   categories: Category[];
   editable: boolean;
+  new: boolean;
   onUpdateTransaction: (tx: Transaction) => void;
   onDeleteTransaction: (tid: TransactionId) => void;
   categoryName: (cid: CategoryId) => string;
@@ -284,8 +292,9 @@ class MobileTransactionRow extends React.PureComponent<
   public render() {
     const tx = this.props.tx;
     const monthName = util.MONTHS[tx.date.getMonth()].substr(0, 3);
+    const newClass = this.props.new ? "new" : "not-new";
     const row = (
-      <div key={tx.id} className="hoverable tx-mobile-row">
+      <div key={tx.id} className={`hoverable tx-mobile-row ${newClass}`}>
         <div className="tx-mobile-date">
           <div className="tx-mobile-month">{monthName}</div>
           <div className="tx-mobile-day">{tx.date.getDate()}</div>

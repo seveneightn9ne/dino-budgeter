@@ -329,6 +329,17 @@ tr.hoverable:hover {
   background-color: #eeeeee;
 }
 
+tr.new,
+.tx-mobile-row.new {
+  background-color: #e9e3f9;
+}
+
+tr.not-new,
+.tx-mobile-row.not-new {
+  background-color: #ffffff;
+  transition: background-color 2s ease-in;
+}
+
 .category-row {
   cursor: pointer;
 }

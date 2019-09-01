@@ -17,6 +17,7 @@ interface CategoryRowProps {
   category: Category;
   categories: Category[];
   budgetLeftover: Money;
+  new: boolean;
   onDeleteCategory: (id: CategoryId) => void;
   onChangeCategory: (newCategory: Category) => void;
 }
@@ -192,10 +193,12 @@ export default class CategoryRow extends React.Component<
       />
     );
 
+    const newClass = this.props.new ? "new" : "not-new";
+
     return (
       <tr
         key={this.props.category.id}
-        className="hoverable category-row"
+        className={`hoverable category-row ${newClass}`}
         onClick={this.onClick}
       >
         <td className="del">

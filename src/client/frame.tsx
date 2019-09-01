@@ -33,6 +33,7 @@ interface FrameState extends InitState {
   setIncome: string;
   setIncomeErr?: boolean;
   addTxnOpen: boolean;
+  newTxn?: TransactionId;
 }
 
 /** /app/:month/:year */
@@ -202,6 +203,7 @@ export default class Frame extends React.Component<FrameProps, FrameState> {
       const newFrame = { ...frame };
       let newHistory = history;
       if (t.frame === frame.index) {
+        // Update the balances in frame, category
         newFrame.balance = frame.balance.minus(t.amount);
         newFrame.spending = frame.spending.plus(t.amount);
         newFrame.categories = newFrame.categories.map((c) => {
@@ -237,18 +239,21 @@ export default class Frame extends React.Component<FrameProps, FrameState> {
       const newTransactions = [...transactions, t];
       const newDebts = { ...debts };
       if (t.split) {
+        // update debts
         const prevBalance = debts[t.split.with.email].balance || Money.Zero;
         debts[t.split.with.email] = {
           balance: prevBalance.plus(getBalanceDelta(me.uid, null, t)),
           payments: debts[t.split.with.email].payments,
         };
       }
+      setTimeout(() => this.setState({ newTxn: undefined }), 1000);
       return {
         frame: newFrame,
         transactions: newTransactions,
         debts: newDebts,
         history: newHistory,
         addTxnOpen: false,
+        newTxn: t.id,
       };
     });
   }
@@ -510,6 +515,7 @@ export default class Frame extends React.Component<FrameProps, FrameState> {
           onAddTransaction={this.onAddTransaction}
           frame={this.state.frame}
           newTxDate={this.newTxDate()}
+          newTxn={this.state.newTxn}
           categories={this.state.frame.categories}
           friends={this.state.friends}
         />
