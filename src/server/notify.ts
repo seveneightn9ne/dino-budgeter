@@ -58,7 +58,7 @@ export async function newPayment<T extends Payment | Charge>(
 
     body:
       payments.description(recipient, actor, payment) +
-      ` for ${payment.memo}".\n\n` +
+      ` for "${payment.memo}".\n\n` +
       `You can view and modify the ${payment.type} at ` +
       `https://dino.jesskenney.com/app/${today.getMonth() +
         1}/${today.getFullYear()}/debts`,
