@@ -1,3 +1,4 @@
+import _ from "lodash";
 import * as React from "react";
 import * as api from "../shared/api";
 import { index } from "../shared/frames";
@@ -10,6 +11,15 @@ import {
   Share,
   Transaction,
 } from "../shared/types";
+import {
+  allowEmpty,
+  ccec,
+  ErrorState,
+  handleError,
+  nonNegativeMoneyError,
+  render as renderError,
+  validate,
+} from "./errors";
 import * as util from "./util";
 
 interface NewTxProps {
@@ -28,11 +38,10 @@ interface UpdateTxProps {
 
 type Props = NewTxProps | UpdateTxProps;
 
-interface TxEntryState {
+interface TxEntryState extends ErrorState<typeof errorDefs> {
   amount: string;
   description: string;
   category: string;
-  error: boolean;
   date: string;
   splitting: boolean;
   splitWith: string;
@@ -56,6 +65,20 @@ function isUpdate(props: Props): props is UpdateTxProps {
   return "transaction" in props;
 }
 
+/**
+ * Possible Error on Save Transaction
+ * Amount could be NaN or <0
+ * Shares could be nonnumeric or <0
+ * Unexpected 400
+ * Unexpected 5xx
+ */
+
+const errorDefs = {
+  amount: nonNegativeMoneyError("amount", "Amount"),
+  yourShare: allowEmpty(nonNegativeMoneyError("yourShare", "Your share")),
+  theirShare: allowEmpty(nonNegativeMoneyError("theirShare", "Their share")),
+};
+
 export default class TxEntry extends React.Component<Props, TxEntryState> {
   constructor(props: Props) {
     super(props);
@@ -73,7 +96,6 @@ export default class TxEntry extends React.Component<Props, TxEntryState> {
         amount,
         description: props.transaction.description,
         category: props.transaction.category || "",
-        error: false,
         date: util.yyyymmdd(props.transaction.date),
         splitting: !!props.transaction.split,
         splitWith: props.transaction.split
@@ -88,19 +110,22 @@ export default class TxEntry extends React.Component<Props, TxEntryState> {
         youPaid: props.transaction.split
           ? props.transaction.split.payer != props.transaction.split.with.uid
           : true,
+        error: "",
+        errors: {},
       };
     } else {
       return {
         amount: "",
         description: "",
         category: "",
-        error: false,
         date: util.yyyymmdd(props.defaultDate),
         splitting: false,
         splitWith: this.defaultSplitWith(),
         yourShare: "1",
         theirShare: "1",
         youPaid: true,
+        error: "",
+        errors: {},
       };
     }
   }
@@ -142,7 +167,8 @@ export default class TxEntry extends React.Component<Props, TxEntryState> {
       })
       .then(() => {
         isUpdate(this.props) && this.props.onDeleteTransaction(t);
-      });
+      })
+      .catch(handleError(this));
     return true;
   }
 
@@ -160,12 +186,11 @@ export default class TxEntry extends React.Component<Props, TxEntryState> {
   }
 
   public prepareSubmission(): SubmitData | false {
-    let amount = new Money(this.state.amount);
-    const total = new Money(this.state.amount);
-    if (!amount.isValid(false /* allowNegative */)) {
-      this.setState({ error: true });
+    if (!validate(errorDefs, this)) {
       return false;
     }
+    let amount = new Money(this.state.amount);
+    const total = new Money(this.state.amount);
     const category = this.state.category;
     const date = util.fromYyyymmdd(this.state.date);
     const frame = index(date.getMonth(), date.getFullYear());
@@ -175,10 +200,6 @@ export default class TxEntry extends React.Component<Props, TxEntryState> {
     if (this.state.splitting) {
       myShare = new Share(this.state.yourShare);
       theirShare = new Share(this.state.theirShare);
-      if (!myShare.isValid(false) || !theirShare.isValid(false)) {
-        this.setState({ error: true });
-        return false;
-      }
       [amount, otherAmount] = distributeTotal(amount, myShare, theirShare);
     }
     return {
@@ -250,17 +271,19 @@ export default class TxEntry extends React.Component<Props, TxEntryState> {
     newTransaction.amount = amount;
 
     // Post the data
-    return util.apiFetch({
-      api: api.TransactionSplit,
-      body: {
-        tid: props.transaction.id,
-        sid: props.transaction.split.id,
-        total,
-        myShare,
-        theirShare,
-        iPaid: this.state.youPaid,
-      },
-    });
+    return util
+      .apiFetch({
+        api: api.TransactionSplit,
+        body: {
+          tid: props.transaction.id,
+          sid: props.transaction.split.id,
+          total,
+          myShare,
+          theirShare,
+          iPaid: this.state.youPaid,
+        },
+      })
+      .catch(handleError(this));
   }
 
   public submitUpdateDescription = (
@@ -273,13 +296,15 @@ export default class TxEntry extends React.Component<Props, TxEntryState> {
       return null;
     }
     newTransaction.description = this.state.description;
-    return util.apiFetch({
-      api: api.TransactionDescription,
-      body: {
-        description: newTransaction.description,
-        id: newTransaction.id,
-      },
-    });
+    return util
+      .apiFetch({
+        api: api.TransactionDescription,
+        body: {
+          description: newTransaction.description,
+          id: newTransaction.id,
+        },
+      })
+      .catch(handleError(this));
   }
 
   public submitUpdateDate = (
@@ -292,13 +317,15 @@ export default class TxEntry extends React.Component<Props, TxEntryState> {
       return null;
     }
     newTransaction.date = data.date;
-    return util.apiFetch({
-      api: api.TransactionDate,
-      body: {
-        date: data.date,
-        id: newTransaction.id,
-      },
-    });
+    return util
+      .apiFetch({
+        api: api.TransactionDate,
+        body: {
+          date: data.date,
+          id: newTransaction.id,
+        },
+      })
+      .catch(handleError(this));
   }
 
   public submitUpdateCategory = (
@@ -311,13 +338,15 @@ export default class TxEntry extends React.Component<Props, TxEntryState> {
       return null;
     }
     newTransaction.category = data.category;
-    return util.apiFetch({
-      api: api.TransactionCategory,
-      body: {
-        category: data.category,
-        id: newTransaction.id,
-      },
-    });
+    return util
+      .apiFetch({
+        api: api.TransactionCategory,
+        body: {
+          category: data.category,
+          id: newTransaction.id,
+        },
+      })
+      .catch(handleError(this));
   }
 
   public submitUpdateAmount = (
@@ -330,13 +359,15 @@ export default class TxEntry extends React.Component<Props, TxEntryState> {
       return null;
     }
     newTransaction.amount = data.amount;
-    return util.apiFetch({
-      api: api.TransactionAmount,
-      body: {
-        amount: data.amount,
-        id: newTransaction.id,
-      },
-    });
+    return util
+      .apiFetch({
+        api: api.TransactionAmount,
+        body: {
+          amount: data.amount,
+          id: newTransaction.id,
+        },
+      })
+      .catch(handleError(this));
   }
 
   public submitForAdd = (props: NewTxProps, data: SubmitData) => {
@@ -384,7 +415,8 @@ export default class TxEntry extends React.Component<Props, TxEntryState> {
           youPaid: true,
         });
         onAddTransaction(transaction);
-      });
+      })
+      .catch(handleError(this));
   }
 
   public openSplitSection = () => {
@@ -434,22 +466,24 @@ export default class TxEntry extends React.Component<Props, TxEntryState> {
           <input
             type="text"
             value={this.state.yourShare}
-            onChange={util.cc(this, "yourShare")}
+            onChange={ccec(this, "yourShare")}
             size={1}
             className="center"
             onFocus={this.selectOnFocus}
           />
+          {renderError(this.state.errors.yourShare)}
         </label>
         <label className="half">
           Their share:{" "}
           <input
             type="text"
             value={this.state.theirShare}
-            onChange={util.cc(this, "theirShare")}
+            onChange={ccec(this, "theirShare")}
             size={1}
             className="center"
             onFocus={this.selectOnFocus}
           />
+          {renderError(this.state.errors.theirShare)}
         </label>
         <div className="section" style={{ clear: "both" }}>
           <label className="nostyle">
@@ -485,7 +519,6 @@ export default class TxEntry extends React.Component<Props, TxEntryState> {
         </option>
       );
     });
-    const className = this.state.error ? "center error" : "center";
     // Show the splitting option if you're adding and have friends, or if you're updating a split transaction.
     const splitting = (isUpdate(this.props) ? (
       this.props.transaction.split
@@ -510,11 +543,12 @@ export default class TxEntry extends React.Component<Props, TxEntryState> {
             :{" "}
             <input
               autoFocus={true}
-              className={className}
+              className="center"
               value={this.state.amount}
-              onChange={util.cc(this, "amount")}
+              onChange={ccec(this, "amount")}
               size={6}
             />
+            {renderError(this.state.errors.amount)}
           </label>
           <label>
             Description:{" "}
@@ -552,6 +586,7 @@ export default class TxEntry extends React.Component<Props, TxEntryState> {
                 Delete
               </button>
             ) : null}
+            {renderError(this.state.error)}
           </label>
         </form>
       </div>

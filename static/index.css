@@ -554,6 +554,10 @@ h1 .close {
   background-color: #ffeb3b;
 }
 
+.error-message {
+  color: red;
+}
+
 /* footer */
 
 footer {

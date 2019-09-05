@@ -4,6 +4,7 @@ import * as api from "../shared/api";
 import * as frames from "../shared/frames";
 import { FrameIndex, InitState } from "../shared/types";
 export * from "../shared/util";
+import _ from "lodash";
 
 export const MONTHS = [
   "January",
@@ -26,8 +27,12 @@ export function yyyymmdd(date: Date): string {
   const y = "" + date.getFullYear();
   let m = "" + (date.getMonth() + 1),
     d = "" + date.getDate();
-  if (m.length == 1) { m = "0" + m; }
-  if (d.length == 1) { d = "0" + d; }
+  if (m.length == 1) {
+    m = "0" + m;
+  }
+  if (d.length == 1) {
+    d = "0" + d;
+  }
   return y + "-" + m + "-" + d;
 }
 
