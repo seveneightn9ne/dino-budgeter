@@ -32,6 +32,7 @@ export interface Category {
   ordering: number;
   budget: Money;
   ghost: boolean;
+  savings: boolean;
   balance?: Money;
   ctime?: Date;
 }

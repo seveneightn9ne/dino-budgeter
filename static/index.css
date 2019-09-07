@@ -326,7 +326,7 @@ td.zero {
 }
 
 tr.hoverable:hover {
-  background-color: #eeeeee;
+  background: #eeeeee;
 }
 
 tr.new,
@@ -342,6 +342,27 @@ tr.not-new,
 
 .category-row {
   cursor: pointer;
+}
+
+.savings {
+  background-color: #e9e3f9;
+  margin: 20px auto;
+  padding: 10px 20px;
+  border-radius: 5px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  max-width: 496px; /* aligns budget with category rows */
+  color: #2f156b;
+}
+.savings .title {
+  padding-right: 20px;
+  flex-grow: 1;
+}
+.savings .fas {
+  font-size: 32px;
+  padding-right: 20px;
+  padding-left: 0;
 }
 
 .stretch {

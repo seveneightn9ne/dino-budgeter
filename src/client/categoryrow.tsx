@@ -46,11 +46,13 @@ export default class CategoryRow extends React.Component<
         `Unbudgeted balance - ${this.props.budgetLeftover.formatted()}`,
       );
     }
-    this.props.categories.forEach((c) => {
+    const addToMap = (c: Category) => {
       if (c.balance.cmp(minBalance) >= 0) {
         map.set(c.id, `${c.name} - ${c.balance.formatted()}`);
       }
-    });
+    };
+    this.props.categories.filter((c) => !c.savings).forEach(addToMap);
+    this.props.categories.filter((c) => c.savings).forEach(addToMap);
     return map;
   }
 
@@ -123,75 +125,27 @@ export default class CategoryRow extends React.Component<
         />
       );
     }
-    const budget = (
-      <ClickToEditMoney
-        size={6}
-        api={CategoryBudget}
-        value={this.props.category.budget}
-        onChange={this.onUpdateBudget}
-        postData={{
-          id: this.props.category.id,
-          frame: this.props.category.frame,
-        }}
-        postKey="amount"
-      />
-    );
+
+    if (this.props.category.savings) {
+      return this.renderSavings();
+    }
+
+    return this.renderRow();
+  }
+
+  private renderRow = () => {
     const spending = this.props.category.balance
       .minus(this.props.category.budget)
       .negate();
-    const spendingCls = spending.cmp(Money.Zero) == 0 ? "zero" : "";
+    const spendingCls = spending.cmp(Money.Zero) === 0 ? "zero" : "";
     const budgetCls =
-      this.props.category.budget.cmp(Money.Zero) == 0 ? "zero" : "";
+      this.props.category.budget.cmp(Money.Zero) === 0 ? "zero" : "";
     const balanceCls =
-      this.props.category.balance.cmp(Money.Zero) == 0
+      this.props.category.balance.cmp(Money.Zero) === 0
         ? "zero"
-        : this.props.category.balance.cmp(Money.Zero) == -1
+        : this.props.category.balance.cmp(Money.Zero) === -1
         ? "highlighted"
         : "";
-
-    const balance =
-      this.props.category.balance.cmp(Money.Zero) < 0 ? (
-        <ControlledPoplet
-          text={this.props.category.balance.formatted()}
-          open={this.state.popletOpen}
-          onRequestClose={this.closePoplet}
-          onRequestOpen={this.openPoplet}
-          title={"Cover from another category"}
-        >
-          Cover from{" "}
-          <ClickToEditDropdown
-            open={true}
-            zeroValue="Choose category..."
-            value=""
-            api={BudgetingMove}
-            values={this.categoryMap(this.props.category.balance.negate())}
-            onChange={this.onCoverBalance}
-            postKey="from"
-            postTransform={(id) => {
-              if (id == this.state.budgetLeftoverId) {
-                return "";
-              }
-              return id;
-            }}
-            postData={{
-              to: this.props.category.id,
-              amount: this.props.category.balance.negate(),
-              frame: this.props.category.frame,
-            }}
-          />
-        </ControlledPoplet>
-      ) : (
-        this.props.category.balance.formatted()
-      );
-
-    const progressBar = (
-      <ProgressBar
-        amount={spending}
-        total={this.props.category.budget}
-        frame={this.props.category.frame}
-        small={true}
-      />
-    );
 
     const newClass = this.props.new ? "new" : "not-new";
 
@@ -207,14 +161,86 @@ export default class CategoryRow extends React.Component<
             onClick={this.delete}
           />
         </td>
-        <td className="stretch">{this.props.category.name}</td>
-        <td className="progress-td">{progressBar}</td>
-        <td className={"amount " + budgetCls}>{budget}</td>
-        <td className={"amount " + spendingCls}>{spending.formatted()}</td>
+        <td className="stretch">
+          <span>{this.props.category.name}</span>
+        </td>
+        <td className="progress-td">{this.renderProgress(spending)}</td>
+        <td className={"amount budget " + budgetCls}>{this.renderBudget()}</td>
+        <td className={"amount spent " + spendingCls}>
+          {spending.formatted()}
+        </td>
         <td className={"amount balance " + balanceCls}>
-          <span className="formatted">{balance}</span>
+          <span className="formatted">{this.renderBalance()}</span>
         </td>
       </tr>
     );
   }
+
+  private renderSavings = () => {
+    return (
+      <div className="savings" onClick={this.onClick}>
+        <span className="fas fa-university" />
+        <span className="title">{this.props.category.name}</span>
+        <span className="budget">{this.renderBudget()}</span>
+      </div>
+    );
+  }
+
+  private renderBudget = () => (
+    <ClickToEditMoney
+      size={6}
+      api={CategoryBudget}
+      value={this.props.category.budget}
+      onChange={this.onUpdateBudget}
+      postData={{
+        id: this.props.category.id,
+        frame: this.props.category.frame,
+      }}
+      postKey="amount"
+    />
+  )
+
+  private renderBalance = () =>
+    this.props.category.balance.cmp(Money.Zero) < 0 ? (
+      <ControlledPoplet
+        text={this.props.category.balance.formatted()}
+        open={this.state.popletOpen}
+        onRequestClose={this.closePoplet}
+        onRequestOpen={this.openPoplet}
+        title={"Cover from another category"}
+      >
+        Cover from{" "}
+        <ClickToEditDropdown
+          open={true}
+          zeroValue="Choose category..."
+          value=""
+          api={BudgetingMove}
+          values={this.categoryMap(this.props.category.balance.negate())}
+          onChange={this.onCoverBalance}
+          postKey="from"
+          postTransform={(id) => {
+            if (id == this.state.budgetLeftoverId) {
+              return "";
+            }
+            return id;
+          }}
+          postData={{
+            to: this.props.category.id,
+            amount: this.props.category.balance.negate(),
+            frame: this.props.category.frame,
+          }}
+        />
+      </ControlledPoplet>
+    ) : (
+      this.props.category.balance.formatted()
+    )
+
+  private renderProgress = (spending: Money) => (
+    <ProgressBar
+      amount={spending}
+      total={this.props.category.budget}
+      frame={this.props.category.frame}
+      small={true}
+    />
+  )
 }

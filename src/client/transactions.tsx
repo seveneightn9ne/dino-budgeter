@@ -91,9 +91,11 @@ export default class Transactions extends React.Component<Props, State> {
 
   private categoryMap(): Map<string, string> {
     const map = new Map();
-    this.props.categories.forEach((c) => {
-      map.set(c.id, c.name);
-    });
+    this.props.categories
+      .filter((c) => !c.savings)
+      .forEach((c) => {
+        map.set(c.id, c.name);
+      });
     return map;
   }
 

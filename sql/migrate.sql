@@ -153,4 +153,12 @@ alter table payments add primary key (id);
 end if;
 end $$;
 
+-- migration 14: savings category
+do $$ begin
+if not exists(select * from information_schema.columns where table_name = 'categories' and column_name = 'savings')
+then
+alter table categories add savings bool not null default false;
+end if;
+end $$;
+
 commit;

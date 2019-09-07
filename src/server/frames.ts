@@ -65,20 +65,34 @@ async function getOrCreateFrameInner(
     frame.categories = await t.batch(
       categories.DEFAULT_CATEGORIES.map(async (c) => {
         i += 1;
-        const id = util.randomId();
         return {
           name: c,
           gid,
           frame: index,
           alive: true,
-          id,
+          id: util.randomId(),
           ghost: true,
+          savings: false,
           ordering: i,
           budget: Money.Zero,
-          balance: Money.Zero.minus(await categories.getSpending(id, index, t)),
+          balance: Money.Zero,
         };
       }),
     );
+    // add savings category
+    i += 1;
+    frame.categories.push({
+      name: categories.SAVINGS_CATEGORY,
+      gid,
+      frame: index,
+      alive: true,
+      id: util.randomId(),
+      ghost: true,
+      savings: true,
+      ordering: i,
+      budget: Money.Zero,
+      balance: Money.Zero,
+    });
   }
   // Save the new frame and categories
   await t.none(
@@ -88,8 +102,11 @@ async function getOrCreateFrameInner(
   await t.batch(
     frame.categories.map((c) =>
       t.none(
-        "insert into categories (id, gid, frame, name, ordering, budget, ghost) values ($1, $2, $3, $4, $5, $6, true)",
-        [c.id, c.gid, c.frame, c.name, c.ordering, c.budget.string()],
+        `insert into categories
+          (id, gid, frame, name, ordering, budget, ghost, savings)
+        values
+          ($1, $2,  $3,    $4,   $5,       $6,     true,  $7)`,
+        [c.id, c.gid, c.frame, c.name, c.ordering, c.budget.string(), c.savings],
       ),
     ),
   );
