@@ -130,3 +130,7 @@ npm install -g typescript
 brew install entr
 npm install
 ```
+
+# Production Deployment
+
+Production environment is the same as dev, but you need a SMTP server on localhost:25 to send emails.
