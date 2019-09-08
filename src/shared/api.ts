@@ -56,7 +56,6 @@ const categorySchema: SchemaType<Category> = {
   ordering: Schemas.number(),
   budget: DinoSchemas.money(),
   ghost: Schemas.boolean(),
-  savings: Schemas.boolean(),
   balance: Schemas.optional(DinoSchemas.money()),
   ctime: Schemas.optional(Schemas.date()),
 };

@@ -1,7 +1,6 @@
 import _ from "lodash";
 import Money from "../shared/Money";
 import * as util from "../shared/util";
-import { getNextOrdinal } from "./categories";
 import db from "./db";
 
 // Add all migrations here to run them
@@ -9,92 +8,6 @@ import db from "./db";
 export async function runMigrations() {
   await migrateAddFriendshipBalance();
   await migrateAddPaymentId();
-  await migrateAddSavingsCategory();
-}
-
-async function migrateAddSavingsCategory() {
-  await db.tx(async (t) => {
-    // Find frame/gid with no savings category
-    const queryFramesNeedingSavings = `
-      select frames.index, frames.gid, frames.ghost from frames
-      left join categories on
-        frames.index = categories.frame and
-        frames.gid = categories.gid and
-        categories.alive = true and
-        categories.savings = true
-      group by frames.index, frames.gid
-      having count(categories.id) = 0`;
-    const rows = await t.manyOrNone(queryFramesNeedingSavings);
-
-    if (!rows || !rows.length) {
-      return;
-    }
-
-    console.log(
-      `Migrating savings category: ${rows.length} frames need savings added`,
-    );
-
-    for (const row of rows) {
-      const { index, gid, ghost } = row;
-      // does it have a 'Savings' category
-      const nameRow = await t.oneOrNone(
-        `select id from categories
-            where
-              name = 'Savings' and
-              frame = $1 and
-              gid = $2
-            limit 1`,
-        [index, gid],
-      );
-      if (nameRow) {
-        // Set this category to be savings
-        const { id } = nameRow;
-        console.log(`Migrating savings category: setting ${id} to savings`);
-        await t.none(
-          `update categories set savings = true where id = $1 and frame = $2 and gid = $3`,
-          [id, index, gid],
-        );
-      } else {
-        // Add a new category
-        console.log(
-          `Migrating savings category: adding a new savings category to ${gid}/${index}`,
-        );
-        const ordinal = await getNextOrdinal(gid, index, t);
-        const id = util.randomId();
-        console.log(
-          `\tNew category will have ordinal = ${ordinal} and id = ${id}`,
-        );
-        await t
-          .one(
-            "insert into categories (id, gid, frame, alive, name, ordering, " +
-              "budget, ghost, savings) values ($1, $2, $3, $4, $5, $6, $7, $8, $9) returning id",
-            [
-              id,
-              gid,
-              index,
-              true /* alive */,
-              "Savings",
-              ordinal,
-              Money.Zero.string(),
-              ghost,
-              true, /* savings */
-            ],
-          )
-          .then((r) => console.log("Promise resolved", r))
-          .catch((e) => console.error(e));
-        console.log("Insert completed");
-      }
-    }
-
-    // Now, verify that there are no frames needing savings
-    const newRows = await t.manyOrNone(queryFramesNeedingSavings);
-    if (newRows && newRows.length !== 0) {
-      throw Error(
-        "DB migration failed: should be no frames without savings. There are " +
-          newRows.length,
-      );
-    }
-  });
 }
 
 async function migrateAddFriendshipBalance() {

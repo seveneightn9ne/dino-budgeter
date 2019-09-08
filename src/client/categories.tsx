@@ -37,7 +37,7 @@ export default class Categories extends React.Component<Props, State> {
     };
   }
   public render() {
-    let cs = this.props.frame.categories.map((c) => (
+    const cs = this.props.frame.categories.map((c) => (
       <CategoryRow
         key={c.id}
         category={c}
@@ -49,8 +49,6 @@ export default class Categories extends React.Component<Props, State> {
         onChangeCategory={this.props.onChangeCategory}
       />
     ));
-    const savings = cs.filter((c) => c.props.category.savings)[0];
-    cs = cs.filter((c) => c.key !== savings.key);
 
     const ais = this.getAIs().map((ai) => (
       <AIComponent ai={ai} key={ai.message()} />
@@ -144,7 +142,6 @@ export default class Categories extends React.Component<Props, State> {
             {cs}
           </tbody>
         </table>
-        {savings}
       </div>
     );
   }

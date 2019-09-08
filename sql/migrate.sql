@@ -161,4 +161,12 @@ alter table categories add savings bool not null default false;
 end if;
 end $$;
 
+-- migration 15: remove savings category
+do $$ begin
+if exists(select * from information_schema.columns where table_name = 'categories' and column_name = 'savings')
+then
+alter table categories drop savings;
+end if;
+end $$;
+
 commit;

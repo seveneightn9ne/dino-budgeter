@@ -22,8 +22,6 @@ export const DEFAULT_CATEGORIES = [
   "Stuff I Forgot To Budget For",
 ];
 
-export const SAVINGS_CATEGORY = "Savings";
-
 export function getNextOrdinal(
   gid: GroupId,
   frame: FrameIndex,
@@ -106,20 +104,4 @@ export async function getHistory(
     }),
   );
   return history;
-}
-
-export async function isSavings(
-  gid: GroupId,
-  frame: FrameIndex,
-  cid: CategoryId,
-  t: pgPromise.ITask<{}>,
-): Promise<boolean> {
-  const row = await t.oneOrNone(
-    `select savings from categories where gid = $1 and frame = $2 and id = $3`,
-    [gid, frame, cid],
-  );
-  if (!row) {
-    return false;
-  }
-  return row.savings;
 }

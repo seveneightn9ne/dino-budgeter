@@ -18,7 +18,6 @@ import {
   User,
 } from "../../shared/types";
 import * as util from "../../shared/util";
-import * as categories from "../categories";
 import db from "../db";
 import * as frames from "../frames";
 import * as notify from "../notify";
@@ -62,15 +61,6 @@ export function handle_transaction_post(
       };
     }
     const gid = await user.getDefaultGroup(actor, t);
-    if (
-      request.category &&
-      (await categories.isSavings(gid, request.frame, request.category, t))
-    ) {
-      return {
-        code: 400,
-        message: "You can't add a transaction to a savings category",
-      };
-    }
     await frames.markNotGhost(gid, request.frame, t);
     const query = `insert into transactions
         (id, gid, frame, amount, description, category, date)
@@ -202,7 +192,7 @@ export function handle_transaction_category_post(
   request: ApiRequest<typeof TransactionCategory>,
   actor: User,
 ): Promise<Response<EmptyResponse>> {
-  // TODO: validate that the category exists, is alive, is owned by the user, is not savings, etc.
+  // TODO: validate that the category exists, is alive, is owned by the user, etc.
   return handle_transaction_update_post(
     "category",
     request,

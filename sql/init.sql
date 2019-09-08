@@ -62,7 +62,6 @@ create table categories (
   ctime timestamp not null default current_timestamp,
   budget text not null,
   ghost bool not null default false,
-  savings bool not null default false,
   primary key (id, frame),
   foreign key (gid, frame) references frames
 );

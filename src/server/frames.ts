@@ -72,27 +72,12 @@ async function getOrCreateFrameInner(
           alive: true,
           id: util.randomId(),
           ghost: true,
-          savings: false,
           ordering: i,
           budget: Money.Zero,
           balance: Money.Zero,
         };
       }),
     );
-    // add savings category
-    i += 1;
-    frame.categories.push({
-      name: categories.SAVINGS_CATEGORY,
-      gid,
-      frame: index,
-      alive: true,
-      id: util.randomId(),
-      ghost: true,
-      savings: true,
-      ordering: i,
-      budget: Money.Zero,
-      balance: Money.Zero,
-    });
   }
   // Save the new frame and categories
   await t.none(
@@ -103,10 +88,10 @@ async function getOrCreateFrameInner(
     frame.categories.map((c) =>
       t.none(
         `insert into categories
-          (id, gid, frame, name, ordering, budget, ghost, savings)
+          (id, gid, frame, name, ordering, budget, ghost)
         values
-          ($1, $2,  $3,    $4,   $5,       $6,     true,  $7)`,
-        [c.id, c.gid, c.frame, c.name, c.ordering, c.budget.string(), c.savings],
+          ($1, $2, $3, $4, $5, $6, true)`,
+        [c.id, c.gid, c.frame, c.name, c.ordering, c.budget.string()],
       ),
     ),
   );

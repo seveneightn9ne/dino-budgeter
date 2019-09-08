@@ -26,7 +26,6 @@ export function handle_category_post(
     budget: Money.Zero,
     balance: Money.Zero,
     ghost: false,
-    savings: false,
     // To be filled in below:
     gid: undefined,
     ordering: undefined,

@@ -46,13 +46,11 @@ export default class CategoryRow extends React.Component<
         `Unbudgeted balance - ${this.props.budgetLeftover.formatted()}`,
       );
     }
-    const addToMap = (c: Category) => {
+    this.props.categories.forEach((c) => {
       if (c.balance.cmp(minBalance) >= 0) {
         map.set(c.id, `${c.name} - ${c.balance.formatted()}`);
       }
-    };
-    this.props.categories.filter((c) => !c.savings).forEach(addToMap);
-    this.props.categories.filter((c) => c.savings).forEach(addToMap);
+    });
     return map;
   }
 
@@ -126,10 +124,6 @@ export default class CategoryRow extends React.Component<
       );
     }
 
-    if (this.props.category.savings) {
-      return this.renderSavings();
-    }
-
     return this.renderRow();
   }
 
@@ -173,16 +167,6 @@ export default class CategoryRow extends React.Component<
           <span className="formatted">{this.renderBalance()}</span>
         </td>
       </tr>
-    );
-  }
-
-  private renderSavings = () => {
-    return (
-      <div className="savings" onClick={this.onClick}>
-        <span className="fas fa-university" />
-        <span className="title">{this.props.category.name}</span>
-        <span className="budget">{this.renderBudget()}</span>
-      </div>
     );
   }
 
