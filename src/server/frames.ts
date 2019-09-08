@@ -5,7 +5,6 @@ import { Category, Frame, FrameIndex, GroupId } from "../shared/types";
 import * as util from "../shared/util";
 import * as categories from "./categories";
 import db from "./db";
-import * as user from "./user";
 export * from "../shared/frames";
 
 export function getOrCreateFrame(
@@ -150,26 +149,19 @@ export async function getBalance(
   index: FrameIndex,
   t: pgPromise.ITask<{}>,
 ): Promise<Money> {
-  const rollover = await user.getGroupSettingOrDefault(gid, "rollover", t);
-  const frameComparison = rollover ? "<=" : "=";
-
   const txnRows = await t.manyOrNone(
-    `select amount from transactions
-        where gid = $1 and frame ${frameComparison} $2 and alive = true`,
+    `select amount from transactions where gid = $1 and frame = $2 and alive = true`,
     [gid, index],
   );
   const totalSpent = txnRows
     ? Money.sum(txnRows.map((r) => new Money(r.amount)))
     : Money.Zero;
 
-  const incomeRows = await t.manyOrNone(
-    `select income from frames
-        where gid = $1 and index ${frameComparison} $2`,
+  const incomeRow = await t.oneOrNone(
+    `select income from frames where gid = $1 and index = $2`,
     [gid, index],
   );
-  const totalIncome = incomeRows
-    ? Money.sum(incomeRows.map((r) => new Money(r.income)))
-    : Money.Zero;
+  const totalIncome = incomeRow ? new Money(incomeRow.income) : Money.Zero;
 
   return totalIncome.minus(totalSpent);
 }

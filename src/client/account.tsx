@@ -196,16 +196,7 @@ export default class Account extends React.Component<Props, State> {
       });
   }
 
-  private onChangeRollover = (e: React.ChangeEvent<HTMLInputElement>) => {
-    this.onUpdateSetting("rollover", e.target.checked);
-  }
-
-  private onChangeNoRollover = (e: React.ChangeEvent<HTMLInputElement>) => {
-    this.onUpdateSetting("rollover", !e.target.checked);
-  }
-
-  private onChangeSettingField = (
-    field: keyof UserSettings,
+  private onChangeSettingField = (field: keyof UserSettings) => (
     e: React.ChangeEvent<HTMLInputElement>,
   ) => {
     this.onUpdateSetting(field, e.target.checked);
@@ -220,7 +211,7 @@ export default class Account extends React.Component<Props, State> {
         <input
           type="checkbox"
           name={field}
-          onChange={(e) => this.onChangeSettingField(field, e)}
+          onChange={this.onChangeSettingField(field)}
           checked={this.state.displaySettings[field]}
         />
         {" " + description + " "}
@@ -251,33 +242,6 @@ export default class Account extends React.Component<Props, State> {
           </label>{" "}
           <input type="submit" value="Save" className={nameCls} />
           <FadeCheck save={this.state.lastSave} />
-        </form>
-        <p>
-          <b>Rollover:</b> when there's money left over at the end of the month,{" "}
-          <FadeCheck save={this.state.lastSaveSettings.rollover} />
-        </p>
-        <form>
-          <label>
-            <input
-              type="radio"
-              name="rollover"
-              value="1"
-              checked={this.state.displaySettings.rollover}
-              onChange={this.onChangeRollover}
-            />{" "}
-            Roll over to the next month
-          </label>
-          <br />
-          <label>
-            <input
-              type="radio"
-              name="rollover"
-              value="0"
-              checked={!this.state.displaySettings.rollover}
-              onChange={this.onChangeNoRollover}
-            />{" "}
-            Ignore leftover money
-          </label>
         </form>
 
         <form>

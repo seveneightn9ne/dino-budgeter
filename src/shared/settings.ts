@@ -2,7 +2,6 @@ import _ from "lodash";
 import { UserSettings } from "./types";
 
 const defaultSettings: Required<UserSettings> = {
-  rollover: true,
   emailNewTransaction: true,
   emailNewPayment: true,
 };

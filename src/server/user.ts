@@ -268,7 +268,8 @@ export async function getRawSettings(
   t: pgPromise.ITask<{}>,
 ): Promise<UserSettings> {
   const row = await t.one("select settings from users where uid = $1", [user]);
-  return row.settings;
+  // Exclude keys that aren't in settings
+  return _.pick(row.settings, Object.keys(settings.getDefaultSettings()));
 }
 
 export async function getSettingOrDefault(
@@ -290,7 +291,8 @@ async function getRawGroupSettings(
         where M.gid = $1 limit 1`,
     [group],
   );
-  return row.settings;
+  // Exclude keys that aren't in settings
+  return _.pick(row.settings, Object.keys(settings.getDefaultSettings()));
 }
 
 // XXX gets the user settings for the first user in the group
@@ -304,11 +306,11 @@ export async function getGroupSettingOrDefault(
 
 export async function setSettings(
   user: UserId,
-  settings: UserSettings,
+  userSettings: UserSettings,
   t: pgPromise.ITask<{}>,
 ): Promise<void> {
   return t.none("update users set settings = $1 where uid = $2", [
-    settings,
+    userSettings,
     user,
   ]);
 }

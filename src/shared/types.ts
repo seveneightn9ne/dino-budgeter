@@ -17,7 +17,6 @@ export interface User {
   settings: UserSettings;
 }
 export interface UserSettings {
-  rollover?: boolean;
   emailNewTransaction?: boolean;
   emailNewPayment?: boolean;
 }

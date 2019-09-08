@@ -114,7 +114,6 @@ const transactionSchema: SchemaType<Transaction> = {
   }),
 };
 const settingsSchema: SchemaType<UserSettings> = {
-  rollover: Schemas.optional(Schemas.boolean()),
   emailNewTransaction: Schemas.optional(Schemas.boolean()),
   emailNewPayment: Schemas.optional(Schemas.boolean()),
 } as SchemaType<UserSettings>;
