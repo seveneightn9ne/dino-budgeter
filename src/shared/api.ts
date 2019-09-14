@@ -17,15 +17,16 @@ import {
 
 const Schemas = api.Schemas;
 
+// tslint:disable-next-line
 namespace DinoSchemas {
   export function money(
     opts: { nonNegative?: boolean } = {},
   ): SchemaBase<Money> {
     const { nonNegative } = opts;
     return (key: string, val: any): Money => {
-      const money = new Money(val);
-      if (money.isValid(!nonNegative)) {
-        return money;
+      const m = new Money(val);
+      if (m.isValid(!nonNegative)) {
+        return m;
       }
       throw new Error("Field " + key + " must be a Money");
     };
@@ -36,9 +37,9 @@ namespace DinoSchemas {
   ): SchemaBase<Share> {
     const { nonNegative } = opts;
     return (key: string, val: any): Share => {
-      const share = new Share(val);
-      if (share.isValid(!nonNegative)) {
-        return share;
+      const s = new Share(val);
+      if (s.isValid(!nonNegative)) {
+        return s;
       }
       throw new Error("Field " + key + " must be a Share");
     };
@@ -59,14 +60,15 @@ const categorySchema: SchemaType<Category> = {
   balance: Schemas.optional(DinoSchemas.money()),
   ctime: Schemas.optional(Schemas.date()),
 };
-const frameSchema: SchemaType<Frame> = {
+const frameSchema: SchemaType<Required<Frame>> = {
   gid: Schemas.string(),
   index: Schemas.number(),
   income: DinoSchemas.money(),
   ghost: Schemas.boolean(),
-  categories: Schemas.optional(Schemas.array(categorySchema)),
-  balance: Schemas.optional(DinoSchemas.money()),
-  spending: Schemas.optional(DinoSchemas.money()),
+  categories: Schemas.array(categorySchema),
+  balance: DinoSchemas.money(),
+  spending: DinoSchemas.money(),
+  savings: DinoSchemas.money(),
 };
 const paymentSchema: SchemaType<PaymentType> = {
   type: Schemas.literal("payment"),

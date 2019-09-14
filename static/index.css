@@ -217,6 +217,48 @@ form.oneline .button.secondary,
 
 /* Categories Page */
 
+.summary {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+}
+.summary > div {
+  display: flex;
+  flex-flow: column wrap;
+  align-content: center;
+  justify-content: center;
+  height: 40px;
+  flex: 1 0 150px;
+  padding: 5px 10px;
+}
+.summary > div.arrow,
+.summary > div.blob-op {
+  flex: 0;
+}
+.summary > div > .fas,
+.summary > div > .far {
+  font-size: 32px;
+  padding-right: 10px;
+}
+.summary .title {
+  font-size: 12px;
+}
+
+.summary > div.savings {
+  flex: 0 0 150px;
+  margin-right: 20px;
+  background-color: #e9e3f9;
+  border-radius: 5px;
+  color: #2f156b;
+}
+
+.blob-op {
+  align-self: center;
+  font-weight: bold;
+  font-size: 32px;
+}
+
+/* 
 .blobs {
   display: flex;
   align-items: stretch;
@@ -237,15 +279,10 @@ form.oneline .button.secondary,
   font-size: 14px;
 }
 
-.blob-op {
-  align-self: center;
-  font-weight: bold;
-  font-size: 18px;
-}
 
 .blob.bold .amount {
   font-weight: bold;
-}
+} */
 
 a.spent {
   color: inherit;
@@ -342,27 +379,6 @@ tr.not-new,
 
 .category-row {
   cursor: pointer;
-}
-
-.savings {
-  background-color: #e9e3f9;
-  margin: 20px auto;
-  padding: 10px 20px;
-  border-radius: 5px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  max-width: 496px; /* aligns budget with category rows */
-  color: #2f156b;
-}
-.savings .title {
-  padding-right: 20px;
-  flex-grow: 1;
-}
-.savings .fas {
-  font-size: 32px;
-  padding-right: 20px;
-  padding-left: 0;
 }
 
 .stretch {

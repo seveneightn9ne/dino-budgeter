@@ -11,7 +11,7 @@ export function getOrCreateFrame(
   gid: GroupId,
   index: FrameIndex,
   t?: pgPromise.ITask<{}>,
-): Promise<Frame> {
+): Promise<Required<Frame>> {
   return t
     ? getOrCreateFrameInner(gid, index, t)
     : db.tx((t) => getOrCreateFrameInner(gid, index, t));
@@ -21,30 +21,33 @@ async function getOrCreateFrameInner(
   gid: GroupId,
   index: FrameIndex,
   t: pgPromise.ITask<{}>,
-): Promise<Frame> {
+): Promise<Required<Frame>> {
   const row = await t.oneOrNone(
     "select * from frames where gid = $1 and index = $2 and ghost = false",
     [gid, index],
   );
   if (row) {
-    const frame = shared.fromSerialized(row);
-    frame.categories = await getCategories(gid, index, t);
-    frame.balance = await getBalance(gid, index, t);
-    frame.spending = await getSpending(gid, index, t);
-    return frame;
+    return {
+      ...shared.fromSerialized(row),
+      categories: await getCategories(gid, index, t),
+      balance: await getBalance(gid, index, t),
+      spending: await getSpending(gid, index, t),
+      savings: await getSavings(gid, index, t),
+    };
   }
   // Delete any ghost if it exists
   await deleteGhost(gid, index, t);
   console.log("creating new frame");
-  const frame: Frame = {
+  const frame: Required<Frame> = {
     gid,
     index,
-    balance: Money.Zero,
-    income: Money.Zero,
     ghost: true,
+    spending: await getSpending(gid, index, t),
+    balance: await getBalance(gid, index, t),
+    savings: await getSavings(gid, index, t),
+    income: Money.Zero, // maybe fill in below
+    categories: null, // to fill in below
   };
-  frame.spending = await getSpending(gid, index, t);
-  frame.balance = await getBalance(gid, index, t);
   const prevFrame = await getPreviousFrame(gid, index, t);
   if (prevFrame) {
     frame.income = prevFrame.income;
@@ -216,4 +219,26 @@ async function getPreviousFrame(
     [gid, index],
   );
   return shared.fromSerialized(row);
+}
+
+async function getSavings(
+  gid: GroupId,
+  index: FrameIndex,
+  t: pgPromise.ITask<{}>,
+): Promise<Money> {
+  const txnRows: Array<{ amount: string }> = await t.manyOrNone(
+    `select amount from transactions where gid = $1 and frame < $2 and alive = true`,
+    [gid, index],
+  );
+  const totalSpent = Money.sum(txnRows.map((r) => new Money(r.amount)));
+
+  const incomeRows: Array<{ income: string }> = await t.manyOrNone(
+    `select income from frames where gid = $1 and index < $2`,
+    [gid, index],
+  );
+  const totalIncome = Money.sum(incomeRows.map((r) => new Money(r.income)));
+
+  // TODO(jessk): Incorporate savings deductions?
+
+  return totalIncome.minus(totalSpent);
 }

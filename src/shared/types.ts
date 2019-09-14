@@ -35,7 +35,7 @@ export interface Category {
   ctime?: Date;
 }
 
-// Corresponds to `frames` db table joined on `categories`, plus `balance` and `spending`
+// Corresponds to `frames` db table joined on `categories`, plus `balance`, `spending`, and `savings`
 export interface Frame {
   gid: GroupId;
   index: FrameIndex;
@@ -44,6 +44,7 @@ export interface Frame {
   categories?: Category[];
   balance?: Money;
   spending?: Money;
+  savings?: Money;
 }
 
 // Corresponds to `transactions` db table plus shared_transaction data

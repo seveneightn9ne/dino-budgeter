@@ -7,7 +7,7 @@ import Money from "../shared/Money";
 import { Category, CategoryId, Frame as FrameType } from "../shared/types";
 import AIComponent from "./ai";
 import CategoryRow from "./categoryrow";
-import { Blob, BlobOp } from "./components/blob";
+import { BlobOp } from "./components/blob";
 import { ClickToEditMoney } from "./components/clicktoedit";
 import { ProgressBar } from "./components/progressbar";
 import NewCategory from "./newcategory";
@@ -65,28 +65,6 @@ export default class Categories extends React.Component<Props, State> {
         postKey="income"
       />
     );
-    let rollover = null;
-    const rolloverAmt = this.props.frame.balance
-      .minus(this.props.frame.income)
-      .plus(this.props.frame.spending);
-    switch (rolloverAmt.cmp(Money.Zero)) {
-      case 1: {
-        const amt = rolloverAmt.formatted();
-        rollover = [
-          <BlobOp key="+" op="+" />,
-          <Blob key={amt} title="last month" amount={amt} />,
-        ];
-        break;
-      }
-      case -1: {
-        const amt = rolloverAmt.negate().formatted();
-        rollover = [
-          <BlobOp key="-" op="-" />,
-          <Blob key={amt} title="last month" amount={amt} />,
-        ];
-        break;
-      }
-    }
 
     const transactionLink = (
       <Link
@@ -99,17 +77,40 @@ export default class Categories extends React.Component<Props, State> {
 
     return (
       <div>
-        <div className="blobs">
-          <Blob title="Income" amount={income} />
-          {rollover}
+        <div className="blobs summary">
+          <div className="savings">
+            <span className="fas fa-university" />
+            <span className="title">Savings</span>
+            <span className="amount">
+              {this.props.frame.savings.formatted()}
+            </span>
+          </div>
+
+          <div className="income">
+            <span className="fas fa-money-check-alt" />
+            <span className="title">Income</span>
+            <span className="amount">{income}</span>
+          </div>
+
+          {/* TODO: add savings transactions */}
+
           <BlobOp op="-" />
-          <Blob title="Spent" amount={transactionLink} />
+
+          <div className="spent">
+            <span className="far fa-credit-card" />
+            <span className="title">Spent</span>
+            <span className="amount">{transactionLink}</span>
+          </div>
+
           <BlobOp op="=" />
-          <Blob
-            title="Balance"
-            amount={this.props.frame.balance.formatted()}
-            bold={true}
-          />
+
+          <div className="balance">
+            <span className="fas fa-coins" />
+            <span className="title">Balance</span>
+            <span className="amount">
+              {this.props.frame.balance.formatted()}
+            </span>
+          </div>
         </div>
 
         <ProgressBar
