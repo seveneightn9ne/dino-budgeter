@@ -7,6 +7,7 @@ export type FrameIndex = number;
 export type TransactionId = string;
 export type SplitId = string;
 export type PaymentId = string;
+export type SavingsTransactionId = string;
 
 // Corresponds to `users` db table
 export interface User {
@@ -41,10 +42,11 @@ export interface Frame {
   index: FrameIndex;
   income: Money;
   ghost: boolean;
-  categories?: Category[];
-  balance?: Money;
-  spending?: Money;
-  savings?: Money;
+  categories: Category[];
+  balance: Money;
+  spending: Money;
+  savings: Money;
+  savingsTransactions: SavingsTransaction[];
 }
 
 // Corresponds to `transactions` db table plus shared_transaction data
@@ -117,6 +119,14 @@ export interface Charge {
   date: Date;
   memo: string;
   frame: FrameIndex;
+}
+
+export interface SavingsTransaction {
+  id: SavingsTransactionId;
+  gid: GroupId;
+  amount: Money;
+  frame: FrameIndex;
+  ctime?: Date;
 }
 
 export class Share extends Money {

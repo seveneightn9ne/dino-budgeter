@@ -75,6 +75,8 @@ export default class Categories extends React.Component<Props, State> {
       </Link>
     );
 
+    const [savingsTxnOp, savingsTxns] = this.renderSavingsTransactions();
+
     return (
       <div>
         <div className="blobs summary">
@@ -92,8 +94,6 @@ export default class Categories extends React.Component<Props, State> {
             <span className="amount">{income}</span>
           </div>
 
-          {/* TODO: add savings transactions */}
-
           <BlobOp op="-" />
 
           <div className="spent">
@@ -101,6 +101,9 @@ export default class Categories extends React.Component<Props, State> {
             <span className="title">Spent</span>
             <span className="amount">{transactionLink}</span>
           </div>
+
+          {savingsTxnOp}
+          {savingsTxns}
 
           <BlobOp op="=" />
 
@@ -145,6 +148,33 @@ export default class Categories extends React.Component<Props, State> {
         </table>
       </div>
     );
+  }
+
+  private renderSavingsTransactions(): [JSX.Element, JSX.Element] {
+    if (this.props.frame.savingsTransactions.length === 0) {
+      return [null, null];
+    }
+
+    const sum = Money.sum(
+      this.props.frame.savingsTransactions.map((s) => s.amount),
+    );
+    if (sum.cmp(Money.Zero) === 0) {
+      return [null, null];
+    }
+
+    // if sum < 0, money was taken out of savings, so we get a +
+    const op = sum.cmp(Money.Zero) < 0 ? "+" : "-";
+    const amount = sum.cmp(Money.Zero) < 0 ? sum.negate() : sum;
+    const toFrom = sum.cmp(Money.Zero) < 0 ? "From" : "To";
+
+    return [
+      <BlobOp op={op} key="op" />,
+      <div className="netSavings" key="savings">
+        <span className="fas fa-piggy-bank" />
+        <span className="title">{toFrom} savings</span>
+        <span className="amount">{amount.formatted()}</span>
+      </div>,
+    ];
   }
 
   private onAddCategory = (c: Category) => {

@@ -169,4 +169,19 @@ alter table categories drop savings;
 end if;
 end $$;
 
+-- migration 16: savings transactions
+do $$ begin
+if not exists(select * from information_schema.tables where table_name = 'savings_transactions')
+then
+create table savings_transactions (
+  id char(32) primary key,
+  gid char(32) not null references groups,
+  amount text not null,
+  frame int not null, -- frame may not match ctime
+  ctime timestamp not null default current_timestamp
+);
+create index gid_idx on savings_transactions(gid);
+end if;
+end $$;
+
 commit;

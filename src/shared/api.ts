@@ -10,6 +10,7 @@ import {
   Friend,
   InitState,
   Payment as PaymentType,
+  SavingsTransaction,
   Share,
   Transaction,
   UserSettings,
@@ -60,6 +61,12 @@ const categorySchema: SchemaType<Category> = {
   balance: Schemas.optional(DinoSchemas.money()),
   ctime: Schemas.optional(Schemas.date()),
 };
+const savingsTransactionSchema: SchemaType<SavingsTransaction> = {
+  id: Schemas.string(),
+  gid: Schemas.string(),
+  amount: DinoSchemas.money(),
+  frame: Schemas.number(),
+};
 const frameSchema: SchemaType<Required<Frame>> = {
   gid: Schemas.string(),
   index: Schemas.number(),
@@ -69,6 +76,7 @@ const frameSchema: SchemaType<Required<Frame>> = {
   balance: DinoSchemas.money(),
   spending: DinoSchemas.money(),
   savings: DinoSchemas.money(),
+  savingsTransactions: Schemas.array(savingsTransactionSchema),
 };
 const paymentSchema: SchemaType<PaymentType> = {
   type: Schemas.literal("payment"),

@@ -6,6 +6,7 @@ import * as util from "../shared/util";
 import * as categories from "./categories";
 import db from "./db";
 export * from "../shared/frames";
+import { getSavings, getSavingsTransactions } from "./savings";
 
 export function getOrCreateFrame(
   gid: GroupId,
@@ -33,6 +34,7 @@ async function getOrCreateFrameInner(
       balance: await getBalance(gid, index, t),
       spending: await getSpending(gid, index, t),
       savings: await getSavings(gid, index, t),
+      savingsTransactions: await getSavingsTransactions(gid, index, t),
     };
   }
   // Delete any ghost if it exists
@@ -47,6 +49,7 @@ async function getOrCreateFrameInner(
     savings: await getSavings(gid, index, t),
     income: Money.Zero, // maybe fill in below
     categories: null, // to fill in below
+    savingsTransactions: [],
   };
   const prevFrame = await getPreviousFrame(gid, index, t);
   if (prevFrame) {
@@ -147,7 +150,7 @@ export function getIncome(
     });
 }
 
-export async function getBalance(
+async function getBalance(
   gid: GroupId,
   index: FrameIndex,
   t: pgPromise.ITask<{}>,
@@ -166,7 +169,10 @@ export async function getBalance(
   );
   const totalIncome = incomeRow ? new Money(incomeRow.income) : Money.Zero;
 
-  return totalIncome.minus(totalSpent);
+  const savingsTxns = await getSavingsTransactions(gid, index, t);
+  const netSavingsTxns = Money.sum(savingsTxns.map((s) => s.amount));
+
+  return totalIncome.minus(totalSpent).minus(netSavingsTxns);
 }
 
 function getSpending(
@@ -219,26 +225,4 @@ async function getPreviousFrame(
     [gid, index],
   );
   return shared.fromSerialized(row);
-}
-
-async function getSavings(
-  gid: GroupId,
-  index: FrameIndex,
-  t: pgPromise.ITask<{}>,
-): Promise<Money> {
-  const txnRows: Array<{ amount: string }> = await t.manyOrNone(
-    `select amount from transactions where gid = $1 and frame < $2 and alive = true`,
-    [gid, index],
-  );
-  const totalSpent = Money.sum(txnRows.map((r) => new Money(r.amount)));
-
-  const incomeRows: Array<{ income: string }> = await t.manyOrNone(
-    `select income from frames where gid = $1 and index < $2`,
-    [gid, index],
-  );
-  const totalIncome = Money.sum(incomeRows.map((r) => new Money(r.income)));
-
-  // TODO(jessk): Incorporate savings deductions?
-
-  return totalIncome.minus(totalSpent);
 }

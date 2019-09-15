@@ -111,4 +111,13 @@ create table email_resets (
 );
 create index token_idx on email_resets(token);
 
+create table savings_transactions (
+  id char(32) primary key,
+  gid char(32) not null references groups,
+  amount text not null,
+  frame int not null, -- frame may not match ctime
+  ctime timestamp not null default current_timestamp
+);
+create index gid_idx on savings_transactions(gid);
+
 commit;

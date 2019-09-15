@@ -1,4 +1,5 @@
 begin;
+drop table if exists savings_transactions;
 drop table if exists playground;
 drop table if exists email_resets;
 drop table if exists payments;
