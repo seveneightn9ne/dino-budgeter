@@ -49,7 +49,7 @@ const Login = (props: RouteComponentProps<{}>) => (
       />
       <div>
         <label>Email: </label>
-        <input type="text" name="username" />
+        <input type="email" name="username" />
       </div>
       <div>
         <label>Password: </label>
@@ -83,8 +83,8 @@ const Signup = () => (
         render={msg("There is already an account with that email.")}
       />
       <div>
-        <label>Username: </label>
-        <input type="text" name="username" />
+        <label>Email: </label>
+        <input type="email" name="username" />
       </div>
       <div>
         <label>Password: </label>
