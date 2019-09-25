@@ -66,6 +66,7 @@ const savingsTransactionSchema: SchemaType<SavingsTransaction> = {
   gid: Schemas.string(),
   amount: DinoSchemas.money(),
   frame: Schemas.number(),
+  ctime: Schemas.optional(Schemas.date()),
 };
 const frameSchema: SchemaType<Required<Frame>> = {
   gid: Schemas.string(),

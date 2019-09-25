@@ -1,6 +1,7 @@
 import pgPromise from "pg-promise";
 import Money from "../shared/Money";
 import { FrameIndex, GroupId, SavingsTransaction } from "../shared/types";
+import { randomId } from "../shared/util";
 
 export async function getSavings(
   gid: GroupId,
@@ -46,6 +47,27 @@ export async function getSavingsTransactions(
     [gid, frame],
   );
   return rows.map(fromSerialized);
+}
+
+export async function addSavingsTransaction(
+  gid: GroupId,
+  frame: FrameIndex,
+  amount: Money,
+  t: pgPromise.ITask<{}>,
+): Promise<SavingsTransaction> {
+  const st: SavingsTransaction = {
+    gid,
+    frame,
+    amount,
+    id: randomId(),
+    ctime: new Date(),
+  };
+  await t.none(
+    "insert into savings_transactions(id, gid, amount, frame) " +
+      "values (${id}, ${gid}, ${amount}, ${frame})",
+    st,
+  );
+  return st;
 }
 
 interface SavingsTransactionRow {

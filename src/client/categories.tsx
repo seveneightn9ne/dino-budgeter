@@ -1,11 +1,11 @@
 import * as React from "react";
 import { Link, RouteComponentProps } from "react-router-dom";
-import { AI, getAIs } from "../shared/ai";
+import { Action, AI, getAIs } from "../shared/ai";
 import { Income } from "../shared/api";
 import * as frames from "../shared/frames";
 import Money from "../shared/Money";
 import { Category, CategoryId, Frame as FrameType } from "../shared/types";
-import AIComponent from "./ai";
+import AIComponent, { CategoryAI } from "./ai";
 import CategoryRow from "./categoryrow";
 import { BlobOp } from "./components/blob";
 import { ClickToEditMoney } from "./components/clicktoedit";
@@ -20,6 +20,7 @@ interface Props extends RouteComponentProps<{ month: number; year: number }> {
   onChangeCategory: (c: Category) => void;
   onDeleteCategory: (c: CategoryId) => void;
   onNewIncome: (newIncome: Money) => void;
+  onAddToSavings: (amt: Money) => void;
 }
 interface State {
   budgeted?: Money;
@@ -50,9 +51,23 @@ export default class Categories extends React.Component<Props, State> {
       />
     ));
 
-    const ais = this.getAIs().map((ai) => (
-      <AIComponent ai={ai} key={ai.message()} />
-    ));
+    const ais = this.getAIs().map((ai) => {
+      if (ai.action && ai.action.type === "choose-category") {
+        return (
+          <CategoryAI
+            ai={ai}
+            categories={this.props.frame.categories}
+            onChangeCategory={this.props.onChangeCategory}
+            onAddToSavings={this.props.onAddToSavings}
+            key={ai.message()}
+          />
+        );
+      }
+      if (ai.action) {
+        throw Error("AI has unexpected action");
+      }
+      return <AIComponent ai={ai as AI<null>} key={ai.message()} />;
+    });
     // income - spent = balance;
     // spent = income - balance;
     const income = (
@@ -183,7 +198,7 @@ export default class Categories extends React.Component<Props, State> {
     setTimeout(() => this.setState({ newCat: undefined }), 1000);
   }
 
-  private getAIs(): AI[] {
+  private getAIs(): Array<AI<Action>> {
     return getAIs(this.props.frame);
   }
 }

@@ -56,4 +56,8 @@ export default class Money {
     }
     return true;
   }
+
+  public toPostgres(): string {
+    return this.string();
+  }
 }

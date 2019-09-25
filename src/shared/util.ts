@@ -11,3 +11,7 @@ export function token() {
 export function formatDate(val: Date) {
   return `${val.getMonth() + 1}/${val.getDate()}/${val.getFullYear()}`;
 }
+
+export function enforceExhaustive(v: never): void {
+  throw Error("enforceExhaustive found an unexpected value: " + v);
+}

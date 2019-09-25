@@ -114,7 +114,6 @@ abstract class ClickToEdit<
   }
 
   protected saveNewValue = (event?: React.FormEvent): void => {
-    console.log("Save new value");
     if (event) {
       event.preventDefault();
     }

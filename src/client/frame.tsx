@@ -2,7 +2,7 @@ import _ from "lodash";
 import * as React from "react";
 import { Redirect, Route, RouteComponentProps, Switch } from "react-router";
 import { Link, NavLink } from "react-router-dom";
-import { AI, getAIs } from "../shared/ai";
+import { Action, AI, getAIs } from "../shared/ai";
 import { Income } from "../shared/api";
 import * as frames from "../shared/frames";
 import Money from "../shared/Money";
@@ -14,6 +14,7 @@ import {
   FrameIndex,
   InitState,
   Payment,
+  SavingsTransaction,
   Transaction,
   TransactionId,
 } from "../shared/types";
@@ -74,7 +75,7 @@ export default class Frame extends React.Component<FrameProps, FrameState> {
     return frames.index(today.getMonth(), today.getFullYear());
   }
 
-  public getAIs(): AI[] {
+  public getAIs(): Array<AI<Action>> {
     if (!this.state.frame) {
       return [];
     }
@@ -439,6 +440,21 @@ export default class Frame extends React.Component<FrameProps, FrameState> {
     this.setState({ frame: newFrame });
   }
 
+  private onAddToSavings(amount: Money) {
+    const newFrame = { ...this.state.frame };
+    const t: SavingsTransaction = {
+      id: "",
+      gid: this.state.frame.gid,
+      frame: this.state.frame.index,
+      amount,
+      ctime: new Date(),
+    };
+    newFrame.savingsTransactions = [...newFrame.savingsTransactions, t];
+    newFrame.savings = newFrame.savings.plus(amount);
+    newFrame.balance = newFrame.balance.minus(amount);
+    this.setState({ frame: newFrame });
+  }
+
   public onPayment = (email: string, pmt: Charge | Payment) => {
     let diffToBalance = pmt.amount.plus(Money.Zero); // why + 0?
     // If I charge you, you owe me more. balance (I owe you) decreases
@@ -622,6 +638,7 @@ export default class Frame extends React.Component<FrameProps, FrameState> {
                       onChangeCategory={this.onChangeCategory.bind(this)}
                       onDeleteCategory={this.onDeleteCategory.bind(this)}
                       onNewIncome={this.onNewIncome.bind(this)}
+                      onAddToSavings={this.onAddToSavings.bind(this)}
                     />
                   )}
                 />

@@ -5,6 +5,7 @@ import Money from "../../shared/Money";
 import { User } from "../../shared/types";
 import db from "../db";
 import * as frames from "../frames";
+import { addSavingsTransaction } from "../savings";
 import * as user from "../user";
 
 export function handle_income_post(
@@ -28,7 +29,11 @@ export function handle_budgeting_move_post(
 ): Promise<ErrorResponse | null> {
   return db.tx(async (t) => {
     const gid = await user.getDefaultGroup(actor, t);
+    if (request.from === "savings") {
+      throw Error("Moving from savings is not yet supported");
+    }
     if (request.from) {
+      // is a category, not from unbudgeted
       const fromRow = await t.oneOrNone(
         "select * from categories where id = $1 and gid = $2 and frame = $3",
         [request.from, gid, request.frame],
@@ -45,23 +50,29 @@ export function handle_budgeting_move_post(
         [newFromBudget.string(), request.from, request.frame],
       );
     }
-    const toRow = await t.oneOrNone(
-      "select * from categories where id = $1 and gid = $2 and frame = $3",
-      [request.to, gid, request.frame],
-    );
-    if (!toRow) {
-      console.error("400: target category does not exist for " + request.to);
-      return {
-        code: 400,
-        message: `Target category does not exist: ${request.to}`,
-      };
-    }
     await frames.markNotGhost(gid, request.frame, t);
-    const newToBudget = new Money(toRow.budget).plus(request.amount);
-    await t.none(
-      "update categories set budget = $1 where id = $2 and frame = $3",
-      [newToBudget.string(), request.to, request.frame],
-    );
-    return null;
+    if (request.to === "savings") {
+      await addSavingsTransaction(gid, request.frame, request.amount, t);
+      return null;
+    } else {
+      // 'to' is a category
+      const toRow = await t.oneOrNone(
+        "select * from categories where id = $1 and gid = $2 and frame = $3",
+        [request.to, gid, request.frame],
+      );
+      if (!toRow) {
+        console.error("400: target category does not exist for " + request.to);
+        return {
+          code: 400,
+          message: `Target category does not exist: ${request.to}`,
+        };
+      }
+      const newToBudget = new Money(toRow.budget).plus(request.amount);
+      await t.none(
+        "update categories set budget = $1 where id = $2 and frame = $3",
+        [newToBudget.string(), request.to, request.frame],
+      );
+      return null;
+    }
   });
 }

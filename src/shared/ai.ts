@@ -2,25 +2,23 @@ import * as frames from "./frames";
 import Money from "./Money";
 import { Frame, FrameIndex, Transaction, TransactionId } from "./types";
 
-export interface AI {
+export interface AI<A extends Action = null> {
   frame?: FrameIndex;
   message(): string;
   cta?: string;
-  action?: Action;
+  action?: A;
 }
-interface Popup {
-  type: "popup";
+export interface ChooseCategory {
+  type: "choose-category";
   title: string;
-  body: string;
-  confirm?: string;
-  cancel?: string;
-  do: () => Promise<void>;
+  subtype: ChooseCategorySubtype;
 }
-interface Redirect {
-  type: "redirect";
-  to: string;
+type ChooseCategorySubtype = SendBalanceData | null;
+interface SendBalanceData {
+  type: "sendBalance";
+  balance: Money;
 }
-type Action = Popup | Redirect;
+export type Action = ChooseCategory | null;
 
 export class OverspentCategory implements AI {
   constructor(
@@ -61,20 +59,26 @@ export class Overbudgeted implements AI {
   }
 }
 
-export class Underbudgeted implements AI {
-  public balance: Money;
-
-  constructor(
-    public frame: FrameIndex,
-    public budgetedAmount: Money,
-    public income: Money,
-  ) {
-    this.balance = income.minus(budgetedAmount);
-  }
-
-  public message(): string {
-    return `${this.balance.formatted()} needs to be budgeted into categories.`;
-  }
+function Underbudgeted(
+  frame: FrameIndex,
+  budgetedAmount: Money,
+  totalToBudget: Money,
+): AI<ChooseCategory> {
+  const balance = totalToBudget.minus(budgetedAmount);
+  return {
+    frame,
+    message: () =>
+      `${balance.formatted()} needs to be budgeted into categories.`,
+    cta: "Move balance to...",
+    action: {
+      type: "choose-category",
+      title: `Move ${balance.formatted()} to...`,
+      subtype: {
+        type: "sendBalance",
+        balance,
+      },
+    },
+  };
 }
 
 export class UncategorizedMulti implements AI {
@@ -87,38 +91,11 @@ export class UncategorizedMulti implements AI {
   }
 }
 
-export class DebtAI implements AI {
-  constructor(
-    public email: string,
-    public iOwe: Money,
-    public doAction: () => Promise<void>,
-  ) {}
-
-  public message(): string {
-    return this.iOwe.cmp(Money.Zero) > 0
-      ? `You owe ${this.email} ${this.iOwe.formatted()}.`
-      : `${this.email} owes you ${this.iOwe.negate().formatted()}`;
-  }
-
-  public cta = "Settle";
-  public action: Popup = {
-    type: "popup",
-    title: "Mark as settled",
-    body:
-      this.iOwe.cmp(Money.Zero) > 0
-        ? `Do this after you've paid ${this.email} ${this.iOwe.formatted()}.`
-        : `Do this after ${
-            this.email
-          } has paid you ${this.iOwe.negate().formatted()}.`,
-    do: this.doAction,
-  };
-}
-
-export function getAIs(frame: Frame): AI[] {
-  const ais: AI[] = [];
-  const overspends: AI[] = [];
+export function getAIs(frame: Frame): Array<AI<Action>> {
+  const ais: Array<AI<Action>> = [];
+  const overspends: Array<AI<Action>> = [];
   frame.categories.forEach((c) => {
-    if (c.balance.cmp(Money.Zero) == -1) {
+    if (c.balance.cmp(Money.Zero) === -1) {
       overspends.push(
         new OverspentCategory(frame.index, c.name, c.budget, c.balance.negate()),
       );
@@ -127,12 +104,12 @@ export function getAIs(frame: Frame): AI[] {
   const totalBudgeted = frames.budgeted(frame);
   const needsBudgeting = frames.totalToBudget(frame);
   const cmpIncome = totalBudgeted.cmp(needsBudgeting);
-  if (cmpIncome == 1) {
+  if (cmpIncome === 1) {
     ais.push(new Overbudgeted(frame.index, totalBudgeted, needsBudgeting));
-  } else if (cmpIncome == -1) {
-    ais.push(new Underbudgeted(frame.index, totalBudgeted, needsBudgeting));
+  } else if (cmpIncome === -1) {
+    ais.push(Underbudgeted(frame.index, totalBudgeted, needsBudgeting));
   }
-  if (ais.length == 0) {
+  if (ais.length === 0) {
     // Only send ovespends if there aren't bigger problems.
     ais.push(...overspends);
   }
