@@ -33,7 +33,7 @@ export default class AddTransaction extends React.Component<Props, State> {
 
   public render(): JSX.Element {
     if (this.state.redirectTo) {
-      return <Redirect to={this.state.redirectTo} />;
+      return <Redirect to={this.state.redirectTo} push={true} />;
     }
     const today = new Date();
     return (

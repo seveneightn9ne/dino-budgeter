@@ -120,6 +120,7 @@ export default class CategoryRow extends React.Component<
       return (
         <Redirect
           to={`${this.props.match.url}/${this.props.category.id}/${this.props.category.name}`}
+          push={true}
         />
       );
     }
