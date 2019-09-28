@@ -124,6 +124,7 @@ export function validate<
     return false;
   } else {
     self.setState({ error: "" });
+    return true;
   }
 }
 
