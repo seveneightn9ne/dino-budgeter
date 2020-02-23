@@ -12,12 +12,12 @@ import { ControlledPoplet } from "./components/poplet";
 import { ProgressBar } from "./components/progressbar";
 import * as util from "./util";
 
-interface CategoryRowProps {
+export interface CategoryRowProps {
   match: match<{ month: number; year: number }>;
   category: Category;
   categories: Category[];
   budgetLeftover: Money;
-  new: boolean;
+  newCat: CategoryId | undefined;
   onDeleteCategory: (id: CategoryId) => void;
   onChangeCategory: (newCategory: Category) => void;
 }
@@ -38,7 +38,7 @@ export default class CategoryRow extends React.Component<
     budgetLeftoverId: util.randomId(),
   };
 
-  public categoryMap(minBalance: Money): Map<string, string> {
+  private categoryMap(minBalance: Money): Map<string, string> {
     const map = new Map();
     if (this.props.budgetLeftover.cmp(minBalance) >= 0) {
       map.set(
@@ -54,7 +54,7 @@ export default class CategoryRow extends React.Component<
     return map;
   }
 
-  public delete = (e: React.MouseEvent<any>): boolean => {
+  private delete = (e: React.MouseEvent<any>): boolean => {
     util
       .apiFetch({
         api: DeleteCategory,
@@ -68,9 +68,9 @@ export default class CategoryRow extends React.Component<
       });
     e.stopPropagation();
     return true;
-  }
+  };
 
-  public onUpdateBudget = (newBudget: Money) => {
+  private onUpdateBudget = (newBudget: Money) => {
     const newCategory = { ...this.props.category };
     newCategory.budget = newBudget;
     newCategory.balance = categories.updateBalanceWithBudget(
@@ -78,9 +78,9 @@ export default class CategoryRow extends React.Component<
       newBudget,
     );
     this.props.onChangeCategory(newCategory);
-  }
+  };
 
-  public onCoverBalance = (fromId: CategoryId) => {
+  private onCoverBalance = (fromId: CategoryId) => {
     if (fromId !== this.state.budgetLeftoverId) {
       const that = this.props.categories.filter((c) => c.id == fromId)[0];
       const thatNew = { ...that };
@@ -97,23 +97,23 @@ export default class CategoryRow extends React.Component<
     this.props.onChangeCategory(thisNew);
 
     this.closePoplet();
-  }
+  };
 
-  public closePoplet = () => {
+  private closePoplet = () => {
     this.setState({ popletOpen: false });
-  }
+  };
 
-  public openPoplet = () => {
+  private openPoplet = () => {
     this.setState({ popletOpen: true });
-  }
+  };
 
-  public previewCover(from: CategoryId) {
+  private previewCover(from: CategoryId) {
     this.setState({ provisionalCoverFrom: from });
   }
 
-  public onClick = () => {
+  private onClick = () => {
     this.setState({ goToDetailPage: true });
-  }
+  };
 
   public render() {
     if (this.state.goToDetailPage) {
@@ -142,7 +142,8 @@ export default class CategoryRow extends React.Component<
         ? "highlighted"
         : "";
 
-    const newClass = this.props.new ? "new" : "not-new";
+    const newClass =
+      this.props.newCat === this.props.category.id ? "new" : "not-new";
 
     return (
       <tr
@@ -169,7 +170,7 @@ export default class CategoryRow extends React.Component<
         </td>
       </tr>
     );
-  }
+  };
 
   private renderBudget = () => (
     <ClickToEditMoney
@@ -183,7 +184,7 @@ export default class CategoryRow extends React.Component<
       }}
       postKey="amount"
     />
-  )
+  );
 
   private renderBalance = () =>
     this.props.category.balance.cmp(Money.Zero) < 0 ? (
@@ -218,7 +219,7 @@ export default class CategoryRow extends React.Component<
       </ControlledPoplet>
     ) : (
       this.props.category.balance.formatted()
-    )
+    );
 
   private renderProgress = (spending: Money) => (
     <ProgressBar
@@ -227,5 +228,5 @@ export default class CategoryRow extends React.Component<
       frame={this.props.category.frame}
       small={true}
     />
-  )
+  );
 }

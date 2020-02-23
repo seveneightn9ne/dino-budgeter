@@ -6,7 +6,7 @@ import * as frames from "../shared/frames";
 import Money from "../shared/Money";
 import { Category, CategoryId, Frame as FrameType } from "../shared/types";
 import AIComponent, { CategoryAI } from "./ai";
-import CategoryRow from "./categoryrow";
+import CategorySection from "./CategorySection";
 import { BlobOp } from "./components/blob";
 import { ClickToEditMoney } from "./components/clicktoedit";
 import { ProgressBar } from "./components/progressbar";
@@ -39,11 +39,11 @@ export default class Categories extends React.Component<Props, State> {
   }
   public render() {
     const cs = this.props.frame.categories.map((c) => (
-      <CategoryRow
+      <CategorySection
         key={c.id}
         category={c}
         categories={this.props.frame.categories}
-        new={this.state.newCat === c.id}
+        newCat={this.state.newCat}
         match={this.props.match}
         budgetLeftover={frames.unbudgeted(this.props.frame)}
         onDeleteCategory={this.props.onDeleteCategory}
@@ -196,7 +196,7 @@ export default class Categories extends React.Component<Props, State> {
     this.setState({ newCat: c.id });
     this.props.onAddCategory(c);
     setTimeout(() => this.setState({ newCat: undefined }), 1000);
-  }
+  };
 
   private getAIs(): Array<AI<Action>> {
     return getAIs(this.props.frame);

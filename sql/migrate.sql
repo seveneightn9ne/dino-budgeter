@@ -143,8 +143,8 @@ end $$;
 do $$ begin
 if (not exists(
     select kcu.column_name
-    from information_schema.key_column_usage kcu 
-    join information_schema.table_constraints tc on tc.constraint_name = kcu.constraint_name 
+    from information_schema.key_column_usage kcu
+    join information_schema.table_constraints tc on tc.constraint_name = kcu.constraint_name
     where tc.constraint_type = 'PRIMARY KEY' and kcu.table_name = 'payments' and kcu.column_name = 'id'))
   and (not exists(
     select * from payments where id is null))
@@ -181,6 +181,14 @@ create table savings_transactions (
   ctime timestamp not null default current_timestamp
 );
 create index gid_idx on savings_transactions(gid);
+end if;
+end $$;
+
+-- migration 17: category parent
+do $$ begin
+if not exists(select * from information_schema.columns where table_name = 'categories' and column_name = 'parent')
+then
+alter table categories add parent char(32);
 end if;
 end $$;
 

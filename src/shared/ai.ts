@@ -25,7 +25,7 @@ export class OverspentCategory implements AI {
     public frame: FrameIndex,
     public categoryName: string,
     public budgetedAmount: Money,
-    public balance: Money,
+    public balance: Money
   ) {}
 
   public message(): string {
@@ -44,7 +44,7 @@ export class Overbudgeted implements AI {
   constructor(
     public frame: FrameIndex,
     public budgetedAmount: Money,
-    public income: Money,
+    public income: Money
   ) {
     this.overspent = income.minus(budgetedAmount);
   }
@@ -62,7 +62,7 @@ export class Overbudgeted implements AI {
 function Underbudgeted(
   frame: FrameIndex,
   budgetedAmount: Money,
-  totalToBudget: Money,
+  totalToBudget: Money
 ): AI<ChooseCategory> {
   const balance = totalToBudget.minus(budgetedAmount);
   return {
@@ -75,9 +75,9 @@ function Underbudgeted(
       title: `Move ${balance.formatted()} to...`,
       subtype: {
         type: "sendBalance",
-        balance,
-      },
-    },
+        balance
+      }
+    }
   };
 }
 
@@ -94,10 +94,10 @@ export class UncategorizedMulti implements AI {
 export function getAIs(frame: Frame): Array<AI<Action>> {
   const ais: Array<AI<Action>> = [];
   const overspends: Array<AI<Action>> = [];
-  frame.categories.forEach((c) => {
+  frame.categories.forEach(c => {
     if (c.balance.cmp(Money.Zero) === -1) {
       overspends.push(
-        new OverspentCategory(frame.index, c.name, c.budget, c.balance.negate()),
+        new OverspentCategory(frame.index, c.name, c.budget, c.balance.negate())
       );
     }
   });
@@ -118,11 +118,11 @@ export function getAIs(frame: Frame): Array<AI<Action>> {
 
 export function getTransactionAIs(
   frame: Frame,
-  transactions: Transaction[],
+  transactions: Transaction[]
 ): AI[] {
   const ais: AI[] = [];
   const uncategorized: TransactionId[] = [];
-  transactions.forEach((transaction) => {
+  transactions.forEach(transaction => {
     if (!transaction.category && transaction.amount.cmp(Money.Zero) !== 0) {
       uncategorized.push(transaction.id);
     }

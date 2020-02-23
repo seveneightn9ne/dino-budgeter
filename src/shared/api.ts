@@ -13,7 +13,7 @@ import {
   SavingsTransaction,
   Share,
   Transaction,
-  UserSettings,
+  UserSettings
 } from "./types";
 
 const Schemas = api.Schemas;
@@ -21,7 +21,7 @@ const Schemas = api.Schemas;
 // tslint:disable-next-line
 namespace DinoSchemas {
   export function money(
-    opts: { nonNegative?: boolean } = {},
+    opts: { nonNegative?: boolean } = {}
   ): SchemaBase<Money> {
     const { nonNegative } = opts;
     return (key: string, val: any): Money => {
@@ -34,7 +34,7 @@ namespace DinoSchemas {
   }
 
   export function share(
-    opts: { nonNegative?: boolean } = {},
+    opts: { nonNegative?: boolean } = {}
   ): SchemaBase<Share> {
     const { nonNegative } = opts;
     return (key: string, val: any): Share => {
@@ -58,15 +58,16 @@ const categorySchema: SchemaType<Category> = {
   ordering: Schemas.number(),
   budget: DinoSchemas.money(),
   ghost: Schemas.boolean(),
+  parent: Schemas.optional(Schemas.string()),
   balance: Schemas.optional(DinoSchemas.money()),
-  ctime: Schemas.optional(Schemas.date()),
+  ctime: Schemas.optional(Schemas.date())
 };
 const savingsTransactionSchema: SchemaType<SavingsTransaction> = {
   id: Schemas.string(),
   gid: Schemas.string(),
   amount: DinoSchemas.money(),
   frame: Schemas.number(),
-  ctime: Schemas.optional(Schemas.date()),
+  ctime: Schemas.optional(Schemas.date())
 };
 const frameSchema: SchemaType<Required<Frame>> = {
   gid: Schemas.string(),
@@ -77,7 +78,7 @@ const frameSchema: SchemaType<Required<Frame>> = {
   balance: DinoSchemas.money(),
   spending: DinoSchemas.money(),
   savings: DinoSchemas.money(),
-  savingsTransactions: Schemas.array(savingsTransactionSchema),
+  savingsTransactions: Schemas.array(savingsTransactionSchema)
 };
 const paymentSchema: SchemaType<PaymentType> = {
   type: Schemas.literal("payment"),
@@ -87,7 +88,7 @@ const paymentSchema: SchemaType<PaymentType> = {
   amount: DinoSchemas.money(),
   date: Schemas.date(),
   memo: Schemas.string(),
-  frame: Schemas.number(),
+  frame: Schemas.number()
 };
 const chargeSchema: SchemaType<Charge> = {
   type: Schemas.literal("charge"),
@@ -97,13 +98,13 @@ const chargeSchema: SchemaType<Charge> = {
   amount: DinoSchemas.money(),
   date: Schemas.date(),
   memo: Schemas.string(),
-  frame: Schemas.number(),
+  frame: Schemas.number()
 };
 const friendSchema: SchemaType<Friend> = {
   uid: Schemas.string(),
   gid: Schemas.string(),
   email: Schemas.string(),
-  name: Schemas.or(Schemas.string(), Schemas.nulll()),
+  name: Schemas.or(Schemas.string(), Schemas.nulll())
 };
 const transactionSchema: SchemaType<Transaction> = {
   id: Schemas.string(),
@@ -121,12 +122,12 @@ const transactionSchema: SchemaType<Transaction> = {
     settled: Schemas.boolean(),
     myShare: DinoSchemas.share(),
     theirShare: DinoSchemas.share(),
-    otherAmount: DinoSchemas.money(),
-  }),
+    otherAmount: DinoSchemas.money()
+  })
 };
 const settingsSchema: SchemaType<UserSettings> = {
   emailNewTransaction: Schemas.optional(Schemas.boolean()),
-  emailNewPayment: Schemas.optional(Schemas.boolean()),
+  emailNewPayment: Schemas.optional(Schemas.boolean())
 } as SchemaType<UserSettings>;
 
 /** API Endpoints */
@@ -139,9 +140,9 @@ export const Payment = new api.API(
     youPay: Schemas.boolean(),
     isPayment: Schemas.boolean(),
     memo: Schemas.string(),
-    frame: Schemas.number(),
+    frame: Schemas.number()
   },
-  api.emptySchema,
+  api.emptySchema
 );
 
 export interface AddTransactionRequest {
@@ -183,19 +184,19 @@ const req: SchemaType<AddTransactionRequest2> = {
     myShare: DinoSchemas.share({ nonNegative: true }),
     theirShare: DinoSchemas.share({ nonNegative: true }),
     otherAmount: DinoSchemas.money({ nonNegative: true }),
-    iPaid: Schemas.boolean(),
-  }),
+    iPaid: Schemas.boolean()
+  })
 };
 export const AddTransaction = new api.API<AddTransactionRequest2, Transaction>(
   "/api/transaction",
   req,
-  transactionSchema,
+  transactionSchema
 );
 
 export const DeleteTransaction = new api.API(
   "/api/transaction/delete",
   { id: Schemas.string() },
-  api.emptySchema,
+  api.emptySchema
 );
 
 export const TransactionSplit = new api.API(
@@ -206,52 +207,52 @@ export const TransactionSplit = new api.API(
     total: DinoSchemas.money({ nonNegative: true }),
     myShare: DinoSchemas.share({ nonNegative: true }),
     theirShare: DinoSchemas.share({ nonNegative: true }),
-    iPaid: Schemas.boolean(),
+    iPaid: Schemas.boolean()
   },
-  api.emptySchema,
+  api.emptySchema
 );
 
 export const TransactionDescription = new api.API(
   "/api/transaction/description",
   {
     description: Schemas.string({ nonEmpty: true }),
-    id: Schemas.string(),
+    id: Schemas.string()
   },
-  api.emptySchema,
+  api.emptySchema
 );
 
 export const TransactionDate = new api.API(
   "/api/transaction/date",
   {
     id: Schemas.string(),
-    date: Schemas.date(),
+    date: Schemas.date()
   },
-  api.emptySchema,
+  api.emptySchema
 );
 
 export const TransactionCategory = new api.API(
   "/api/transaction/category",
   {
     id: Schemas.string(),
-    category: Schemas.string(),
+    category: Schemas.string()
   },
-  api.emptySchema,
+  api.emptySchema
 );
 
 export const TransactionAmount = new api.API(
   "/api/transaction/amount",
   {
     id: Schemas.string(),
-    amount: DinoSchemas.money(),
+    amount: DinoSchemas.money()
   },
-  api.emptySchema,
+  api.emptySchema
 );
 
 export const Initialize = new api.API(
   "/api/init",
   {
     index: Schemas.number(),
-    fields: Schemas.array(Schemas.string()),
+    fields: Schemas.array(Schemas.string())
   },
   {
     frame: Schemas.optional(frameSchema),
@@ -259,8 +260,8 @@ export const Initialize = new api.API(
     debts: Schemas.optional(
       Schemas.values({
         balance: DinoSchemas.money(),
-        payments: Schemas.baseArray(Schemas.or(paymentSchema, chargeSchema)),
-      }),
+        payments: Schemas.baseArray(Schemas.or(paymentSchema, chargeSchema))
+      })
     ),
     me: Schemas.optional(friendSchema),
     categories: Schemas.optional(Schemas.array(categorySchema)),
@@ -271,12 +272,12 @@ export const Initialize = new api.API(
       Schemas.values(
         Schemas.array({
           budget: DinoSchemas.money(),
-          spending: DinoSchemas.money(),
-        }),
-      ),
+          spending: DinoSchemas.money()
+        })
+      )
     ),
-    settings: Schemas.optional(settingsSchema),
-  } as SchemaType<InitState>,
+    settings: Schemas.optional(settingsSchema)
+  } as SchemaType<InitState>
 );
 
 export const AddCategory = new api.API<
@@ -286,18 +287,18 @@ export const AddCategory = new api.API<
   "/api/category",
   {
     frame: Schemas.number(),
-    name: Schemas.string({ nonEmpty: true }),
+    name: Schemas.string({ nonEmpty: true })
   },
-  categorySchema,
+  categorySchema
 );
 
 export const DeleteCategory = new api.API(
   "/api/category/delete",
   {
     id: Schemas.string(),
-    frame: Schemas.number(),
+    frame: Schemas.number()
   },
-  api.emptySchema,
+  api.emptySchema
 );
 
 export const CategoryBudget = new api.API(
@@ -305,9 +306,9 @@ export const CategoryBudget = new api.API(
   {
     id: Schemas.string(),
     frame: Schemas.number(),
-    amount: DinoSchemas.money({ nonNegative: true }),
+    amount: DinoSchemas.money({ nonNegative: true })
   },
-  api.emptySchema,
+  api.emptySchema
 );
 
 export const CategoryName = new api.API(
@@ -315,9 +316,9 @@ export const CategoryName = new api.API(
   {
     id: Schemas.string(),
     frame: Schemas.number(),
-    name: Schemas.string({ nonEmpty: true }),
+    name: Schemas.string({ nonEmpty: true })
   },
-  api.emptySchema,
+  api.emptySchema
 );
 
 export const BudgetingMove = new api.API(
@@ -326,24 +327,24 @@ export const BudgetingMove = new api.API(
     to: Schemas.string(),
     from: Schemas.string(),
     amount: DinoSchemas.money(),
-    frame: Schemas.number(),
+    frame: Schemas.number()
   },
-  api.emptySchema,
+  api.emptySchema
 );
 
 export const Income = new api.API(
   "/api/income",
   {
     income: DinoSchemas.money(),
-    frame: Schemas.number(),
+    frame: Schemas.number()
   },
-  api.emptySchema,
+  api.emptySchema
 );
 
 export const Name = new api.API(
   "/api/name",
   { name: Schemas.string() },
-  api.emptySchema,
+  api.emptySchema
 );
 const friendRequest = { email: Schemas.string({ nonEmpty: true }) };
 export interface FriendRequest {
@@ -352,21 +353,21 @@ export interface FriendRequest {
 export const AcceptFriend = new api.API<FriendRequest, Friend>(
   "/api/friend",
   friendRequest,
-  friendSchema,
+  friendSchema
 );
 export const RejectFriend = new api.API(
   "/api/friend/reject",
   friendRequest,
-  api.emptySchema,
+  api.emptySchema
 );
 export const DeleteFriend = new api.API(
   "/api/friend/delete",
   friendRequest,
-  api.emptySchema,
+  api.emptySchema
 );
 
 export const UpdateSettings = new api.API(
   "/api/settings",
   settingsSchema,
-  api.emptySchema,
+  api.emptySchema
 );

@@ -1,30 +1,23 @@
 {
-    "extends": [
-        "tslint:recommended",
-        "tslint-react",
-        "tslint-react-hooks"
-    ],
-    "rules": {
-        "object-literal-sort-keys": false,
-        "no-console": false,
-        "no-empty": [
-            true,
-            "allow-empty-functions"
-        ],
-        "interface-name": false,
-        "ordered-imports": true,
-        "no-invalid-this": true,
-        "jsx-no-multiline-js": false,
-        "jsx-wrap-multiline": false,
-        "max-classes-per-file": false,
-        "member-ordering": false,
-        "no-object-literal-type-assertion": false,
-        "variable-name": [
-            true,
-            "ban-keywords",
-            "check-format",
-            "allow-pascal-case",
-            "allow-leading-underscore"
-        ]
-    }
+  "extends": ["tslint:recommended", "tslint-react", "tslint-react-hooks"],
+  "rules": {
+    "object-literal-sort-keys": false,
+    "no-console": false,
+    "no-empty": [true, "allow-empty-functions"],
+    "interface-name": false,
+    "ordered-imports": true,
+    "no-invalid-this": true,
+    "jsx-no-multiline-js": false,
+    "jsx-wrap-multiline": false,
+    "max-classes-per-file": false,
+    "member-ordering": false,
+    "no-object-literal-type-assertion": false,
+    "variable-name": [
+      true,
+      "ban-keywords",
+      "check-format",
+      "allow-pascal-case",
+      "allow-leading-underscore"
+    ]
+  }
 }

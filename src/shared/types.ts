@@ -32,6 +32,7 @@ export interface Category {
   ordering: number;
   budget: Money;
   ghost: boolean;
+  parent?: CategoryId;
   balance?: Money;
   ctime?: Date;
 }
@@ -132,9 +133,9 @@ export interface SavingsTransaction {
 export class Share extends Money {
   public static normalize(...shares: Share[]): NormalizedShare[] {
     const total = shares.reduce((a, b) => a.plus(b), Share.Zero);
-    return shares.map((s) => new NormalizedShare(s.dividedBy(total).num));
+    return shares.map(s => new NormalizedShare(s.dividedBy(total).num));
   }
-  public asNumber(): Number {
+  public asNumber(): number {
     return this.num.toNumber();
   }
   public static fromMoney(m: Money) {
