@@ -22,16 +22,16 @@ export default class NewCategory extends KeyPress<
   public expand = () => {
     this.setState({ expanded: true });
     return true; // stop propagation
-  }
+  };
 
   public collapse = () => {
     this.unRegisterKeyPress();
     this.setState({ expanded: false });
-  }
+  };
 
   public updateValue = (event: React.ChangeEvent<HTMLInputElement>) => {
     this.setState({ value: event.target.value });
-  }
+  };
 
   public submit = (event: React.FormEvent) => {
     util
@@ -47,11 +47,17 @@ export default class NewCategory extends KeyPress<
         this.setState({ expanded: false, value: "" });
       });
     event.preventDefault();
-  }
+  };
 
   public onEscape = () => {
     this.collapse();
-  }
+  };
+
+  private onBlur = () => {
+    if (this.state.value === "") {
+      this.collapse();
+    }
+  };
 
   public render() {
     if (!this.state.expanded) {
@@ -69,7 +75,7 @@ export default class NewCategory extends KeyPress<
         />
         <input
           onFocus={this.registerKeyPress}
-          onBlur={this.unRegisterKeyPress}
+          onBlur={this.onBlur}
           type="text"
           placeholder="New Category"
           autoFocus={true}
