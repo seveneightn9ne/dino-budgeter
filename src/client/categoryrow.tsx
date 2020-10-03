@@ -18,6 +18,7 @@ export interface CategoryRowProps {
   categories: Category[];
   budgetLeftover: Money;
   newCat: CategoryId | undefined;
+  depth: number;
   onDeleteCategory: (id: CategoryId) => void;
   onChangeCategory: (newCategory: Category) => void;
 }
@@ -107,10 +108,6 @@ export default class CategoryRow extends React.Component<
     this.setState({ popletOpen: true });
   };
 
-  private previewCover(from: CategoryId) {
-    this.setState({ provisionalCoverFrom: from });
-  }
-
   private onClick = () => {
     this.setState({ goToDetailPage: true });
   };
@@ -145,6 +142,10 @@ export default class CategoryRow extends React.Component<
     const newClass =
       this.props.newCat === this.props.category.id ? "new" : "not-new";
 
+    const indent = (
+      <span style={{ display: "inline-block", width: 20 * this.props.depth }} />
+    );
+
     return (
       <tr
         key={this.props.category.id}
@@ -158,6 +159,7 @@ export default class CategoryRow extends React.Component<
           />
         </td>
         <td className="stretch">
+          {indent}
           <span>{this.props.category.name}</span>
         </td>
         <td className="progress-td">{this.renderProgress(spending)}</td>

@@ -18,7 +18,12 @@ export default class CategorySection extends React.Component<
       return <CategoryRow {...this.props} />;
     }
 
-    return this.renderChildren();
+    return (
+      <React.Fragment>
+        <CategoryRow {...this.props} />
+        {this.renderChildren()}
+      </React.Fragment>
+    );
   }
 
   private renderChildren() {
@@ -27,6 +32,7 @@ export default class CategorySection extends React.Component<
         ...this.props,
         category: c,
         key: c.id,
+        depth: this.props.depth + 1,
       }))
       .map((props) => <CategoryRow key={props.key} {...props} />);
     return <React.Fragment>{children}</React.Fragment>;

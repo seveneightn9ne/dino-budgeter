@@ -26,6 +26,7 @@ export function handle_category_post(
     budget: Money.Zero,
     balance: Money.Zero,
     ghost: false,
+    parent: request.parent,
     // To be filled in below:
     gid: undefined,
     ordering: undefined,
@@ -36,7 +37,7 @@ export function handle_category_post(
     await frames.markNotGhost(c.gid, c.frame, t);
     await t.none(
       "insert into categories (id, gid, frame, alive, name, ordering, " +
-        "budget, ghost) values ($1, $2, $3, $4, $5, $6, $7, $8)",
+        "budget, ghost, parent) values ($1, $2, $3, $4, $5, $6, $7, $8, $9)",
       [
         c.id,
         c.gid,
@@ -46,6 +47,7 @@ export function handle_category_post(
         c.ordering,
         c.budget.string(),
         c.ghost,
+        c.parent || null,
       ],
     );
     return c;

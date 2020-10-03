@@ -38,18 +38,21 @@ export default class Categories extends React.Component<Props, State> {
     };
   }
   public render() {
-    const cs = this.props.frame.categories.map((c) => (
-      <CategorySection
-        key={c.id}
-        category={c}
-        categories={this.props.frame.categories}
-        newCat={this.state.newCat}
-        match={this.props.match}
-        budgetLeftover={frames.unbudgeted(this.props.frame)}
-        onDeleteCategory={this.props.onDeleteCategory}
-        onChangeCategory={this.props.onChangeCategory}
-      />
-    ));
+    const cs = this.props.frame.categories
+      .filter((c) => !c.parent)
+      .map((c) => (
+        <CategorySection
+          key={c.id}
+          category={c}
+          categories={this.props.frame.categories}
+          newCat={this.state.newCat}
+          match={this.props.match}
+          depth={0}
+          budgetLeftover={frames.unbudgeted(this.props.frame)}
+          onDeleteCategory={this.props.onDeleteCategory}
+          onChangeCategory={this.props.onChangeCategory}
+        />
+      ));
 
     const ais = this.getAIs().map((ai) => {
       if (ai.action && ai.action.type === "choose-category") {
@@ -155,6 +158,7 @@ export default class Categories extends React.Component<Props, State> {
                 <NewCategory
                   frame={this.props.frame.index}
                   onAddCategory={this.onAddCategory}
+                  categories={this.props.frame.categories}
                 />
               </td>
             </tr>

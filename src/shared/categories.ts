@@ -8,7 +8,9 @@ export function updateBalanceWithBudget(
   },
   newBudget: Money,
 ): Money {
-  if (!category.balance) { throw new Error("balance is required"); }
+  if (!category.balance) {
+    throw new Error("balance is required");
+  }
   return category.balance.minus(category.budget).plus(newBudget);
 }
 
@@ -22,6 +24,9 @@ export function fromSerialized(row: any): Category {
   }
   if (row.balance) {
     category.balance = new Money(row.balance);
+  }
+  if (!row.parent) {
+    delete category.parent;
   }
   return category;
 }

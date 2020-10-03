@@ -7,17 +7,19 @@ import * as util from "./util";
 interface NewCategoryProps {
   frame: FrameIndex;
   onAddCategory: (category: Category) => void;
+  categories: Category[];
 }
 interface NewCategoryState {
   expanded: boolean;
   value: string;
+  parent: string;
 }
 
 export default class NewCategory extends KeyPress<
   NewCategoryProps & NewCategoryProps,
   NewCategoryState
 > {
-  public state = { expanded: false, value: "" };
+  public state = { expanded: false, value: "", parent: "" };
 
   public expand = () => {
     this.setState({ expanded: true });
@@ -33,6 +35,10 @@ export default class NewCategory extends KeyPress<
     this.setState({ value: event.target.value });
   };
 
+  private updateParent = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    this.setState({ parent: e.target.value });
+  };
+
   public submit = (event: React.FormEvent) => {
     util
       .apiFetch({
@@ -40,23 +46,18 @@ export default class NewCategory extends KeyPress<
         body: {
           frame: this.props.frame,
           name: this.state.value,
+          parent: this.state.parent || undefined,
         },
       })
       .then((response) => {
         this.props.onAddCategory(response);
-        this.setState({ expanded: false, value: "" });
+        this.setState({ expanded: false, value: "", parent: "" });
       });
     event.preventDefault();
   };
 
   public onEscape = () => {
     this.collapse();
-  };
-
-  private onBlur = () => {
-    if (this.state.value === "") {
-      this.collapse();
-    }
   };
 
   public render() {
@@ -67,6 +68,11 @@ export default class NewCategory extends KeyPress<
         </span>
       );
     }
+    const categoryOptions = this.props.categories.map((c) => (
+      <option key={c.id} value={c.id}>
+        {c.name}
+      </option>
+    ));
     return (
       <form onSubmit={this.submit}>
         <span
@@ -75,13 +81,16 @@ export default class NewCategory extends KeyPress<
         />
         <input
           onFocus={this.registerKeyPress}
-          onBlur={this.onBlur}
           type="text"
           placeholder="New Category"
           autoFocus={true}
           value={this.state.value}
           onChange={this.updateValue}
         />
+        <select value={this.state.parent} onChange={this.updateParent}>
+          <option value="">Nest under...</option>
+          {categoryOptions}
+        </select>
         <input type="submit" disabled={!this.state.value} value="Add" />
       </form>
     );
