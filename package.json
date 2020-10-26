@@ -37,7 +37,7 @@
     "nodemailer": "^5.1.1",
     "passport": "^0.4.0",
     "passport-local": "^1.0.0",
-    "pg-promise": "^8.4.6",
+    "pg-promise": "^10.5.2",
     "randomstring": "^1.1.5",
     "react": "^16.8.0",
     "react-dom": "^16.8.0",
