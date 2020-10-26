@@ -19,7 +19,10 @@ interface ClickToEditProps<
   open?: boolean;
   onProvisionalChange?: (newVal: V) => void;
   editable?: boolean;
+  displayValue?: V;
+  prefixOnEdit?: string;
 }
+
 interface ClickToEditInputProps<
   Request extends object,
   K extends keyof Request,
@@ -27,11 +30,13 @@ interface ClickToEditInputProps<
 > extends ClickToEditProps<Request, K, V> {
   size?: number;
 }
+
 type Value<
   Request extends object,
   K extends keyof Request,
   V
 > = Request[K] extends V ? Request[K] : any;
+
 interface ClickToEditDropdownProps<
   Request extends object,
   K extends keyof Request
@@ -64,20 +69,25 @@ abstract class ClickToEdit<
   }
 
   public render() {
+    const prefix = this.state.editing && this.props.prefixOnEdit ?
+      <span className="cte-prefix">{this.props.prefixOnEdit}</span> : null;
     const val = this.state.editing ? (
-      <form className="cte" onBlur={this.blur} onSubmit={this.saveNewValue}>
-        {this.renderInput()}
-        <input type="submit" value="Save" style={this.saveStyle} />
-      </form>
+        <form className="cte" onBlur={this.blur} onSubmit={this.saveNewValue}>
+          {this.renderInput()}
+          <input type="submit" value="Save" style={this.saveStyle} />
+        </form>
     ) : (
       <span className="clickable editable formatted" onClick={this.edit}>
-        {this.formatDisplay(this.props.value)}
+        {this.formatDisplay(this.props.displayValue || this.props.value)}
       </span>
     );
     return (
-      <span className={this.props.className} onClick={this.captureClicks}>
-        {val}
-      </span>
+      <React.Fragment>
+        {prefix}
+        <span className={this.props.className} onClick={this.captureClicks}>
+          {val}
+        </span>
+      </React.Fragment>
     );
   }
 

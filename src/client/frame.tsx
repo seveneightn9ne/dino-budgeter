@@ -143,7 +143,10 @@ export default class Frame extends React.Component<FrameProps, FrameState> {
     const newCategories = [...this.state.frame.categories];
     newCategories.push(category);
     newFrame.categories = newCategories;
-    this.setState({ frame: newFrame });
+    this.setState(({history}) => ({
+      frame: newFrame,
+      history: this.newCategoryHistory(history, category.id, Money.Zero, Money.Zero),
+    }));
   }
 
   public onDeleteCategory(id: CategoryId) {
@@ -190,7 +193,8 @@ export default class Frame extends React.Component<FrameProps, FrameState> {
     budget: Money | null,
   ) => {
     const newHistory = { ...history };
-    newHistory[cid] = [...history[cid]];
+    const oldHistory = history[cid] || [{budget: Money.Zero, spending: Money.Zero}];
+    newHistory[cid] = [...oldHistory];
     const prev = newHistory[cid][newHistory[cid].length - 1];
     newHistory[cid][newHistory[cid].length - 1] = {
       spending: spending || prev.spending,

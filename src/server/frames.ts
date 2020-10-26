@@ -93,10 +93,10 @@ async function getOrCreateFrameInner(
     frame.categories.map((c) =>
       t.none(
         `insert into categories
-          (id, gid, frame, name, ordering, budget, ghost)
+          (id, gid, frame, name, ordering, budget, ghost, parent)
         values
-          ($1, $2, $3, $4, $5, $6, true)`,
-        [c.id, c.gid, c.frame, c.name, c.ordering, c.budget.string()],
+          ($1, $2, $3, $4, $5, $6, true, $7)`,
+        [c.id, c.gid, c.frame, c.name, c.ordering, c.budget.string(), c.parent],
       ),
     ),
   );

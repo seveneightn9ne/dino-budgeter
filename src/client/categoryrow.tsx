@@ -1,3 +1,4 @@
+import _ from "lodash";
 import * as React from "react";
 import { match, Redirect } from "react-router-dom";
 import { BudgetingMove, CategoryBudget, DeleteCategory } from "../shared/api";
@@ -38,6 +39,23 @@ export default class CategoryRow extends React.Component<
     popletOpen: false,
     budgetLeftoverId: util.randomId(),
   };
+
+  private children = () => {
+    const childIds = findChildren(this.props.categories, this.props.category);
+    return this.props.categories.filter((c) => _.includes(childIds, c.id));
+  }
+
+  private displayBudget() {
+    return Money.sum(_.map([this.props.category, ...this.children()], "budget"));
+  }
+
+  private displayBalance() {
+    return Money.sum(_.map([this.props.category, ...this.children()], "balance"));
+  }
+
+  private displaySpending() {
+    return this.displayBalance().minus(this.displayBudget()).negate();
+  }
 
   private categoryMap(minBalance: Money): Map<string, string> {
     const map = new Map();
@@ -126,16 +144,14 @@ export default class CategoryRow extends React.Component<
   }
 
   private renderRow = () => {
-    const spending = this.props.category.balance
-      .minus(this.props.category.budget)
-      .negate();
+    const spending = this.displaySpending();
     const spendingCls = spending.cmp(Money.Zero) === 0 ? "zero" : "";
-    const budgetCls =
-      this.props.category.budget.cmp(Money.Zero) === 0 ? "zero" : "";
-    const balanceCls =
-      this.props.category.balance.cmp(Money.Zero) === 0
+    const budget = this.displayBudget();
+    const budgetCls = budget.cmp(Money.Zero) === 0 ? "zero" : "";
+    const balance =  this.displayBalance();
+    const balanceCls = balance.cmp(Money.Zero) === 0
         ? "zero"
-        : this.props.category.balance.cmp(Money.Zero) === -1
+        : balance.cmp(Money.Zero) === -1
         ? "highlighted"
         : "";
 
@@ -172,12 +188,17 @@ export default class CategoryRow extends React.Component<
         </td>
       </tr>
     );
-  };
+  }
 
-  private renderBudget = () => (
-    <ClickToEditMoney
+  private renderBudget = () => {
+    const prefixOnEdit = this.children().length
+      ? `${this.displayBudget().minus(this.props.category.budget).formatted()} + `
+      : null;
+    return (<ClickToEditMoney
       size={6}
       api={CategoryBudget}
+      displayValue={this.displayBudget()}
+      prefixOnEdit={prefixOnEdit}
       value={this.props.category.budget}
       onChange={this.onUpdateBudget}
       postData={{
@@ -185,8 +206,8 @@ export default class CategoryRow extends React.Component<
         frame: this.props.category.frame,
       }}
       postKey="amount"
-    />
-  );
+    />);
+    }
 
   private renderBalance = () =>
     this.props.category.balance.cmp(Money.Zero) < 0 ? (
@@ -221,7 +242,7 @@ export default class CategoryRow extends React.Component<
       </ControlledPoplet>
     ) : (
       this.props.category.balance.formatted()
-    );
+    )
 
   private renderProgress = (spending: Money) => (
     <ProgressBar
@@ -230,5 +251,23 @@ export default class CategoryRow extends React.Component<
       frame={this.props.category.frame}
       small={true}
     />
-  );
+  )
 }
+
+// Memoized function to find all descendants of a given category
+// Note: not returning full categories because those can change so we don't want to memoize them
+const findChildren = _.memoize((categories: Category[], parent: Category) => {
+  const descendants: CategoryId[] = [];
+
+  const categoriesByParent = _.groupBy(categories, "parent");
+  const queue = [parent];
+  while (queue.length) {
+    const cat = queue.pop();
+    const children = categoriesByParent[cat.id];
+    if (children && children.length) {
+      descendants.push(..._.map(children, "id"));
+      queue.push(...children);
+    }
+  }
+  return descendants;
+}, (cs: Category[], p: Category) => p.id + ":" + cs.map((c) => c.id + "/" + c.parent).join("_"));

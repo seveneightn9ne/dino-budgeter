@@ -258,7 +258,7 @@ form.oneline .button.secondary,
   font-size: 32px;
 }
 
-/* 
+/*
 .blobs {
   display: flex;
   align-items: stretch;
@@ -483,6 +483,13 @@ h2 .editable:hover::after {
   font-size: 70%;
   padding-left: 10px;
   margin-top: -3px;
+}
+
+.cte-prefix {
+  position: absolute;
+  left: -100%;
+  width: 100%;
+  text-align: right;
 }
 
 /* mobile transactions list */
