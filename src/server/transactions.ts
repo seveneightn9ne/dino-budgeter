@@ -156,14 +156,14 @@ export async function canUserEdit(
   uid: UserId,
   t: pgPromise.ITask<{}>,
 ): Promise<boolean> {
-  const row = await t.one(
+  const row = await t.oneOrNone(
     `select count(*) > 0 as exists
         from membership left join transactions
             on membership.gid = transactions.gid
         where transactions.id = $1 and membership.uid = $2`,
     [tid, uid],
   );
-  return row.exists;
+  return !!row;
 }
 
 export async function deleteTransaction(

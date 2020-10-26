@@ -24,17 +24,17 @@ passport.deserializeUser(function(id: string, cb) {
 // Passport configuration
 passport.use(
   new LocalStrategy(function(username, password, done) {
-    db.one("select * from users where email=$1", username)
+    db.oneOrNone("select * from users where email=$1", username)
       .then((row) => {
+        if (!row) {
+          return done(null, false, { message: "There's no user with that email address."});
+        }
         if (checkPassword(password, row.password_hash)) {
           return done(null, row as User);
         } else {
           // TODO how to show the user the error message??
           return done(null, false, { message: "Incorrect passowrd." });
         }
-      })
-      .catch(() => {
-        return done(null, false, { message: "Incorrect username." });
       });
   }),
 );
@@ -68,27 +68,27 @@ export const handle_signup_post = function(req: Request, res: Response) {
         res.redirect("/signup/no-password");
         return;
       }
-      return db.one(
+      return db.oneOrNone(
         "select count(*) > 0 as exists from users where email=$1",
         email,
       );
     })
     .then((row) => {
-      if (row.exists) {
+      if (row) {
         res.redirect("/signup/user-exists");
       } else {
         const password = req.body.password;
         const password_hash = hashPassword(password);
         const user_id = util.randomId();
         const group_id = util.randomId();
-        db.tx(function*(t) {
-          yield t.none("insert into users values ($1, $2, $3)", [
+        db.tx(async (t) => {
+          await t.none("insert into users values ($1, $2, $3)", [
             user_id,
             email,
             password_hash,
           ]);
-          yield t.none("insert into groups values ($1)", [group_id]);
-          yield t.none("insert into membership (uid, gid) values ($1, $2)", [
+          await t.none("insert into groups values ($1)", [group_id]);
+          await t.none("insert into membership (uid, gid) values ($1, $2)", [
             user_id,
             group_id,
           ]);

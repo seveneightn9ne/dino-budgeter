@@ -44,12 +44,12 @@ export function isUserInGroup(
   t: pgPromise.ITask<{}>,
 ): Promise<boolean> {
   return t
-    .one(
+    .oneOrNone(
       "select count(*) > 0 as exists from membership where uid = $1 and gid = $2",
       [user.uid, group],
     )
     .then((row) => {
-      return row.exists;
+      return !!row;
     });
 }
 
@@ -226,12 +226,12 @@ export async function isFriend(
   u2: UserId,
   t: pgPromise.ITask<{}>,
 ): Promise<boolean> {
-  const row = await t.one(
+  const row = await t.oneOrNone(
     `select count(*) > 0 as exists from friendship where
         u1 = $1 and u2 = $2 and u1_accepted and u2_accepted and alive`,
     [u1, u2].sort(),
   );
-  return row.exists;
+  return !!row;
 }
 
 /** Amounts that user owes each friend. Negative means the friend owes the user. */
