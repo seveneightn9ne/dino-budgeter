@@ -74,7 +74,7 @@ export const handle_signup_post = function(req: Request, res: Response) {
       );
     })
     .then((row) => {
-      if (row) {
+      if (row.exists) {
         res.redirect("/signup/user-exists");
       } else {
         const password = req.body.password;

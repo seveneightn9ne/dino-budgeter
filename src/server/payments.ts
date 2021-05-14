@@ -41,7 +41,7 @@ export async function getBalance(
     `select balance, alive from friendship where u1 = $1 and u2 = $2`,
     [u1, u2],
   );
-  if (row && row.balance && row.alive) {
+  if (row.balance && row.alive) {
     return new Money(row.balance);
   }
   return Money.Zero;

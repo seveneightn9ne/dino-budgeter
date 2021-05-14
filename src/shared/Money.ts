@@ -2,7 +2,8 @@ import BigNumber from "bignumber.js";
 
 export default class Money {
   public num: BigNumber; // really it's private. Don't touch.
-  private stringValue: string; // Only here so you can read the value of console.logged Moneys
+  // @ts-ignore: Only here so you can read the value of console.logged Moneys
+  private stringValue: string;
   constructor(value: BigNumber.Value) {
     this.num = new BigNumber(value);
     this.stringValue = this.string();
