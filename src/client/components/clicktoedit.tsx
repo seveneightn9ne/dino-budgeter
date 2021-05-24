@@ -12,6 +12,7 @@ interface ClickToEditProps<
   value: V;
   onChange: (newVal: V) => void;
   className?: string;
+  textClassName?: string;
   // The |{} is a hack because typescript doesn't correctly infer the Response type of API2s with an emptySchema.
   api: API<Request, EmptyResponse | {}>;
   postData?: Pick<Request, Exclude<keyof Request, K>>;
@@ -48,6 +49,7 @@ interface ClickToEditDropdownProps<
 
 interface ClickToEditState {
   editing: boolean;
+  eventListener?: (e: KeyboardEvent) => boolean;
   newValue?: string;
   newValueErr?: boolean;
 }
@@ -63,10 +65,18 @@ abstract class ClickToEdit<
 
   constructor(props: P) {
     super(props);
+    if (props.open) {
+      this.installEscapeListener();
+    }
     this.state = {
       editing: !!props.open,
     };
   }
+
+  public componentWillUnmount() {
+    this.uninstallEscapeListener();
+  }
+
 
   public render() {
     const prefix = this.state.editing && this.props.prefixOnEdit ?
@@ -77,7 +87,7 @@ abstract class ClickToEdit<
           <input type="submit" value="Save" style={this.saveStyle} />
         </form>
     ) : (
-      <span className="clickable editable formatted" onClick={this.edit}>
+      <span className={"clickable editable formatted " + (this.props.textClassName || "")} onClick={this.edit}>
         {this.formatDisplay(this.props.displayValue || this.props.value)}
       </span>
     );
@@ -106,11 +116,31 @@ abstract class ClickToEdit<
     if (this.props.editable === false) {
       return;
     }
+    this.installEscapeListener();
     this.setState({ editing: true, newValue: this.getInitialValue() });
   }
 
   protected endEdit(): void {
+    this.uninstallEscapeListener()
     this.setState({ editing: !!this.props.open });
+  }
+
+  private installEscapeListener() {
+    const escFunction = (e: KeyboardEvent) => {
+      if(e.key=='Escape'||e.key=='Esc'||e.keyCode==27) {
+        this.blur()
+        e.preventDefault();
+        return false;
+      }
+    }
+    document.addEventListener("keydown", escFunction, false);
+    this.setState({eventListener: escFunction});
+  }
+
+  private uninstallEscapeListener() {
+    if (this.state.eventListener) {
+      document.removeEventListener("keydown", this.state.eventListener, false);
+    }
   }
 
   protected updateValue(

@@ -27,7 +27,7 @@ async function getOrCreateFrameInner(
     "select * from frames where gid = $1 and index = $2 and ghost = false",
     [gid, index],
   );
-  if (row.exists) {
+  if (row) {
     return {
       ...shared.fromSerialized(row),
       categories: await getCategories(gid, index, t),

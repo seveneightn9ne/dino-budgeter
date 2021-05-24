@@ -18,8 +18,9 @@ export interface CategoryRowProps {
   category: Category;
   categories: Category[];
   budgetLeftover: Money;
-  newCat: CategoryId | undefined;
+  newCat?: CategoryId;
   depth: number;
+  isOther?: boolean;
   onDeleteCategory: (id: CategoryId) => void;
   onChangeCategory: (newCategory: Category) => void;
 }
@@ -27,8 +28,15 @@ export interface CategoryRowProps {
 interface CategoryRowState {
   budgetLeftoverId: CategoryId;
   provisionalCoverFrom?: CategoryId;
-  popletOpen: boolean;
+  popletOpen: {
+    balance: boolean;
+    budget: {
+      [categoryId: string]: boolean;
+    }
+  };
   goToDetailPage?: boolean;
+  newCatTransition?: boolean;
+  timers: number[];
 }
 
 export default class CategoryRow extends React.Component<
@@ -36,20 +44,64 @@ export default class CategoryRow extends React.Component<
   CategoryRowState
 > {
   public state: CategoryRowState = {
-    popletOpen: false,
+    popletOpen: {
+      'balance': false,
+      'budget': {},
+    },
     budgetLeftoverId: util.randomId(),
+    timers: [],
   };
 
-  private children = () => {
-    const childIds = findChildren(this.props.categories, this.props.category);
+  public componentDidUpdate(prevProps: CategoryRowProps) {
+    // When transitioning from newCat to just-a-cat, add in the 
+    // newCatTransition state to fade out the background color
+    if (prevProps.newCat && !this.props.newCat) {
+      const timer = setTimeout(() => {
+        this.setState({newCatTransition: false});
+      })
+      this.setState(({timers}) => ({newCatTransition: true, timers: timers.concat([timer])}));
+
+    }
+  }
+
+  public componentWillUnmount() {
+    // Clear any setTimeout timers
+    this.state.timers.forEach((timer) => {
+      clearTimeout(timer);
+    })
+  }
+
+  public render() {
+    // Handle when the row has been clicked
+    if (this.state.goToDetailPage) {
+      return (
+        <Redirect
+          to={`${this.props.match.url}/${this.props.category.id}/${this.props.category.name}`}
+          push={true}
+        />
+      );
+    }
+
+    return this.renderRow();
+  }
+
+  private children = (category = this.props.category) => {
+    const childIds = findChildren(this.props.categories, category);
     return this.props.categories.filter((c) => _.includes(childIds, c.id));
   }
 
-  private displayBudget() {
-    return Money.sum(_.map([this.props.category, ...this.children()], "budget"));
+  private displayBudget(category = this.props.category) {
+    if (this.props.isOther) {
+      return category.budget;
+    }
+    return Money.sum(_.map([this.props.category, ...this.children(category)], "budget"));
   }
 
   private displayBalance() {
+    if (this.props.isOther) {
+      return this.props.category.balance;
+    }
+    console.log("displayBalance is sum of " + this.props.category.balance.string() + " and " + this.children().map(c => c.balance.string()).join(", "))
     return Money.sum(_.map([this.props.category, ...this.children()], "balance"));
   }
 
@@ -89,11 +141,11 @@ export default class CategoryRow extends React.Component<
     return true;
   };
 
-  private onUpdateBudget = (newBudget: Money) => {
-    const newCategory = { ...this.props.category };
+  private onUpdateBudget = (newBudget: Money, category = this.props.category) => {
+    const newCategory = { ...category };
     newCategory.budget = newBudget;
     newCategory.balance = categories.updateBalanceWithBudget(
-      this.props.category,
+      category,
       newBudget,
     );
     this.props.onChangeCategory(newCategory);
@@ -119,28 +171,26 @@ export default class CategoryRow extends React.Component<
   };
 
   private closePoplet = () => {
-    this.setState({ popletOpen: false });
+    this.setState({popletOpen: {budget: {}, balance: false}});
+    return true;
   };
 
-  private openPoplet = () => {
-    this.setState({ popletOpen: true });
+  private openBudgetPoplet = (categoryId: CategoryId) => {
+    this.setState({popletOpen: {balance: false, budget: {[categoryId]: true}}});
   };
+
+  private openBalancePoplet = () => {
+    this.setState({popletOpen: {balance: true, budget: {}}});
+  }
 
   private onClick = () => {
-    this.setState({ goToDetailPage: true });
+    if (!this.anyPopletOpen()) {
+      this.setState({ goToDetailPage: true });
+    }
   };
 
-  public render() {
-    if (this.state.goToDetailPage) {
-      return (
-        <Redirect
-          to={`${this.props.match.url}/${this.props.category.id}/${this.props.category.name}`}
-          push={true}
-        />
-      );
-    }
-
-    return this.renderRow();
+  private anyPopletOpen = () => {
+    return this.state.popletOpen.balance || Object.keys(this.state.popletOpen.budget).length > 0;
   }
 
   private renderRow = () => {
@@ -155,28 +205,37 @@ export default class CategoryRow extends React.Component<
         ? "highlighted"
         : "";
 
-    const newClass =
-      this.props.newCat === this.props.category.id ? "new" : "not-new";
+    const rowClass =
+      this.props.newCat === this.props.category.id ? "new" : 
+      this.state.newCatTransition ? "not-new-ease" : "not-new";
 
     const indent = (
       <span style={{ display: "inline-block", width: 20 * this.props.depth }} />
     );
 
+    const del = this.props.isOther ? null : (
+      <span
+      className="deleteCr clickable fa-times fas"
+      onClick={this.delete}
+    />
+    );
+
+    const nameClass = this.props.isOther ? "otherCR" : "";
+    const name = this.props.isOther ? "Other" : this.props.category.name;
+
+    // TODO: Make sub categories smaller font
     return (
       <tr
         key={this.props.category.id}
-        className={`hoverable category-row ${newClass}`}
+        className={`category-row hoverable ${rowClass}`}
         onClick={this.onClick}
       >
         <td className="del">
-          <span
-            className="deleteCr clickable fa-times fas"
-            onClick={this.delete}
-          />
+          {del}
         </td>
         <td className="stretch">
           {indent}
-          <span>{this.props.category.name}</span>
+          <span className={nameClass}>{name}</span>
         </td>
         <td className="progress-td">{this.renderProgress(spending)}</td>
         <td className={"amount budget " + budgetCls}>{this.renderBudget()}</td>
@@ -191,31 +250,60 @@ export default class CategoryRow extends React.Component<
   }
 
   private renderBudget = () => {
-    const prefixOnEdit = this.children().length
-      ? `${this.displayBudget().minus(this.props.category.budget).formatted()} + `
-      : null;
-    return (<ClickToEditMoney
-      size={6}
-      api={CategoryBudget}
-      displayValue={this.displayBudget()}
-      prefixOnEdit={prefixOnEdit}
-      value={this.props.category.budget}
-      onChange={this.onUpdateBudget}
-      postData={{
-        id: this.props.category.id,
-        frame: this.props.category.frame,
-      }}
-      postKey="amount"
-    />);
+    return this.children().length && !this.props.isOther
+      ? this.renderParentBudget(this.props.category)
+      : this.cteBudget(this.props.category);
     }
 
-  private renderBalance = () =>
-    this.props.category.balance.cmp(Money.Zero) < 0 ? (
+  private renderParentBudget = (category: Category) => {
+    const children = this.children(category).map((child) => {
+      const grandChildren = findChildren(this.props.categories, child);
+      if (grandChildren.length) {
+        return this.renderParentBudget(child);
+      }
+      return <React.Fragment key={child.id}>
+        <label className="right narrow">{child.name}: {this.cteBudget(child, true /* underline */)}</label>
+      </React.Fragment>;
+    })
+    return <ControlledPoplet
+        text={"$" + this.displayBudget(category).string()}
+        open={!!this.state.popletOpen['budget'][category.id]}
+        onRequestClose={() => this.closePoplet()}
+        onRequestOpen={() => this.openBudgetPoplet(category.id)}
+        title={"Edit Budget"}
+      >
+        <h1>{category.name} Budget</h1>
+        {children}
+        <label className="right narrow">Other: {this.cteBudget(category, true /* underline */)}</label>
+        <label className="right">Total: <span style={{paddingRight: 20}}>
+          {this.displayBudget(category).string()}</span></label>
+      </ControlledPoplet>;
+  }
+
+  private cteBudget(category: Category, underline = false) {
+    return <ClickToEditMoney
+      textClassName={underline ? "dash-underline" : ""}
+      size={6}
+      api={CategoryBudget}
+      value={category.budget}
+      onChange={(newBudget) => this.onUpdateBudget(newBudget, category)}
+      postData={{
+        id: category.id,
+        frame: category.frame,
+      }}
+      postKey="amount"
+    />;
+  }
+
+  private renderBalance = () => {
+    const isNegativeBalance = this.displayBalance().cmp(Money.Zero) < 0;
+    if(isNegativeBalance) {
+      return (
       <ControlledPoplet
         text={this.props.category.balance.formatted()}
-        open={this.state.popletOpen}
-        onRequestClose={this.closePoplet}
-        onRequestOpen={this.openPoplet}
+        open={this.state.popletOpen['balance']}
+        onRequestClose={() => this.closePoplet()}
+        onRequestOpen={() => this.openBalancePoplet()}
         title={"Cover from another category"}
       >
         Cover from{" "}
@@ -240,9 +328,11 @@ export default class CategoryRow extends React.Component<
           }}
         />
       </ControlledPoplet>
-    ) : (
-      this.props.category.balance.formatted()
-    )
+      );
+    }
+
+    return this.displayBalance().formatted();
+  }
 
   private renderProgress = (spending: Money) => (
     <ProgressBar

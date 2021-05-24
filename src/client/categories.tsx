@@ -37,6 +37,11 @@ export default class Categories extends React.Component<Props, State> {
       setIncome: "",
     };
   }
+
+  public componentDidMount() {
+    window.scrollTo(0,0)
+  }
+
   public render() {
     const cs = this.props.frame.categories
       .filter((c) => !c.parent)

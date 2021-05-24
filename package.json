@@ -70,7 +70,8 @@
     "watch-serve": "find dist/server dist/shared | entr -r sh -c \"npm run serve\"",
     "watch-client": "node_modules/.bin/webpack --mode=development --watch",
     "lint": "node_modules/.bin/tslint -c tslint.json -p tsconfig.json",
-    "serve": "node dist/server/server.js"
+    "serve": "node dist/server/server.js",
+    "watch-all": "npm run watch-server & npm run watch-client & npm run watch-serve"
   },
   "repository": {
     "type": "git",

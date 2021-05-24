@@ -65,6 +65,10 @@ export default class Transactions extends React.Component<Props, State> {
     popletOpen: false,
   };
 
+  public componentDidMount() {
+    window.scrollTo(0,0)
+  }
+
   private delete = (id: TransactionId, event: React.MouseEvent): boolean => {
     event.stopPropagation();
     if (this.disableEdit()) {

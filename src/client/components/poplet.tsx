@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 
 interface PopletProps {
   text: React.ReactNode;
@@ -23,7 +23,26 @@ const onRequestOpen = (props: ControlledProps) => (
   props.onRequestOpen();
 };
 
+const escFunction = (props: ControlledProps) => {
+  return (e: KeyboardEvent) => {
+    if(props.open && e.key=='Escape'||e.key=='Esc'||e.keyCode==27) {
+        props.onRequestClose();
+        e.preventDefault();
+        return false;
+    }
+  }
+}
+
 export const ControlledPoplet: React.SFC<ControlledProps> = (props) => {
+
+  useEffect(() => {
+    const esc = escFunction(props);
+    document.addEventListener("keydown", esc, false);
+    return () => {
+      document.removeEventListener("keydown", esc, false);
+    };
+  }, [props.open]);
+
   let className = "poplet";
   if (props.className) {
     className += " " + props.className;

@@ -35,6 +35,23 @@ export default class CategorySection extends React.Component<
         depth: this.props.depth + 1,
       }))
       .map((props) => <CategoryRow key={props.key} {...props} />);
-    return <React.Fragment>{children}</React.Fragment>;
+    return <React.Fragment>
+      {children}
+      {this.renderOtherRow()}
+    </React.Fragment>;
+  }
+
+  private renderOtherRow() {
+    return <CategoryRow 
+      key="other"
+      category={this.props.category}
+      categories={this.props.categories}
+      budgetLeftover={this.props.budgetLeftover}
+      depth={this.props.depth + 1}
+      onDeleteCategory={this.props.onDeleteCategory}
+      onChangeCategory={this.props.onChangeCategory}
+      match={this.props.match}
+      isOther={true}
+    />
   }
 }

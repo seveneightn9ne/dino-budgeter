@@ -156,7 +156,7 @@ input.error {
 }
 
 .clickable:hover {
-  text-decoration: underline;
+  border-bottom: 1px solid black;
 }
 
 .deleteCr {
@@ -168,6 +168,11 @@ input.error {
 .deleteCr:hover {
   color: #7c4dff;
   text-decoration: none;
+}
+
+.otherCR {
+  font-style: italic;
+  color: #aaaaaa;
 }
 
 tr:hover .deleteCr {
@@ -369,16 +374,21 @@ tr.hoverable:hover {
 tr.new,
 .tx-mobile-row.new {
   background-color: #e9e3f9;
+  transition: background-color 2s ease-out;
 }
 
 tr.not-new,
 .tx-mobile-row.not-new {
   background-color: #ffffff;
-  transition: background-color 2s ease-in;
+  /*transition: background-color 2s ease-in;*/
 }
 
-.category-row {
+.category-row.hoverable {
   cursor: pointer;
+}
+
+.dash-underline {
+  border-bottom: 1px dashed black;
 }
 
 .stretch {
@@ -421,7 +431,8 @@ form {
 }
 
 h2 .cte,
-h3 .cte {
+h3 .cte,
+label .cte {
   display: inline;
 }
 
@@ -448,16 +459,12 @@ h2 .cte input {
 
 .editable {
   cursor: text;
-}
-
-/* Give space for the hover icon */
-
-.editable {
-  padding-right: 20px;
+  /* Give space for the hover icon */
+  margin-right: 20px;
 }
 
 .editable:hover {
-  padding-right: 0;
+  margin-right: 0;
 }
 
 /* Show pencil on hover */
@@ -538,6 +545,14 @@ h2 .editable:hover::after {
   background-color: white;
   border-bottom: solid 1px #eeeeee;
   padding: 20px;
+}
+
+label.right {
+  text-align: right;
+}
+
+.poplet label.narrow {
+  padding: 10px 20px;
 }
 
 .poplet label.nostyle,
