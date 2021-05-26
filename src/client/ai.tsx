@@ -4,6 +4,7 @@ import { BudgetingMove } from "../shared/api";
 import Money from "../shared/Money";
 import { Category, CategoryId } from "../shared/types";
 import { enforceExhaustive } from "../shared/util";
+import { CategoryMap } from "./category_utils";
 import { ClickToEditDropdown } from "./components/clicktoedit";
 import { ControlledPoplet } from "./components/poplet";
 
@@ -113,7 +114,6 @@ function Dropdown(props: {
       return (
         <ClickToEditDropdown
           open={true}
-          zeroValue="Choose category..."
           values={categoryMap(props.cs)}
           value=""
           api={BudgetingMove}
@@ -133,10 +133,10 @@ function Dropdown(props: {
 }
 
 function categoryMap(cs: Category[]) {
-  const map = new Map();
-  map.set("savings", "🏦 Savings");
-  cs.forEach((c) => {
-    map.set(c.id, c.name);
+  return new CategoryMap({
+    categories: cs,
+    formatCat: (c) => c.name,
+    zeroValue: "Choose category...",
+    extraItems: [["savings", "🏦 Savings"]],
   });
-  return map;
 }

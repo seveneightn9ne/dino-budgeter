@@ -18,6 +18,7 @@ import {
   TransactionId,
 } from "../shared/types";
 import AIComponent from "./ai";
+import { CategoryMap } from "./category_utils";
 import {
   ClickToEditDate,
   ClickToEditDropdown,
@@ -93,12 +94,12 @@ export default class Transactions extends React.Component<Props, State> {
     return this.categoryMap().get(cid);
   }
 
-  private categoryMap(): Map<string, string> {
-    const map = new Map();
-    this.props.categories.forEach((c) => {
-      map.set(c.id, c.name);
+  private categoryMap(): CategoryMap {
+    return new CategoryMap({
+      categories: this.props.categories,
+      formatCat: (c) => c.name,
+      zeroValue: "Uncategorized",
     });
-    return map;
   }
 
   private onAddTransaction(t: Transaction) {
@@ -166,7 +167,6 @@ export default class Transactions extends React.Component<Props, State> {
               editable={editable}
               api={TransactionCategory}
               value={tx.category || ""}
-              zeroValue="Uncategorized"
               values={this.categoryMap()}
               onChange={(cid) =>
                 this.props.onUpdateTransaction({ ...tx, category: cid })

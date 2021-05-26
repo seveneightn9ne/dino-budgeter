@@ -2,6 +2,7 @@ import * as React from "react";
 import { API, EmptyResponse } from "typescript-json-api/dist/shared/api";
 import Money from "../../shared/Money";
 import { formatDate } from "../../shared/util";
+import { CategoryMap } from "../category_utils";
 import * as util from "../util";
 
 interface ClickToEditProps<
@@ -42,8 +43,7 @@ interface ClickToEditDropdownProps<
   Request extends object,
   K extends keyof Request
 > extends ClickToEditProps<Request, K, Value<Request, K, string>> {
-  zeroValue: string;
-  values: Map<string, string>;
+  values: CategoryMap;
   postTransform?: (val: string) => string;
 }
 
@@ -341,9 +341,6 @@ export class ClickToEditDropdown<
     return val as Value<Request, K, string>;
   }
   public formatDisplay(val: string): string {
-    if (val == "") {
-      return this.props.zeroValue;
-    }
     return this.props.values.get(val);
   }
   public onChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -355,18 +352,7 @@ export class ClickToEditDropdown<
     });
   }
   public renderInput() {
-    const options: JSX.Element[] = [
-      <option key="" value="">
-        {this.props.zeroValue}
-      </option>,
-    ];
-    this.props.values.forEach((display, val) =>
-      options.push(
-        <option key={val} value={val}>
-          {display}
-        </option>,
-      ),
-    );
+    const options = this.props.values.options();
     return (
       <select
         autoFocus={true}

@@ -5,6 +5,7 @@ import { BudgetingMove, CategoryBudget, DeleteCategory } from "../shared/api";
 import * as categories from "../shared/categories";
 import Money from "../shared/Money";
 import { Category, CategoryId } from "../shared/types";
+import { CategoryMap } from "./category_utils";
 import {
   ClickToEditDropdown,
   ClickToEditMoney,
@@ -101,7 +102,6 @@ export default class CategoryRow extends React.Component<
     if (this.props.isOther) {
       return this.props.category.balance;
     }
-    console.log("displayBalance is sum of " + this.props.category.balance.string() + " and " + this.children().map(c => c.balance.string()).join(", "))
     return Money.sum(_.map([this.props.category, ...this.children()], "balance"));
   }
 
@@ -109,20 +109,14 @@ export default class CategoryRow extends React.Component<
     return this.displayBalance().minus(this.displayBudget()).negate();
   }
 
-  private categoryMap(minBalance: Money): Map<string, string> {
-    const map = new Map();
-    if (this.props.budgetLeftover.cmp(minBalance) >= 0) {
-      map.set(
-        this.state.budgetLeftoverId,
-        `Unbudgeted balance - ${this.props.budgetLeftover.formatted()}`,
-      );
-    }
-    this.props.categories.forEach((c) => {
-      if (c.balance.cmp(minBalance) >= 0) {
-        map.set(c.id, `${c.name} - ${c.balance.formatted()}`);
-      }
+  private categoryMap(minBalance: Money): CategoryMap {
+    return new CategoryMap({
+      categories: this.props.categories,
+      filterCat: (c) => c.balance.cmp(minBalance) >= 0,
+      formatCat: (c) => `${c.name} - ${c.balance.formatted()}`,
+      zeroValue: "Choose category...",
+      extraItems: [[this.state.budgetLeftoverId, `Unbudgeted balance - ${this.props.budgetLeftover.formatted()}`]]
     });
-    return map;
   }
 
   private delete = (e: React.MouseEvent<any>): boolean => {
@@ -309,7 +303,6 @@ export default class CategoryRow extends React.Component<
         Cover from{" "}
         <ClickToEditDropdown
           open={true}
-          zeroValue="Choose category..."
           value=""
           api={BudgetingMove}
           values={this.categoryMap(this.props.category.balance.negate())}
