@@ -21,6 +21,12 @@ npm run serve
 Watching
 
 ```
+npm run watch-all
+```
+
+Or, separately:
+
+```
 npm run watch-server
 npm run watch-client
 npm run watch-serve
@@ -40,10 +46,11 @@ sudo apt install postgresql postgresql-contrib
 _macOS_
 
 ```
-brew install postgresql
+$ brew install postgresql
+$ brew services restart postgresql
 ```
 
-Test that your database is running with `psql postgres`. If it doesn't work, run `brew services restart postgresql`.
+Test that your database is running with `psql postgres`.
 
 ### 2. Create a user named `budgeter` and give it no special priveleges.
 
@@ -52,13 +59,17 @@ _Ubuntu_
 Ignore non-fatal errors about changing directories.
 
 ```
-sudo -u postgres createuser --interactive
+$ sudo -u postgres createuser --interactive
 ```
 
 _macOS_
 
 ```
-createuser --interactive
+$ createuser --interactive
+Enter name of role to add: budgeter
+Shall the new role be a superuser? (y/n) n
+Shall the new role be allowed to create databases? (y/n) n
+Shall the new role be allowed to create more new roles? (y/n) n
 ```
 
 ### 3. Set the user's password. Pick a good password and save it somewhere.
@@ -66,14 +77,14 @@ createuser --interactive
 _Ubuntu_
 
 ```
-sudo -u postgres psql
+$ sudo -u postgres psql
 postgres=# \password budgeter
 ```
 
 _macOS_
 
 ```
-psql postgres
+$ psql postgres
 postgres=# \password budgeter
 ```
 
@@ -82,13 +93,13 @@ postgres=# \password budgeter
 _Ubuntu_
 
 ```
-sudo -u postgres createdb budgeter
+$ sudo -u postgres createdb budgeter
 ```
 
 _macOS_
 
 ```
-createdb budgeter
+$ createdb budgeter
 ```
 
 ### 5. Set up your `.envrc` file for the project.
@@ -118,17 +129,13 @@ sql/init.sh
 
 https://nodejs.org/en/
 
-### 8. Install typescript
+
+### 8. Install dependencies
 
 ```
-npm install -g typescript
-```
-
-### 9. Install dependencies
-
-```
-brew install entr
-npm install
+$ brew install entr
+$ npm install -g typescript
+$ npm install
 ```
 
 # Production Deployment
