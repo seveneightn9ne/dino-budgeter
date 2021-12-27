@@ -5,13 +5,14 @@ import _ from "lodash";
 interface Props {
   categories: Category[],
   filterCat?: (cat: Category) => boolean,
-  formatCat: (cat: Category) => string,
+  formatCat?: (cat: Category) => string,
   zeroValue: string,
   extraItems?: [string, string][],
 }
 
 const defaults = {
   filterCat: (_: Category) => true,
+  formatCat: (c: Category) => c.name,
   extraItems: [] as [string, string][],
 }
 
@@ -40,13 +41,25 @@ export class CategoryMap {
             <option key={id} value={id}>{value}</option>
           );
         });
-        this.props.categories.filter(this.props.filterCat).forEach((cat) =>
-          options.push(
-            <option key={cat.id} value={cat.id}>
-              {this.props.formatCat(cat)}
-            </option>,
-          ),
-        );
+        this.props.categories
+          .filter(this.props.filterCat)
+          .filter((c) => !c.parent) // Only root categories
+          .forEach((cat) => this.addOptionTree(cat, options));
         return options;
+    }
+
+    private addOptionTree(root: Category, options: JSX.Element[], depth = 0) {
+      const prefix = "\u00A0\u00A0\u00A0\u00A0".repeat(depth);
+      const title = prefix + this.props.formatCat(root);
+      console.log(`Depth: ${depth}; Title: ${title}`);
+      options.push(
+        <option key={root.id} value={root.id} style={{textIndent: 10*depth}}>
+          {title}
+        </option>,
+      );
+      this.props.categories
+        .filter(this.props.filterCat)
+        .filter((c) => c.parent === root.id) // children of root
+        .forEach((c) => this.addOptionTree(c, options, depth + 1));
     }
 }

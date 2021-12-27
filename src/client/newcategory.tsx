@@ -1,6 +1,7 @@
 import * as React from "react";
 import { AddCategory } from "../shared/api";
 import { Category, FrameIndex } from "../shared/types";
+import { CategoryMap } from "./category_utils";
 import KeyPress from "./components/keypress";
 import * as util from "./util";
 
@@ -68,11 +69,10 @@ export default class NewCategory extends KeyPress<
         </span>
       );
     }
-    const categoryOptions = this.props.categories.map((c) => (
-      <option key={c.id} value={c.id}>
-        {c.name}
-      </option>
-    ));
+    const categoryOptions = new CategoryMap({
+      categories: this.props.categories,
+      zeroValue: "Nest under...",
+    }).options();
     return (
       <form onSubmit={this.submit}>
         <span
@@ -88,7 +88,6 @@ export default class NewCategory extends KeyPress<
           onChange={this.updateValue}
         />
         <select value={this.state.parent} onChange={this.updateParent}>
-          <option value="">Nest under...</option>
           {categoryOptions}
         </select>
         <input type="submit" disabled={!this.state.value} value="Add" />

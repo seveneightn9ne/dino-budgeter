@@ -11,6 +11,7 @@ import {
   Share,
   Transaction,
 } from "../shared/types";
+import { CategoryMap } from "./category_utils";
 import {
   allowEmpty,
   ccec,
@@ -512,13 +513,10 @@ export default class TxEntry extends React.Component<Props, TxEntryState> {
   }
 
   public render(): JSX.Element {
-    const options = this.props.categories.map((c) => {
-      return (
-        <option key={c.id} value={c.id}>
-          {c.name}
-        </option>
-      );
-    });
+    const categoryOptions = new CategoryMap({
+      categories: this.props.categories,
+      zeroValue: "Uncategorized",
+    }).options();
     // Show the splitting option if you're adding and have friends, or if you're updating a split transaction.
     const splitting = (isUpdate(this.props) ? (
       this.props.transaction.split
@@ -569,8 +567,7 @@ export default class TxEntry extends React.Component<Props, TxEntryState> {
               onChange={util.cc(this, "category")}
               value={this.state.category}
             >
-              <option value="">Uncategorized</option>
-              {options}
+              {categoryOptions}
             </select>
           </label>
           {splitting}

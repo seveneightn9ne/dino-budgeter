@@ -198,6 +198,7 @@ export default class CategoryRow extends React.Component<
         : balance.cmp(Money.Zero) === -1
         ? "highlighted"
         : "";
+    console.log(`${this.props.category.name} - ${balance.string()} - ${balanceCls} - ${balance.cmp(Money.Zero)}`)
 
     const rowClass =
       this.props.newCat === this.props.category.id ? "new" : 
@@ -215,7 +216,7 @@ export default class CategoryRow extends React.Component<
     );
 
     const nameClass = this.props.isOther ? "otherCR" : "";
-    const name = this.props.isOther ? "Other" : this.props.category.name;
+    const name = this.props.isOther ? "Other " + this.props.category.name : this.props.category.name;
 
     // TODO: Make sub categories smaller font
     return (
